@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 
 	"github.com/thingful/expando"
@@ -10,39 +11,48 @@ import (
 
 func main() {
 
+	var in string
+	var scriptContents string
+
+	flag.StringVar(&in, "in", "{}", "json input")
+	flag.StringVar(&scriptContents, "script", "function decode( input ){ return input }", "js to transform input")
+
+	/*	j := `{
+			"value": "30",
+			"deviceId": "23",
+			"createdAt": "1487941771000"
+		}`
+	*/
+	flag.Parse()
+
 	scripter := engine.New()
-
-	j := `{
-		"value": "30",
-		"deviceId": "23",
-		"createdAt": "1487941771000"
-	}`
-
-	input := expando.Input{Payload: []byte(j)}
+	input := expando.Input{Payload: []byte(in)}
 
 	script := expando.Script{
-		Runtime: expando.Javascript,
-		Input:   expando.JSON,
-		Contents: `function decode (input) {
+		Runtime:  expando.Javascript,
+		Input:    expando.JSON,
+		Contents: scriptContents,
 
-			// define the terms against the m3-lite ontology
-			// http://ontology.fiesta-iot.eu/ontologyDocs/fiesta-iot/doc
-			input['@context'] = {
-                'm3-lite': 'http://purl.org/iot/vocab/m3-lite#'
-			}
+		/*`function decode (input) {
 
-			// it is an air pollutant sensor
-			input['@type'] = "m3-lite:AirPollutantSensor"
+					// define the terms against the m3-lite ontology
+					// http://ontology.fiesta-iot.eu/ontologyDocs/fiesta-iot/doc
+					input['@context'] = {
+		                'm3-lite': 'http://purl.org/iot/vocab/m3-lite#'
+					}
 
-			// environment based
-			input['domain'] = {
-                "@type" : "m3-lite:Environment"
-            }
+					// it is an air pollutant sensor
+					input['@type'] = "m3-lite:AirPollutantSensor"
 
-			// TODO : what is the value, unit?
+					// environment based
+					input['domain'] = {
+		                "@type" : "m3-lite:Environment"
+		            }
 
-			return input
-			}`,
+					// TODO : what is the value, unit?
+
+					return input
+					}`,*/
 	}
 
 	output, err := scripter.Execute(input, script)
