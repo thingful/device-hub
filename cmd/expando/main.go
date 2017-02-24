@@ -26,6 +26,7 @@ func main() {
 		Contents: `function decode (input) {
 
 			// define the terms against the m3-lite ontology
+			// http://ontology.fiesta-iot.eu/ontologyDocs/fiesta-iot/doc
 			input['@context'] = {
                 'm3-lite': 'http://purl.org/iot/vocab/m3-lite#'
 			}
@@ -38,7 +39,7 @@ func main() {
                 "@type" : "m3-lite:Environment"
             }
 
-			// TODO : what is the value, unit
+			// TODO : what is the value, unit?
 
 			return input
 			}`,
