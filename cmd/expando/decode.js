@@ -7,8 +7,12 @@ function decode (input) {
     // define the terms against the m3-lite ontology
     // http://ontology.fiesta-iot.eu/ontologyDocs/fiesta-iot/doc
     input['@context'] = {
-        'm3-lite': 'http://purl.org/iot/vocab/m3-lite#'
+        'm3-lite': 'http://purl.org/iot/vocab/m3-lite#',
+        'decode' : 'http://decode.xxx'
     }
+
+    input['@id'] = "decode:/" + input['deviceId'] + ':' + input['createdAt']
+
 
     // it is an air pollutant sensor
     input['@type'] = "m3-lite:AirPollutantSensor"

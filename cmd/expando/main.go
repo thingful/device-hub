@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/thingful/expando"
-	"github.com/thingful/expando/engine"
+	"bitbucket.org/tsetsova/decode-prototype/hub/expando"
+	"bitbucket.org/tsetsova/decode-prototype/hub/expando/engine"
 )
 
 func main() {
@@ -36,6 +36,7 @@ func main() {
 	}
 
 	output, err := scripter.Execute(script, input)
+
 	if err != nil {
 		panic(err)
 	}
