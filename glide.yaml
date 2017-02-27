@@ -1,0 +1,8 @@
+package: bitbucket.org/tsetsova/decode-prototype/hub/expando
+import:
+- package: github.com/robertkrimen/otto
+testImport:
+- package: github.com/stretchr/testify
+  version: ^1.1.4
+  subpackages:
+  - assert
