@@ -12,13 +12,24 @@ import (
 	"bitbucket.org/tsetsova/decode-prototype/hub/expando/engine"
 )
 
+var (
+	SourceVersion string
+)
+
 func main() {
 
 	var scriptContents string
+	var showVersion bool
 
 	flag.StringVar(&scriptContents, "script", "function decode( input ){ return input }", "js to transform input")
+	flag.BoolVar(&showVersion, "version", false, "show version")
 
 	flag.Parse()
+
+	if showVersion {
+		fmt.Println(SourceVersion)
+		return
+	}
 
 	in, err := getInputFromStdIn()
 
