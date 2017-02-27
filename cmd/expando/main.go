@@ -30,6 +30,7 @@ func main() {
 	input := expando.Input{Payload: []byte(in)}
 
 	script := expando.Script{
+		Main:     "decode",
 		Runtime:  expando.Javascript,
 		Input:    expando.JSON,
 		Contents: scriptContents,
