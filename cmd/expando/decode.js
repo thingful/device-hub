@@ -23,6 +23,6 @@ function decode (input) {
     "@type" : "m3-lite:Environment"
     }
 
-    // TODO : what is the value, data format, unit?
+    // TODO : what 'is' the value, date format, unit?
     return input
 }

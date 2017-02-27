@@ -14,7 +14,7 @@ const (
 )
 
 type Script struct {
-	//	UUID     string
+	Main     string
 	Runtime  Runtime
 	Input    InputType
 	Contents string

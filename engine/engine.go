@@ -31,7 +31,8 @@ func (e engine) Execute(script expando.Script, input expando.Input) (interface{}
 		env := map[string]interface{}{
 			"__input": input.Payload,
 		}
-		output, err = e.run(script.Contents, "decode(__input);", env, time.Second*1)
+		main := fmt.Sprintf("%s (__input);", script.Main)
+		output, err = e.run(script.Contents, main, env, time.Second*1)
 
 	}
 	if script.Input == expando.CSV {
@@ -42,7 +43,8 @@ func (e engine) Execute(script expando.Script, input expando.Input) (interface{}
 			return nil, err
 		}
 
-		output, err = e.run(script.Contents, "decode(__header, __lines);", env, time.Second*1)
+		main := fmt.Sprintf("%s (__header, __lines);", script.Main)
+		output, err = e.run(script.Contents, main, env, time.Second*1)
 
 	}
 
@@ -51,7 +53,9 @@ func (e engine) Execute(script expando.Script, input expando.Input) (interface{}
 		env := map[string]interface{}{
 			"__input": string(input.Payload),
 		}
-		output, err = e.run(script.Contents, "decode( JSON.parse( __input ));", env, time.Second*1)
+
+		main := fmt.Sprintf("%s ( JSON.parse( __input ));", script.Main)
+		output, err = e.run(script.Contents, main, env, time.Second*1)
 
 	}
 
@@ -80,6 +84,7 @@ func (engine) run(code, main string, env map[string]interface{}, timeout time.Du
 	}
 
 	vm.Set("__log", func(call otto.FunctionCall) otto.Value {
+		// TODO : allow logger to be defined
 		log.Println(call.ArgumentList)
 		return otto.UndefinedValue()
 	})

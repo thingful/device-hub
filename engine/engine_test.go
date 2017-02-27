@@ -14,9 +14,10 @@ func TestRawDecodeValid(t *testing.T) {
 	t.Parallel()
 
 	script := expando.Script{
+		Main:    "xxx",
 		Runtime: expando.Javascript,
 		Input:   expando.Raw,
-		Contents: `function decode (input) {
+		Contents: `function xxx (input) {
 				return {
 						'value' : ((input[0] << 8) | input[1]) / 100,
 					}
@@ -48,9 +49,10 @@ func TestCSVDecodeValid(t *testing.T) {
 	t.Parallel()
 
 	script := expando.Script{
+		Main:    "xxx",
 		Runtime: expando.Javascript,
 		Input:   expando.CSV,
-		Contents: `function decode (header, lines) {
+		Contents: `function xxx (header, lines) {
 				return {
 						'header' : header,
 						'lines' : lines
@@ -76,9 +78,10 @@ func TestJSONDecodeValid(t *testing.T) {
 	t.Parallel()
 
 	script := expando.Script{
+		Main:    "xxx",
 		Runtime: expando.Javascript,
 		Input:   expando.JSON,
-		Contents: `function decode (input) {
+		Contents: `function xxx (input) {
 				return input
 			}`,
 	}
