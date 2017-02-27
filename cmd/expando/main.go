@@ -1,9 +1,12 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
+	"os"
 
 	"github.com/thingful/expando"
 	"github.com/thingful/expando/engine"
@@ -11,19 +14,17 @@ import (
 
 func main() {
 
-	var in string
 	var scriptContents string
 
-	flag.StringVar(&in, "in", "{}", "json input")
 	flag.StringVar(&scriptContents, "script", "function decode( input ){ return input }", "js to transform input")
 
-	/*	j := `{
-			"value": "30",
-			"deviceId": "23",
-			"createdAt": "1487941771000"
-		}`
-	*/
 	flag.Parse()
+
+	in, err := getInputFromStdIn()
+
+	if err != nil {
+		panic(err)
+	}
 
 	scripter := engine.New()
 	input := expando.Input{Payload: []byte(in)}
@@ -32,39 +33,33 @@ func main() {
 		Runtime:  expando.Javascript,
 		Input:    expando.JSON,
 		Contents: scriptContents,
-
-		/*`function decode (input) {
-
-					// define the terms against the m3-lite ontology
-					// http://ontology.fiesta-iot.eu/ontologyDocs/fiesta-iot/doc
-					input['@context'] = {
-		                'm3-lite': 'http://purl.org/iot/vocab/m3-lite#'
-					}
-
-					// it is an air pollutant sensor
-					input['@type'] = "m3-lite:AirPollutantSensor"
-
-					// environment based
-					input['domain'] = {
-		                "@type" : "m3-lite:Environment"
-		            }
-
-					// TODO : what is the value, unit?
-
-					return input
-					}`,*/
 	}
 
-	output, err := scripter.Execute(input, script)
+	output, err := scripter.Execute(script, input)
 	if err != nil {
 		panic(err)
 	}
 
-	bytes, err := json.MarshalIndent(output, "", "   ")
+	bytes, err := json.Marshal(output)
 	if err != nil {
 		panic(err)
 	}
 
 	fmt.Println(string(bytes))
 
+}
+
+// if we are being piped some input return it else error
+func getInputFromStdIn() (string, error) {
+
+	fi, err := os.Stdin.Stat()
+	if err != nil {
+		return "", err
+	}
+	if fi.Mode()&os.ModeNamedPipe == 0 {
+		return "", errors.New("input expected from stdin e.g. echo {} | ./expando")
+	}
+
+	reader := bufio.NewReader(os.Stdin)
+	return reader.ReadString('\n')
 }
