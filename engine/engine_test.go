@@ -33,7 +33,7 @@ func TestRawDecodeValid(t *testing.T) {
 	input := expando.Input{Payload: buf.Bytes()}
 
 	e := New()
-	result, err := e.Execute(input, script)
+	result, err := e.Execute(script, input)
 
 	assert.Nil(t, err)
 
@@ -62,7 +62,7 @@ func TestCSVDecodeValid(t *testing.T) {
 	input := expando.Input{Payload: []byte(csv)}
 
 	e := New()
-	result, err := e.Execute(input, script)
+	result, err := e.Execute(script, input)
 	assert.Nil(t, err)
 	resultAsMap := result.(map[string]interface{})
 
@@ -87,7 +87,7 @@ func TestJSONDecodeValid(t *testing.T) {
 	input := expando.Input{Payload: []byte(json)}
 
 	e := New()
-	result, err := e.Execute(input, script)
+	result, err := e.Execute(script, input)
 
 	assert.Nil(t, err)
 	resultAsMap := result.(map[string]interface{})

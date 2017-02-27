@@ -22,7 +22,7 @@ func New() engine {
 
 type engine struct{}
 
-func (e engine) Execute(input expando.Input, script expando.Script) (interface{}, error) {
+func (e engine) Execute(script expando.Script, input expando.Input) (interface{}, error) {
 
 	var output otto.Value
 	var err error
