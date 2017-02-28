@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"errors"
 	"flag"
@@ -31,14 +32,7 @@ func main() {
 		return
 	}
 
-	in, err := getInputFromStdIn()
-
-	if err != nil {
-		panic(err)
-	}
-
 	scripter := engine.New()
-	input := expando.Input{Payload: []byte(in)}
 
 	script := expando.Script{
 		Main:     "decode",
@@ -47,19 +41,79 @@ func main() {
 		Contents: scriptContents,
 	}
 
-	output, err := scripter.Execute(script, input)
+	ctx, cancel := context.WithCancel(context.Background())
+
+	broker := FromStdIn(ctx)
+
+	inputChannel := broker.Channel()
+	errorChannel := broker.Errors()
+
+	go broker.Next()
+
+	for {
+
+		select {
+
+		case <-ctx.Done():
+			return
+
+		case err := <-errorChannel:
+			panic(err)
+
+		case input := <-inputChannel:
+
+			output, err := scripter.Execute(script, input)
+
+			if err != nil {
+				panic(err)
+			}
+
+			bytes, err := json.Marshal(output)
+			if err != nil {
+				panic(err)
+			}
+
+			fmt.Println(string(bytes))
+			cancel()
+		}
+	}
+}
+
+func FromStdIn(ctx context.Context) *stdin {
+
+	channel := make(chan expando.Input)
+	errors := make(chan error)
+
+	return &stdin{
+		ctx:     ctx,
+		channel: channel,
+		errors:  errors,
+	}
+}
+
+type stdin struct {
+	ctx     context.Context
+	channel chan expando.Input
+	errors  chan error
+}
+
+func (s *stdin) Channel() chan expando.Input {
+	return s.channel
+}
+
+func (s *stdin) Errors() chan error {
+	return s.errors
+}
+
+func (s *stdin) Next() {
+
+	contents, err := getInputFromStdIn()
 
 	if err != nil {
-		panic(err)
+		s.errors <- err
+	} else {
+		s.channel <- expando.Input{Payload: []byte(contents)}
 	}
-
-	bytes, err := json.Marshal(output)
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Println(string(bytes))
-
 }
 
 // if we are being piped some input return it else error
