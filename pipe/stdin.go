@@ -54,7 +54,7 @@ func getInputFromStdIn() (string, error) {
 		return "", err
 	}
 	if fi.Mode()&os.ModeNamedPipe == 0 {
-		return "", errors.New("input expected from stdin e.g. echo {} | ./expando")
+		return "", errors.New("input expected from stdin")
 	}
 
 	reader := bufio.NewReader(os.Stdin)
