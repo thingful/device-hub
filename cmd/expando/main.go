@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"os"
 
 	"bitbucket.org/tsetsova/decode-prototype/hub/expando"
 	"bitbucket.org/tsetsova/decode-prototype/hub/expando/engine"
@@ -56,23 +57,28 @@ func main() {
 			return
 
 		case err := <-errorChannel:
-			panic(err)
+			exitWithError(err)
 
 		case input := <-inputChannel:
 
 			output, err := scripter.Execute(script, input)
 
 			if err != nil {
-				panic(err)
+				exitWithError(err)
 			}
 
 			bytes, err := json.Marshal(output)
 			if err != nil {
-				panic(err)
+				exitWithError(err)
 			}
 
 			fmt.Println(string(bytes))
 			cancel()
 		}
 	}
+}
+
+func exitWithError(err error) {
+	fmt.Fprintf(os.Stderr, "error: %v\n", err)
+	os.Exit(1)
 }

@@ -50,9 +50,11 @@ func (s *stdin) Next() {
 func getInputFromStdIn() ([]byte, error) {
 
 	fi, err := os.Stdin.Stat()
+
 	if err != nil {
 		return []byte{}, err
 	}
+
 	if fi.Mode()&os.ModeNamedPipe == 0 {
 		return []byte{}, errors.New("input expected from stdin")
 	}
