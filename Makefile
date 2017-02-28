@@ -1,13 +1,14 @@
 
 SOURCE_VERSION = $(shell git rev-parse --short=6 HEAD)
 BUILD_FLAGS = -v -ldflags "-X main.SourceVersion=$(SOURCE_VERSION)"
+PACKAGES := $(shell go list ./... | grep -v /vendor/ )
 
 all: pi linux darwin ## build executables for the various environments
 
 .PHONY: all
 
 test: ## run the tests
-	go test -v ./...
+	go test -v $(PACKAGES)
 
 .PHONY: test
 
