@@ -42,21 +42,22 @@ func (s *stdin) Next() {
 	if err != nil {
 		s.errors <- err
 	} else {
-		s.channel <- expando.Input{Payload: []byte(contents)}
+		s.channel <- expando.Input{Payload: contents}
 	}
 }
 
 // if we are being piped some input return it else error
-func getInputFromStdIn() (string, error) {
+func getInputFromStdIn() ([]byte, error) {
 
 	fi, err := os.Stdin.Stat()
 	if err != nil {
-		return "", err
+		return []byte{}, err
 	}
 	if fi.Mode()&os.ModeNamedPipe == 0 {
-		return "", errors.New("input expected from stdin")
+		return []byte{}, errors.New("input expected from stdin")
 	}
 
 	reader := bufio.NewReader(os.Stdin)
-	return reader.ReadString('\n')
+
+	return reader.ReadBytes('\n')
 }
