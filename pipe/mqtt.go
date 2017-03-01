@@ -55,6 +55,8 @@ func (m *mqttbroker) Channel() mqttChannel {
 				QoS:         mqtt.QoS0,
 
 				Handler: func(topicName, message []byte) {
+
+					// TODO : add topic name to metadata
 					channel <- expando.Input{Payload: message}
 					fmt.Println(string(topicName), string(message))
 				},
