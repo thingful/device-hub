@@ -1,5 +1,5 @@
 hash: 6a0b9137284ee4ed83739dfa320d687820a56acddd872566751ebdbc69ccec68
-updated: 2017-02-27T14:24:56.970292094Z
+updated: 2017-03-01T12:29:12.996769751Z
 imports:
 - name: github.com/robertkrimen/otto
   version: 6a77b7cbc37d0c39f7d5fa5766826e541df31fd5
@@ -10,6 +10,12 @@ imports:
   - parser
   - registry
   - token
+- name: github.com/yosssi/gmq
+  version: 8b6f29886d48001ed1f76ee3f1471355b0b64b21
+  subpackages:
+  - mqtt
+  - mqtt/client
+  - mqtt/packet
 - name: gopkg.in/sourcemap.v1
   version: 6e83acea0053641eff084973fee085f0c193c61a
   subpackages:
