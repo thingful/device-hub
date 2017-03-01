@@ -68,9 +68,10 @@ func (m *mqttbroker) Channel() mqttChannel {
 	return mqttChannel{out: channel, errors: m.errors}
 }
 
-func (m *mqttbroker) Close() {
-	m.client.Disconnect()
+func (m *mqttbroker) Close() error {
+	err := m.client.Disconnect()
 	defer m.client.Terminate()
+	return err
 }
 
 type mqttChannel struct {

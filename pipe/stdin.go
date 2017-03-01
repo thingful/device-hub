@@ -31,6 +31,10 @@ func (s *stdin) Channel() stdinChannel {
 	return stdinChannel{out: channel, errors: s.errors}
 }
 
+func (s *stdin) Close() error {
+	return nil
+}
+
 type stdinChannel struct {
 	errors chan error
 	out    chan expando.Input
@@ -41,6 +45,7 @@ func (s stdinChannel) Errors() chan error {
 	return s.errors
 }
 
+// Out returns a channel of expando.Input
 func (s stdinChannel) Out() chan expando.Input {
 	return s.out
 }
