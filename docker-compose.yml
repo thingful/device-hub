@@ -1,0 +1,8 @@
+version: '2'
+services:
+  mqtt:
+    image: erlio/docker-vernemq
+    ports:
+      - "1883:1883"
+    environment:
+      - DOCKER_VERNEMQ_ALLOW_ANONYMOUS=on
