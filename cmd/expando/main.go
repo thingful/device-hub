@@ -40,9 +40,11 @@ func main() {
 		Contents: scriptContents,
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, _ := context.WithCancel(context.Background())
 
-	broker := pipe.FromStdIn(ctx)
+	//	broker := pipe.FromStdIn(ctx)
+
+	broker := pipe.FromMQTT(ctx)
 
 	channel := broker.Channel()
 	errorChannel := channel.Errors()
@@ -54,12 +56,13 @@ func main() {
 		select {
 
 		case <-ctx.Done():
+			fmt.Println("context closed")
 			return
 
 		case err := <-errorChannel:
 			exitWithError(err)
 
-		case input := <-channel.Out:
+		case input := <-channel.Out():
 
 			output, err := scripter.Execute(script, input)
 
@@ -73,7 +76,8 @@ func main() {
 			}
 
 			fmt.Println(string(bytes))
-			cancel()
+			//broker.Close()
+			//cancel()
 		}
 	}
 }

@@ -28,17 +28,21 @@ type stdin struct {
 // Channel returns a new channel to start processing messages
 func (s *stdin) Channel() stdinChannel {
 	channel := make(chan expando.Input)
-	return stdinChannel{Out: channel, errors: s.errors}
+	return stdinChannel{out: channel, errors: s.errors}
 }
 
 type stdinChannel struct {
 	errors chan error
-	Out    chan expando.Input
+	out    chan expando.Input
 }
 
 // Errors returns a channel of errors
 func (s stdinChannel) Errors() chan error {
 	return s.errors
+}
+
+func (s stdinChannel) Out() chan expando.Input {
+	return s.out
 }
 
 // Next starts the process of getting the next message
@@ -49,7 +53,7 @@ func (s stdinChannel) Next() {
 	if err != nil {
 		s.errors <- err
 	} else {
-		s.Out <- expando.Input{Payload: contents}
+		s.out <- expando.Input{Payload: contents}
 	}
 }
 
