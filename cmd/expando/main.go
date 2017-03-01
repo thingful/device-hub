@@ -44,10 +44,10 @@ func main() {
 
 	broker := pipe.FromStdIn(ctx)
 
-	inputChannel := broker.Channel()
-	errorChannel := broker.Errors()
+	channel := broker.Channel()
+	errorChannel := channel.Errors()
 
-	go broker.Next()
+	go channel.Next()
 
 	for {
 
@@ -59,7 +59,7 @@ func main() {
 		case err := <-errorChannel:
 			exitWithError(err)
 
-		case input := <-inputChannel:
+		case input := <-channel.Out:
 
 			output, err := scripter.Execute(script, input)
 

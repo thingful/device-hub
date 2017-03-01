@@ -9,40 +9,47 @@ import (
 	"bitbucket.org/tsetsova/decode-prototype/hub/expando"
 )
 
+// FromStdIn pipes data from stdin
 func FromStdIn(ctx context.Context) *stdin {
 
-	channel := make(chan expando.Input)
 	errors := make(chan error)
 
 	return &stdin{
-		ctx:     ctx,
-		channel: channel,
-		errors:  errors,
+		ctx:    ctx,
+		errors: errors,
 	}
 }
 
 type stdin struct {
-	ctx     context.Context
-	channel chan expando.Input
-	errors  chan error
+	ctx    context.Context
+	errors chan error
 }
 
-func (s *stdin) Channel() chan expando.Input {
-	return s.channel
+// Channel returns a new channel to start processing messages
+func (s *stdin) Channel() stdinChannel {
+	channel := make(chan expando.Input)
+	return stdinChannel{Out: channel, errors: s.errors}
 }
 
-func (s *stdin) Errors() chan error {
+type stdinChannel struct {
+	errors chan error
+	Out    chan expando.Input
+}
+
+// Errors returns a channel of errors
+func (s stdinChannel) Errors() chan error {
 	return s.errors
 }
 
-func (s *stdin) Next() {
+// Next starts the process of getting the next message
+func (s stdinChannel) Next() {
 
 	contents, err := getInputFromStdIn()
 
 	if err != nil {
 		s.errors <- err
 	} else {
-		s.channel <- expando.Input{Payload: contents}
+		s.Out <- expando.Input{Payload: contents}
 	}
 }
 
