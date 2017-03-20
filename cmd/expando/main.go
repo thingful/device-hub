@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -19,8 +20,12 @@ var (
 func main() {
 
 	var scriptContents string
+	var in string
+	var out string
 	var showVersion bool
 
+	flag.StringVar(&in, "in", "", "read from specified input e.g. std or mqtt")
+	flag.StringVar(&out, "out", "std", "output to specified stream.")
 	flag.StringVar(&scriptContents, "script", "function decode( input ){ return input }", "js to transform input")
 	flag.BoolVar(&showVersion, "version", false, "show version")
 
@@ -29,6 +34,13 @@ func main() {
 	if showVersion {
 		fmt.Println(SourceVersion)
 		return
+	}
+
+	if in == "" {
+		exitWithError(errors.New("must specify an -in flag"))
+	}
+	if out == "" {
+		exitWithError(errors.New("must specify an -out flag"))
 	}
 
 	scripter := engine.New()
@@ -40,23 +52,31 @@ func main() {
 		Contents: scriptContents,
 	}
 
-	ctx, _ := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(context.Background())
 
-	//	broker := pipe.FromStdIn(ctx)
+	var broker pipe.Broker
 
-	broker := pipe.FromMQTT(ctx)
+	if in == "std" {
+
+		broker = pipe.FromStdIn(cancel)
+
+	}
+	if in == "mqtt" {
+		broker = pipe.FromMQTT(ctx)
+	}
+
+	if broker == nil {
+		exitWithError(errors.New("unable to create broker"))
+	}
 
 	channel := broker.Channel()
 	errorChannel := channel.Errors()
-
-	go channel.Next()
 
 	for {
 
 		select {
 
 		case <-ctx.Done():
-			fmt.Println("context closed")
 			return
 
 		case err := <-errorChannel:

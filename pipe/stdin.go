@@ -10,25 +10,32 @@ import (
 )
 
 // FromStdIn pipes data from stdin
-func FromStdIn(ctx context.Context) *stdin {
+func FromStdIn(cancel context.CancelFunc) *stdin {
 
 	errors := make(chan error)
 
 	return &stdin{
-		ctx:    ctx,
+		cancel: cancel,
 		errors: errors,
 	}
 }
 
 type stdin struct {
-	ctx    context.Context
+	cancel context.CancelFunc
 	errors chan error
 }
 
 // Channel returns a new channel to start processing messages
-func (s *stdin) Channel() stdinChannel {
-	channel := make(chan expando.Input)
-	return stdinChannel{out: channel, errors: s.errors}
+func (s *stdin) Channel() Channel {
+	out := make(chan expando.Input)
+
+	channel := stdinChannel{cancel: s.cancel,
+		out:    out,
+		errors: s.errors}
+
+	go channel.next()
+
+	return channel
 }
 
 func (s *stdin) Close() error {
@@ -38,6 +45,7 @@ func (s *stdin) Close() error {
 type stdinChannel struct {
 	errors chan error
 	out    chan expando.Input
+	cancel context.CancelFunc
 }
 
 // Errors returns a channel of errors
@@ -50,8 +58,7 @@ func (s stdinChannel) Out() chan expando.Input {
 	return s.out
 }
 
-// Next starts the process of getting the next message
-func (s stdinChannel) Next() {
+func (s stdinChannel) next() {
 
 	contents, err := getInputFromStdIn()
 
@@ -60,6 +67,7 @@ func (s stdinChannel) Next() {
 	} else {
 		s.out <- expando.Input{Payload: contents}
 	}
+	s.cancel()
 }
 
 // if we are being piped some input return it else error

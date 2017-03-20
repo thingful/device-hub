@@ -43,7 +43,7 @@ type mqttbroker struct {
 	client *client.Client
 }
 
-func (m *mqttbroker) Channel() mqttChannel {
+func (m *mqttbroker) Channel() Channel {
 
 	channel := make(chan expando.Input)
 
