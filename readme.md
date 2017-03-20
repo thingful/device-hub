@@ -51,8 +51,21 @@ Run
 Pipe through from standard input -
 
 ```
- echo '{"value": "22", "deviceId": "23", "createdAt": "1488205809000"}' | ../expando/cmd/expando/expando -script="$(cat ../expando/cmd/expando/decode.js)"
+ echo '{"value": "22", "deviceId": "23", "createdAt": "1488205809000"}' | ./cmd/expando/expando -script="$(cat ./cmd/expando/decode.js)" -in=std
 {"@context":{"decode":"http://decode.xxx","m3-lite":"http://purl.org/iot/vocab/m3-lite#"},"@id":"decode:/23:1488205809000","@type":"m3-lite:AirPollutantSensor","createdAt":"1488205809000","deviceId":"23","domain":{"@type":"m3-lite:Environment"},"value":"22"}
 
 ```
 
+Pipe through from MQTT -
+
+Start the MQTT server
+
+```
+docker-compose up
+```
+
+```
+./cmd/expando/expando -in=mqtt -script="$(cat ./cmd/expando/decode.js)"
+```
+
+Send a message via mqtt to 0.0.0.0:1883 e.g. using MQTTLens (https://chrome.google.com/webstore/detail/mqttlens/hemojaaeigabkbcookmlgmdigohjobjm?hl=en)
