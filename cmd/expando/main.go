@@ -11,6 +11,7 @@ import (
 	"github.com/thingful/expando"
 	"github.com/thingful/expando/engine"
 	"github.com/thingful/expando/pipe"
+	"github.com/yosssi/gmq/mqtt/client"
 )
 
 var (
@@ -62,7 +63,19 @@ func main() {
 
 	}
 	if in == "mqtt" {
-		broker = pipe.FromMQTT(ctx)
+
+		// TODO : pick up connection options from somewhere
+		options := &client.ConnectOptions{
+			Network:  "tcp",
+			Address:  "0.0.0.0:1883",
+			ClientID: []byte("expando-client"),
+		}
+
+		var err error
+		broker, err = pipe.FromMQTT(options)
+		if err != nil {
+			exitWithError(err)
+		}
 	}
 
 	if broker == nil {
@@ -97,8 +110,6 @@ func main() {
 			}
 
 			fmt.Println(string(bytes))
-			//broker.Close()
-			//cancel()
 		}
 	}
 }

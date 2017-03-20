@@ -1,15 +1,12 @@
 package pipe
 
 import (
-	"context"
-	"fmt"
-
 	"github.com/thingful/expando"
 	"github.com/yosssi/gmq/mqtt"
 	"github.com/yosssi/gmq/mqtt/client"
 )
 
-func FromMQTT(ctx context.Context) *mqttbroker {
+func FromMQTT(options *client.ConnectOptions) (*mqttbroker, error) {
 
 	errors := make(chan error)
 
@@ -19,26 +16,19 @@ func FromMQTT(ctx context.Context) *mqttbroker {
 		},
 	})
 
-	// Connect to the MQTT Server.
-	err := cli.Connect(&client.ConnectOptions{
-		Network:  "tcp",
-		Address:  "0.0.0.0:1883",
-		ClientID: []byte("expando-client"),
-	})
+	err := cli.Connect(options)
 
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	return &mqttbroker{
-		ctx:    ctx,
 		errors: errors,
 		client: cli,
-	}
+	}, nil
 }
 
 type mqttbroker struct {
-	ctx    context.Context
 	errors chan error
 	client *client.Client
 }
@@ -57,7 +47,6 @@ func (m *mqttbroker) Channel() Channel {
 
 					// TODO : add topic name to metadata
 					channel <- expando.Input{Payload: message}
-					fmt.Println(string(topicName), string(message))
 				},
 			},
 		},
