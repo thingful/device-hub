@@ -25,9 +25,9 @@ func main() {
 	var out string
 	var showVersion bool
 
-	flag.StringVar(&in, "in", "", "read from specified input e.g. std or mqtt")
+	flag.StringVar(&in, "in", "", "read from specified input. Known values are 'std' or 'mqtt'.")
 	flag.StringVar(&out, "out", "std", "output to specified stream.")
-	flag.StringVar(&scriptContents, "script", "function decode( input ){ return input }", "js to transform input")
+	flag.StringVar(&scriptContents, "script", "function decode( input ){ return input }", "js to transform input.")
 	flag.BoolVar(&showVersion, "version", false, "show version")
 
 	flag.Parse()
@@ -73,6 +73,7 @@ func main() {
 
 		var err error
 		broker, err = pipe.FromMQTT(options)
+
 		if err != nil {
 			exitWithError(err)
 		}

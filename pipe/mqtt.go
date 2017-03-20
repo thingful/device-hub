@@ -37,9 +37,11 @@ func (m *mqttbroker) Channel() Channel {
 
 	channel := make(chan expando.Input)
 
+	// TODO : separate out subscriptions from channels
 	err := m.client.Subscribe(&client.SubscribeOptions{
 		SubReqs: []*client.SubReq{
 			&client.SubReq{
+				// TODO : set topicfilter
 				TopicFilter: []byte("#"),
 				QoS:         mqtt.QoS0,
 
