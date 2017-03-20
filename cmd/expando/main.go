@@ -69,6 +69,7 @@ func main() {
 		exitWithError(errors.New("unable to create broker"))
 	}
 
+	defer broker.Close()
 	channel := broker.Channel()
 	errorChannel := channel.Errors()
 

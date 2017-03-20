@@ -88,8 +88,3 @@ func (m mqttChannel) Errors() chan error {
 func (m mqttChannel) Out() chan expando.Input {
 	return m.out
 }
-
-// Next starts the process of getting the next message
-func (m mqttChannel) Next() {
-	// NOOP
-}
