@@ -5,8 +5,8 @@ import (
 	"encoding/binary"
 	"testing"
 
-	"bitbucket.org/tsetsova/decode-prototype/hub/expando"
 	"github.com/stretchr/testify/assert"
+	"github.com/thingful/expando"
 )
 
 func TestRawDecodeValid(t *testing.T) {

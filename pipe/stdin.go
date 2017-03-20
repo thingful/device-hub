@@ -6,7 +6,7 @@ import (
 	"errors"
 	"os"
 
-	"bitbucket.org/tsetsova/decode-prototype/hub/expando"
+	"github.com/thingful/expando"
 )
 
 // FromStdIn pipes data from stdin

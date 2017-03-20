@@ -4,8 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"bitbucket.org/tsetsova/decode-prototype/hub/expando"
-
+	"github.com/thingful/expando"
 	"github.com/yosssi/gmq/mqtt"
 	"github.com/yosssi/gmq/mqtt/client"
 )

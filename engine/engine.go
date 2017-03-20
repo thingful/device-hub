@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"bitbucket.org/tsetsova/decode-prototype/hub/expando"
 	"github.com/robertkrimen/otto"
+	"github.com/thingful/expando"
 )
 
 var (

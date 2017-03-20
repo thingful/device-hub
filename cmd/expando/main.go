@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"os"
 
-	"bitbucket.org/tsetsova/decode-prototype/hub/expando"
-	"bitbucket.org/tsetsova/decode-prototype/hub/expando/engine"
-	"bitbucket.org/tsetsova/decode-prototype/hub/expando/pipe"
+	"github.com/thingful/expando"
+	"github.com/thingful/expando/engine"
+	"github.com/thingful/expando/pipe"
 )
 
 var (
