@@ -1,12 +1,18 @@
 package pipe
 
 import (
+	"errors"
+
 	"github.com/thingful/expando"
 	"github.com/yosssi/gmq/mqtt"
 	"github.com/yosssi/gmq/mqtt/client"
 )
 
-func FromMQTT(options *client.ConnectOptions) (*mqttbroker, error) {
+func FromMQTT(options *client.ConnectOptions, topic string) (*mqttbroker, error) {
+
+	if topic == "" {
+		return nil, errors.New("mqtt topic is empty string")
+	}
 
 	errors := make(chan error)
 
@@ -23,12 +29,14 @@ func FromMQTT(options *client.ConnectOptions) (*mqttbroker, error) {
 	}
 
 	return &mqttbroker{
+		topic:  topic,
 		errors: errors,
 		client: cli,
 	}, nil
 }
 
 type mqttbroker struct {
+	topic  string
 	errors chan error
 	client *client.Client
 }
@@ -41,8 +49,8 @@ func (m *mqttbroker) Channel() Channel {
 	err := m.client.Subscribe(&client.SubscribeOptions{
 		SubReqs: []*client.SubReq{
 			&client.SubReq{
-				// TODO : set topicfilter
-				TopicFilter: []byte("#"),
+
+				TopicFilter: []byte(m.topic),
 				QoS:         mqtt.QoS0,
 
 				Handler: func(topicName, message []byte) {

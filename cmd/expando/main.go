@@ -72,7 +72,7 @@ func main() {
 		}
 
 		var err error
-		broker, err = pipe.FromMQTT(options)
+		broker, err = pipe.FromMQTT(options, "#")
 
 		if err != nil {
 			exitWithError(err)
