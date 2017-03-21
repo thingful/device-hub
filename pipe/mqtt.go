@@ -8,6 +8,10 @@ import (
 	"github.com/yosssi/gmq/mqtt/client"
 )
 
+const (
+	TOPIC_NAME = "topic"
+)
+
 func FromMQTT(options *client.ConnectOptions, topic string) (*mqttbroker, error) {
 
 	if topic == "" {
@@ -55,8 +59,14 @@ func (m *mqttbroker) Channel() Channel {
 
 				Handler: func(topicName, message []byte) {
 
-					// TODO : add topic name to metadata
-					channel <- expando.Input{Payload: message}
+					input := expando.Input{
+						Payload: message,
+						Metadata: map[string]interface{}{
+							TOPIC_NAME: topicName,
+						},
+					}
+
+					channel <- input
 				},
 			},
 		},
