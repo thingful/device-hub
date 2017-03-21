@@ -84,7 +84,12 @@ func main() {
 	}
 
 	defer broker.Close()
-	channel := broker.Channel()
+	channel, err := broker.Channel()
+
+	if err != nil {
+		exitWithError(err)
+	}
+
 	errorChannel := channel.Errors()
 
 	for {

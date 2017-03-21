@@ -45,7 +45,7 @@ type mqttbroker struct {
 	client *client.Client
 }
 
-func (m *mqttbroker) Channel() Channel {
+func (m *mqttbroker) Channel() (Channel, error) {
 
 	channel := make(chan expando.Input)
 
@@ -72,10 +72,10 @@ func (m *mqttbroker) Channel() Channel {
 		},
 	})
 	if err != nil {
-		panic(err)
+		return NoOpChannel{}, err
 	}
 
-	return mqttChannel{out: channel, errors: m.errors}
+	return mqttChannel{out: channel, errors: m.errors}, nil
 }
 
 func (m *mqttbroker) Close() error {

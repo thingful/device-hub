@@ -26,7 +26,7 @@ type stdin struct {
 }
 
 // Channel returns a new channel to start processing messages
-func (s *stdin) Channel() Channel {
+func (s *stdin) Channel() (Channel, error) {
 	out := make(chan expando.Input)
 
 	channel := stdinChannel{cancel: s.cancel,
@@ -35,7 +35,7 @@ func (s *stdin) Channel() Channel {
 
 	go channel.next()
 
-	return channel
+	return channel, nil
 }
 
 func (s *stdin) Close() error {

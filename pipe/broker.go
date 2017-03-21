@@ -3,7 +3,7 @@ package pipe
 import "github.com/thingful/expando"
 
 type Broker interface {
-	Channel() Channel
+	Channel() (Channel, error)
 	Close() error
 }
 
