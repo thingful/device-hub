@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/robertkrimen/otto"
-	"github.com/thingful/expando"
+	hub "github.com/thingful/device-hub"
 )
 
 var (
@@ -22,12 +22,12 @@ func New() engine {
 
 type engine struct{}
 
-func (e engine) Execute(script expando.Script, input expando.Input) (interface{}, error) {
+func (e engine) Execute(script hub.Script, input hub.Input) (interface{}, error) {
 
 	var output otto.Value
 	var err error
 
-	if script.Input == expando.Raw {
+	if script.Input == hub.Raw {
 		env := map[string]interface{}{
 			"__input": input.Payload,
 		}
@@ -35,7 +35,7 @@ func (e engine) Execute(script expando.Script, input expando.Input) (interface{}
 		output, err = e.run(script.Contents, main, env, time.Second*1)
 
 	}
-	if script.Input == expando.CSV {
+	if script.Input == hub.CSV {
 
 		env, err := prepareCSV(input)
 
@@ -48,7 +48,7 @@ func (e engine) Execute(script expando.Script, input expando.Input) (interface{}
 
 	}
 
-	if script.Input == expando.JSON {
+	if script.Input == hub.JSON {
 
 		env := map[string]interface{}{
 			"__input": string(input.Payload),
@@ -114,7 +114,7 @@ func (engine) run(code, main string, env map[string]interface{}, timeout time.Du
 	return vm.Run(fmt.Sprintf("%s;\n %s", code, main))
 }
 
-func prepareCSV(input expando.Input) (map[string]interface{}, error) {
+func prepareCSV(input hub.Input) (map[string]interface{}, error) {
 
 	r := csv.NewReader(strings.NewReader(string(input.Payload)))
 

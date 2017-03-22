@@ -1,6 +1,6 @@
 package pipe
 
-import "github.com/thingful/expando"
+import hub "github.com/thingful/device-hub"
 
 type Broker interface {
 	Channel() (Channel, error)
@@ -9,5 +9,5 @@ type Broker interface {
 
 type Channel interface {
 	Errors() chan error
-	Out() chan expando.Input
+	Out() chan hub.Input
 }

@@ -6,7 +6,7 @@ import (
 	"errors"
 	"os"
 
-	"github.com/thingful/expando"
+	hub "github.com/thingful/device-hub"
 )
 
 // FromStdIn pipes data from stdin
@@ -27,7 +27,7 @@ type stdin struct {
 
 // Channel returns a new channel to start processing messages
 func (s *stdin) Channel() (Channel, error) {
-	out := make(chan expando.Input)
+	out := make(chan hub.Input)
 
 	channel := stdinChannel{cancel: s.cancel,
 		out:    out,
@@ -44,7 +44,7 @@ func (s *stdin) Close() error {
 
 type stdinChannel struct {
 	errors chan error
-	out    chan expando.Input
+	out    chan hub.Input
 	cancel context.CancelFunc
 }
 
@@ -54,7 +54,7 @@ func (s stdinChannel) Errors() chan error {
 }
 
 // Out returns a channel of expando.Input
-func (s stdinChannel) Out() chan expando.Input {
+func (s stdinChannel) Out() chan hub.Input {
 	return s.out
 }
 
@@ -65,7 +65,7 @@ func (s stdinChannel) next() {
 	if err != nil {
 		s.errors <- err
 	} else {
-		s.out <- expando.Input{Payload: contents}
+		s.out <- hub.Input{Payload: contents}
 	}
 	s.cancel()
 }

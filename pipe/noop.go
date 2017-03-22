@@ -1,6 +1,8 @@
 package pipe
 
-import "github.com/thingful/expando"
+import (
+	hub "github.com/thingful/device-hub"
+)
 
 type NoOpChannel struct {
 }
@@ -9,6 +11,6 @@ func (NoOpChannel) Errors() chan error {
 	return make(chan error)
 }
 
-func (NoOpChannel) Out() chan expando.Input {
-	return make(chan expando.Input)
+func (NoOpChannel) Out() chan hub.Input {
+	return make(chan hub.Input)
 }

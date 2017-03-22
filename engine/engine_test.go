@@ -6,17 +6,17 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/thingful/expando"
+	hub "github.com/thingful/device-hub"
 )
 
 func TestRawDecodeValid(t *testing.T) {
 
 	t.Parallel()
 
-	script := expando.Script{
+	script := hub.Script{
 		Main:    "xxx",
-		Runtime: expando.Javascript,
-		Input:   expando.Raw,
+		Runtime: hub.Javascript,
+		Input:   hub.Raw,
 		Contents: `function xxx (input) {
 				return {
 						'value' : ((input[0] << 8) | input[1]) / 100,
@@ -31,7 +31,7 @@ func TestRawDecodeValid(t *testing.T) {
 	initialValue := 22.33
 	binary.Write(buf, binary.BigEndian, int16(initialValue*100))
 
-	input := expando.Input{Payload: buf.Bytes()}
+	input := hub.Input{Payload: buf.Bytes()}
 
 	e := New()
 	result, err := e.Execute(script, input)
@@ -48,10 +48,10 @@ func TestCSVDecodeValid(t *testing.T) {
 
 	t.Parallel()
 
-	script := expando.Script{
+	script := hub.Script{
 		Main:    "xxx",
-		Runtime: expando.Javascript,
-		Input:   expando.CSV,
+		Runtime: hub.Javascript,
+		Input:   hub.CSV,
 		Contents: `function xxx (header, lines) {
 				return {
 						'header' : header,
@@ -61,7 +61,7 @@ func TestCSVDecodeValid(t *testing.T) {
 	}
 
 	csv := "column1, column2\none, two\nthree, four\n five,six"
-	input := expando.Input{Payload: []byte(csv)}
+	input := hub.Input{Payload: []byte(csv)}
 
 	e := New()
 	result, err := e.Execute(script, input)
@@ -77,17 +77,17 @@ func TestJSONDecodeValid(t *testing.T) {
 
 	t.Parallel()
 
-	script := expando.Script{
+	script := hub.Script{
 		Main:    "xxx",
-		Runtime: expando.Javascript,
-		Input:   expando.JSON,
+		Runtime: hub.Javascript,
+		Input:   hub.JSON,
 		Contents: `function xxx (input) {
 				return input
 			}`,
 	}
 
 	json := "{ \"a\" : 1}"
-	input := expando.Input{Payload: []byte(json)}
+	input := hub.Input{Payload: []byte(json)}
 
 	e := New()
 	result, err := e.Execute(script, input)

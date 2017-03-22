@@ -4,7 +4,7 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/thingful/expando"
+	hub "github.com/thingful/device-hub"
 	"github.com/yosssi/gmq/mqtt"
 	"github.com/yosssi/gmq/mqtt/client"
 )
@@ -43,7 +43,7 @@ func (m *mqttbroker) Channel() (Channel, error) {
 		return NoOpChannel{}, err
 	}
 
-	channel := make(chan expando.Input)
+	channel := make(chan hub.Input)
 
 	err = m.client.Subscribe(&client.SubscribeOptions{
 		SubReqs: []*client.SubReq{
@@ -54,7 +54,7 @@ func (m *mqttbroker) Channel() (Channel, error) {
 
 				Handler: func(topicName, message []byte) {
 
-					input := expando.Input{
+					input := hub.Input{
 						Payload: message,
 						Metadata: map[string]interface{}{
 							TOPIC_NAME: topicName,
@@ -106,7 +106,7 @@ func (m *mqttbroker) Close() error {
 
 type mqttChannel struct {
 	errors chan error
-	out    chan expando.Input
+	out    chan hub.Input
 }
 
 // Errors returns a channel of errors
@@ -114,6 +114,6 @@ func (m mqttChannel) Errors() chan error {
 	return m.errors
 }
 
-func (m mqttChannel) Out() chan expando.Input {
+func (m mqttChannel) Out() chan hub.Input {
 	return m.out
 }
