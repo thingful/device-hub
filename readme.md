@@ -1,7 +1,7 @@
-expando
--------
+device-hub
+-----------
 
-Takes output from an IOT device and expands it either transforming it into JSON format and/or adding in some metadata. 
+Takes output from one or many IOT devices and expands it either transforming it into JSON format and/or adding in some metadata. 
 The logic to transform the data is written in javascript.
 
 ```javascript
@@ -21,7 +21,7 @@ Install golang
 Get the code -
 
 ```
-go get "bitbucket.org/tsetsova/decode-prototype
+go get "github.com/thingful/device-hub
 
 ```
 
@@ -51,7 +51,7 @@ Run
 Pipe through from standard input -
 
 ```
- echo '{"value": "22", "deviceId": "23", "createdAt": "1488205809000"}' | ./cmd/expando/expando -script="$(cat ./cmd/expando/decode.js)" -in=std
+ echo '{"value": "22", "deviceId": "23", "createdAt": "1488205809000"}' | ./device-hub -script="$(cat ./decode.js)" -in=std
 {"@context":{"decode":"http://decode.xxx","m3-lite":"http://purl.org/iot/vocab/m3-lite#"},"@id":"decode:/23:1488205809000","@type":"m3-lite:AirPollutantSensor","createdAt":"1488205809000","deviceId":"23","domain":{"@type":"m3-lite:Environment"},"value":"22"}
 
 ```
@@ -65,7 +65,7 @@ docker-compose up
 ```
 
 ```
-./cmd/expando/expando -in=mqtt -script="$(cat ./cmd/expando/decode.js)"
+./device-hub -in=mqtt -script="$(cat ./decode.js)"
 ```
 
 Send a message via mqtt to 0.0.0.0:1883 e.g. using MQTTLens (https://chrome.google.com/webstore/detail/mqttlens/hemojaaeigabkbcookmlgmdigohjobjm?hl=en)
