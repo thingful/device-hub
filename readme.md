@@ -21,7 +21,7 @@ Install golang
 Get the code -
 
 ```
-go get "github.com/thingful/device-hub
+go get github.com/thingful/device-hub
 
 ```
 
