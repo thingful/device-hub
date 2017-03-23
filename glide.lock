@@ -1,6 +1,10 @@
 hash: 6a0b9137284ee4ed83739dfa320d687820a56acddd872566751ebdbc69ccec68
-updated: 2017-03-01T12:29:12.996769751Z
+updated: 2017-03-23T15:53:32.288091923Z
 imports:
+- name: github.com/eclipse/paho.mqtt.golang
+  version: 069f3a089e16f6aac97907342222cb8e13b92d85
+  subpackages:
+  - packets
 - name: github.com/robertkrimen/otto
   version: 6a77b7cbc37d0c39f7d5fa5766826e541df31fd5
   subpackages:
@@ -10,12 +14,10 @@ imports:
   - parser
   - registry
   - token
-- name: github.com/yosssi/gmq
-  version: 8b6f29886d48001ed1f76ee3f1471355b0b64b21
+- name: golang.org/x/net
+  version: 47990a1ba55743e6ef1affd3a14e5bac8553615d
   subpackages:
-  - mqtt
-  - mqtt/client
-  - mqtt/packet
+  - websocket
 - name: gopkg.in/sourcemap.v1
   version: 6e83acea0053641eff084973fee085f0c193c61a
   subpackages:
@@ -25,6 +27,10 @@ testImports:
   version: 6d212800a42e8ab5c146b8ace3490ee17e5225f9
   subpackages:
   - spew
+- name: github.com/ibrt/go-compose
+  version: dff8dce230fa959112fddf2b8fbfd6bf3d000ee0
+  subpackages:
+  - compose
 - name: github.com/pmezard/go-difflib
   version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
   subpackages:
