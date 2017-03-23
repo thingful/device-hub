@@ -70,7 +70,7 @@ func main() {
 		// TODO : pick up connection options from somewhere
 		opts := mqtt.NewClientOptions()
 		opts.AddBroker("tcp://0.0.0.0:1883")
-		opts.SetClientID("device-hub")
+		opts.SetClientID(fmt.Sprintf("device-hub-%s", SourceVersion))
 		opts.SetKeepAlive(2 * time.Second)
 		opts.SetPingTimeout(1 * time.Second)
 
