@@ -4,16 +4,16 @@ import (
 	"errors"
 	"sync"
 
+	mqtt "github.com/eclipse/paho.mqtt.golang"
+
 	hub "github.com/thingful/device-hub"
-	"github.com/yosssi/gmq/mqtt"
-	"github.com/yosssi/gmq/mqtt/client"
 )
 
 const (
 	TOPIC_NAME = "topic"
 )
 
-func FromMQTT(options *client.ConnectOptions, topic string) (*mqttbroker, error) {
+func FromMQTT(options *mqtt.ClientOptions, topic string) (*mqttbroker, error) {
 
 	if topic == "" {
 		return nil, errors.New("mqtt topic is empty string")
@@ -21,17 +21,16 @@ func FromMQTT(options *client.ConnectOptions, topic string) (*mqttbroker, error)
 
 	errors := make(chan error)
 	return &mqttbroker{
-		topic:   topic,
-		errors:  errors,
-		options: options,
+		topic:  topic,
+		errors: errors,
+		client: mqtt.NewClient(options),
 	}, nil
 }
 
 type mqttbroker struct {
 	topic           string
 	errors          chan error
-	client          *client.Client
-	options         *client.ConnectOptions
+	client          mqtt.Client
 	connection_lock sync.Mutex
 }
 
@@ -45,32 +44,27 @@ func (m *mqttbroker) Channel() (Channel, error) {
 
 	channel := make(chan hub.Input)
 
-	err = m.client.Subscribe(&client.SubscribeOptions{
-		SubReqs: []*client.SubReq{
-			&client.SubReq{
-
-				TopicFilter: []byte(m.topic),
-				QoS:         mqtt.QoS0,
-
-				Handler: func(topicName, message []byte) {
-
-					input := hub.Input{
-						Payload: message,
-						Metadata: map[string]interface{}{
-							TOPIC_NAME: topicName,
-						},
-					}
-
-					channel <- input
-				},
+	handler := func(client mqtt.Client, msg mqtt.Message) {
+		input := hub.Input{
+			Payload: msg.Payload(),
+			Metadata: map[string]interface{}{
+				TOPIC_NAME: msg.Topic(),
 			},
-		},
-	})
-	if err != nil {
-		return NoOpChannel{}, err
+		}
+
+		channel <- input
+
+	}
+	if token := m.client.Subscribe(m.topic, 0, handler); token.Wait() && token.Error() != nil {
+		return NoOpChannel{}, token.Error()
 	}
 
 	return mqttChannel{out: channel, errors: m.errors}, nil
+}
+
+func (m *mqttbroker) Client() (mqtt.Client, error) {
+	err := m.connect()
+	return m.client, err
 }
 
 func (m *mqttbroker) connect() error {
@@ -78,30 +72,22 @@ func (m *mqttbroker) connect() error {
 	m.connection_lock.Lock()
 	defer m.connection_lock.Unlock()
 
-	if m.client != nil {
+	if m.client.IsConnected() {
 		return nil
 	}
 
-	m.client = client.New(&client.Options{
-		ErrorHandler: func(err error) {
-			m.errors <- err
-		},
-	})
-
-	err := m.client.Connect(m.options)
-
-	if err != nil {
-		m.client = nil
-		return err
+	if token := m.client.Connect(); token.Wait() && token.Error() != nil {
+		return token.Error()
 	}
-
 	return nil
 }
 
 func (m *mqttbroker) Close() error {
-	err := m.client.Disconnect()
-	defer m.client.Terminate()
-	return err
+
+	if m.client != nil && m.client.IsConnected() {
+		m.client.Disconnect(1)
+	}
+	return nil
 }
 
 type mqttChannel struct {
