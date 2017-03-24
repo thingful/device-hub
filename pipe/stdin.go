@@ -9,37 +9,19 @@ import (
 	hub "github.com/thingful/device-hub"
 )
 
-// FromStdIn pipes data from stdin
-func FromStdIn(cancel context.CancelFunc) *stdin {
+func NewStdInChannel(cancel context.CancelFunc) (Channel, error) {
 
 	errors := make(chan error)
-
-	return &stdin{
-		cancel: cancel,
-		errors: errors,
-	}
-}
-
-type stdin struct {
-	cancel context.CancelFunc
-	errors chan error
-}
-
-// Channel returns a new channel to start processing messages
-func (s *stdin) Channel() (Channel, error) {
 	out := make(chan hub.Input)
 
-	channel := stdinChannel{cancel: s.cancel,
+	channel := &stdinChannel{
+		cancel: cancel,
+		errors: errors,
 		out:    out,
-		errors: s.errors}
+	}
 
 	go channel.next()
-
 	return channel, nil
-}
-
-func (s *stdin) Close() error {
-	return nil
 }
 
 type stdinChannel struct {

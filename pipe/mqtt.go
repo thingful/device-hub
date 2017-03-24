@@ -41,40 +41,19 @@ func DefaultClient(options *mqtt.ClientOptions) mqtt.Client {
 	}
 
 	client = mqtt.NewClient(options)
+
 	return client
 
 }
 
-func FromMQTT(client mqtt.Client, topic string) (*mqttbroker, error) {
+func NewMQTTChannel(client mqtt.Client, topic string) (Channel, error) {
 
 	if topic == "" {
 		return nil, errors.New("mqtt topic is empty string")
 	}
 
 	errors := make(chan error)
-	return &mqttbroker{
-		topic:  topic,
-		errors: errors,
-		client: client,
-	}, nil
-}
-
-type mqttbroker struct {
-	topic           string
-	errors          chan error
-	client          mqtt.Client
-	connection_lock sync.Mutex
-}
-
-func (m *mqttbroker) Channel() (Channel, error) {
-
-	err := m.connect()
-
-	if err != nil {
-		return NoOpChannel{}, err
-	}
-
-	channel := make(chan hub.Input)
+	out := make(chan hub.Input)
 
 	handler := func(client mqtt.Client, msg mqtt.Message) {
 		input := hub.Input{
@@ -84,35 +63,15 @@ func (m *mqttbroker) Channel() (Channel, error) {
 			},
 		}
 
-		channel <- input
+		out <- input
 
 	}
 
-	if token := m.client.Subscribe(m.topic, 0, handler); token.Wait() && token.Error() != nil {
+	if token := client.Subscribe(topic, 0, handler); token.Wait() && token.Error() != nil {
 		return NoOpChannel{}, token.Error()
 	}
 
-	return mqttChannel{out: channel, errors: m.errors}, nil
-}
-
-func (m *mqttbroker) connect() error {
-
-	m.connection_lock.Lock()
-	defer m.connection_lock.Unlock()
-
-	if m.client.IsConnected() {
-		return nil
-	}
-
-	if token := m.client.Connect(); token.Wait() && token.Error() != nil {
-		return token.Error()
-	}
-
-	return nil
-}
-
-func (m *mqttbroker) Close() error {
-	return nil
+	return mqttChannel{out: out, errors: errors}, nil
 }
 
 type mqttChannel struct {
@@ -120,7 +79,6 @@ type mqttChannel struct {
 	out    chan hub.Input
 }
 
-// Errors returns a channel of errors
 func (m mqttChannel) Errors() chan error {
 	return m.errors
 }

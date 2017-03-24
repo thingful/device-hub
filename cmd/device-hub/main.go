@@ -55,11 +55,16 @@ func main() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 
-	var broker pipe.Broker
+	var channel pipe.Channel
+	var err error
 
 	if in == "std" {
 
-		broker = pipe.FromStdIn(cancel)
+		channel, err = pipe.NewStdInChannel(cancel)
+
+		if err != nil {
+			exitWithError(err)
+		}
 
 	}
 	if in == "mqtt" {
@@ -69,26 +74,21 @@ func main() {
 		options := pipe.DefaultMQTTOptions("tcp://0.0.0.0:1883", clientName)
 		client := pipe.DefaultClient(options)
 
-		var err error
-		broker, err = pipe.FromMQTT(client, "#")
+		// TODO : set sensible wait time
+		if token := client.Connect(); token.Wait() && token.Error() != nil {
+			exitWithError(token.Error())
+		}
+
+		channel, err = pipe.NewMQTTChannel(client, "#")
 
 		if err != nil {
 			exitWithError(err)
 		}
 	}
 
-	if broker == nil {
-		exitWithError(errors.New("unable to create broker"))
+	if channel == nil {
+		exitWithError(errors.New("unable to create channel"))
 	}
-
-	defer broker.Close()
-	channel, err := broker.Channel()
-
-	if err != nil {
-		exitWithError(err)
-	}
-
-	errorChannel := channel.Errors()
 
 	for {
 
@@ -97,7 +97,7 @@ func main() {
 		case <-ctx.Done():
 			return
 
-		case err := <-errorChannel:
+		case err := <-channel.Errors():
 			log.Println(err)
 
 		case input := <-channel.Out():
