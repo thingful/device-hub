@@ -24,16 +24,12 @@ test_integration: ## run integration tests (SLOW)
 	mkdir -p $(ARTEFACT_DIR)
 	echo 'mode: atomic' > $(ARTEFACT_DIR)/cover-integration.out
 	touch $(ARTEFACT_DIR)/cover.tmp
-ifdef run
-	$(foreach package, $(PACKAGES), $(GO_INTEGRATION) -coverprofile=$(ARTEFACT_DIR)/cover.tmp $(package) -run $(run) && tail -n +1 $(ARTEFACT_DIR)/cover.tmp >> $(ARTEFACT_DIR)/cover-integration.out || exit;)
-else
-	$(foreach package, $(PACKAGES), $(GO_INTEGRATION) -coverprofile=$(ARTEFACT_DIR)/cover.tmp $(package) && tail -n +1 $(ARTEFACT_DIR)/cover.tmp >> $(ARTEFACT_DIR)/cover-integration.out || exit;)
-endif
-
+	$(foreach package, $(PACKAGES), $(GO_INTEGRATION) -coverprofile=$(ARTEFACT_DIR)/cover.tmp $(package) && tail -n +2 $(ARTEFACT_DIR)/cover.tmp >> $(ARTEFACT_DIR)/cover-integration.out || exit;)
 .PHONY: test_integration
 
 clean: ## clean up
 	rm -rf tmp/
+	rm -rf $(ARTEFACT_DIR)
 
 .PHONY: clean
 
