@@ -1,5 +1,5 @@
-hash: 6a0b9137284ee4ed83739dfa320d687820a56acddd872566751ebdbc69ccec68
-updated: 2017-03-23T15:53:32.288091923Z
+hash: c2000262a394f5141b2123a7aabdcff8d124b82030a998de669b922f918b2d03
+updated: 2017-03-24T12:48:15.182440378Z
 imports:
 - name: github.com/eclipse/paho.mqtt.golang
   version: 069f3a089e16f6aac97907342222cb8e13b92d85
@@ -27,8 +27,8 @@ testImports:
   version: 6d212800a42e8ab5c146b8ace3490ee17e5225f9
   subpackages:
   - spew
-- name: github.com/ibrt/go-compose
-  version: dff8dce230fa959112fddf2b8fbfd6bf3d000ee0
+- name: github.com/mdevilliers/go-compose
+  version: 24e783b9eebdcded8ac31bdab1de2d79d8788350
   subpackages:
   - compose
 - name: github.com/pmezard/go-difflib

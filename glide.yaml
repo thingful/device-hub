@@ -1,4 +1,4 @@
-package: bitbucket.org/tsetsova/decode-prototype/hub/expando
+package: github.com/thingful/device-hub
 import:
 - package: github.com/robertkrimen/otto
 testImport:
