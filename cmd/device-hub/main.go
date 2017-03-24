@@ -8,9 +8,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"time"
-
-	mqtt "github.com/eclipse/paho.mqtt.golang"
 
 	hub "github.com/thingful/device-hub"
 	"github.com/thingful/device-hub/engine"
@@ -68,14 +65,12 @@ func main() {
 	if in == "mqtt" {
 
 		// TODO : pick up connection options from somewhere
-		opts := mqtt.NewClientOptions()
-		opts.AddBroker("tcp://0.0.0.0:1883")
-		opts.SetClientID(fmt.Sprintf("device-hub-%s", SourceVersion))
-		opts.SetKeepAlive(2 * time.Second)
-		opts.SetPingTimeout(1 * time.Second)
+		clientName := fmt.Sprintf("device-hub-%s", SourceVersion)
+		options := pipe.DefaultMQTTOptions("tcp://0.0.0.0:1883", clientName)
+		client := pipe.DefaultClient(options)
 
 		var err error
-		broker, err = pipe.FromMQTT(opts, "#")
+		broker, err = pipe.FromMQTT(client, "#")
 
 		if err != nil {
 			exitWithError(err)
