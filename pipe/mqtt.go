@@ -3,6 +3,7 @@ package pipe
 import (
 	"errors"
 	"sync"
+	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 
@@ -13,7 +14,38 @@ const (
 	TOPIC_NAME = "topic"
 )
 
-func FromMQTT(options *mqtt.ClientOptions, topic string) (*mqttbroker, error) {
+func DefaultMQTTOptions(brokerAddress, clientID string) *mqtt.ClientOptions {
+
+	opts := mqtt.NewClientOptions()
+	opts.AddBroker(brokerAddress)
+	opts.SetClientID(clientID)
+
+	opts.SetKeepAlive(2 * time.Second)
+	opts.SetPingTimeout(1 * time.Second)
+
+	return opts
+}
+
+var (
+	client      mqtt.Client
+	client_lock sync.Mutex
+)
+
+func DefaultClient(options *mqtt.ClientOptions) mqtt.Client {
+
+	client_lock.Lock()
+	defer client_lock.Unlock()
+
+	if client != nil {
+		return client
+	}
+
+	client = mqtt.NewClient(options)
+	return client
+
+}
+
+func FromMQTT(client mqtt.Client, topic string) (*mqttbroker, error) {
 
 	if topic == "" {
 		return nil, errors.New("mqtt topic is empty string")
@@ -23,7 +55,7 @@ func FromMQTT(options *mqtt.ClientOptions, topic string) (*mqttbroker, error) {
 	return &mqttbroker{
 		topic:  topic,
 		errors: errors,
-		client: mqtt.NewClient(options),
+		client: client,
 	}, nil
 }
 
@@ -55,16 +87,12 @@ func (m *mqttbroker) Channel() (Channel, error) {
 		channel <- input
 
 	}
+
 	if token := m.client.Subscribe(m.topic, 0, handler); token.Wait() && token.Error() != nil {
 		return NoOpChannel{}, token.Error()
 	}
 
 	return mqttChannel{out: channel, errors: m.errors}, nil
-}
-
-func (m *mqttbroker) Client() (mqtt.Client, error) {
-	err := m.connect()
-	return m.client, err
 }
 
 func (m *mqttbroker) connect() error {
@@ -79,14 +107,11 @@ func (m *mqttbroker) connect() error {
 	if token := m.client.Connect(); token.Wait() && token.Error() != nil {
 		return token.Error()
 	}
+
 	return nil
 }
 
 func (m *mqttbroker) Close() error {
-
-	if m.client != nil && m.client.IsConnected() {
-		m.client.Disconnect(1)
-	}
 	return nil
 }
 
