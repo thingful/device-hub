@@ -9,35 +9,25 @@ import (
 	hub "github.com/thingful/device-hub"
 )
 
-func NewStdInChannel(cancel context.CancelFunc) (Channel, error) {
+func NewStdInChannel(cancel context.CancelFunc) *stdinChannel {
 
 	errors := make(chan error)
 	out := make(chan hub.Input)
 
 	channel := &stdinChannel{
-		cancel: cancel,
-		errors: errors,
-		out:    out,
+		defaultChannel: defaultChannel{
+			errors: errors,
+			out:    out,
+		}, cancel: cancel,
 	}
 
 	go channel.next()
-	return channel, nil
+	return channel
 }
 
 type stdinChannel struct {
-	errors chan error
-	out    chan hub.Input
+	defaultChannel
 	cancel context.CancelFunc
-}
-
-// Errors returns a channel of errors
-func (s stdinChannel) Errors() chan error {
-	return s.errors
-}
-
-// Out returns a channel of expando.Input
-func (s stdinChannel) Out() chan hub.Input {
-	return s.out
 }
 
 func (s stdinChannel) next() {

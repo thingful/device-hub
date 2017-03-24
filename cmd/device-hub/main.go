@@ -60,11 +60,7 @@ func main() {
 
 	if in == "std" {
 
-		channel, err = pipe.NewStdInChannel(cancel)
-
-		if err != nil {
-			exitWithError(err)
-		}
+		channel = pipe.NewStdInChannel(cancel)
 
 	}
 	if in == "mqtt" {
@@ -87,6 +83,16 @@ func main() {
 		if err != nil {
 			exitWithError(err)
 		}
+	}
+
+	if in == "http" {
+
+		router := pipe.DefaultRouter()
+
+		channel = pipe.NewHTTPChannel("/xxx", router)
+
+		pipe.StartDefaultHTTPListener(ctx, router, ":8085")
+
 	}
 
 	if channel == nil {

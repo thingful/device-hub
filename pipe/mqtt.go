@@ -71,18 +71,5 @@ func NewMQTTChannel(client mqtt.Client, topic string) (Channel, error) {
 		return NoOpChannel{}, token.Error()
 	}
 
-	return mqttChannel{out: out, errors: errors}, nil
-}
-
-type mqttChannel struct {
-	errors chan error
-	out    chan hub.Input
-}
-
-func (m mqttChannel) Errors() chan error {
-	return m.errors
-}
-
-func (m mqttChannel) Out() chan hub.Input {
-	return m.out
+	return defaultChannel{out: out, errors: errors}, nil
 }
