@@ -79,6 +79,9 @@ func main() {
 			exitWithError(token.Error())
 		}
 
+		// TODO : set a sensible timeout
+		defer client.Disconnect(1000)
+
 		channel, err = pipe.NewMQTTChannel(client, "#")
 
 		if err != nil {
