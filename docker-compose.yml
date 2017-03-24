@@ -1,7 +1,7 @@
 version: '2'
 services:
   mqtt:
-    image: erlio/docker-vernemq
+    image: erlio/docker-vernemq:0.15.3
     ports:
       - "1883:1883"
     environment:
