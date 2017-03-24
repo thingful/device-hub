@@ -5,19 +5,47 @@ PACKAGES := $(shell go list ./... | grep -v /vendor/ )
 
 EXE_NAME := 'device-hub'
 
+GO_TEST = go test -covermode=atomic
+GO_INTEGRATION = $(GO_TEST) -bench=. -v --tags=integration
+GO_COVER = go tool cover
+GO_BENCH = go test -bench=.
+ARTEFACT_DIR = coverage
+
 all: pi linux darwin ## build executables for the various environments
 
 .PHONY: all
 
-test: ## run the tests
-	go test -v $(PACKAGES)
+test: ## run tests
+	$(GO_TEST) $(PACKAGES)
 
 .PHONY: test
+
+test_integration: ## run integration tests (SLOW)
+	mkdir -p $(ARTEFACT_DIR)
+	echo 'mode: atomic' > $(ARTEFACT_DIR)/cover-integration.out
+	touch $(ARTEFACT_DIR)/cover.tmp
+ifdef run
+	$(foreach package, $(PACKAGES), $(GO_INTEGRATION) -coverprofile=$(ARTEFACT_DIR)/cover.tmp $(package) -run $(run) && tail -n +1 $(ARTEFACT_DIR)/cover.tmp >> $(ARTEFACT_DIR)/cover-integration.out || exit;)
+else
+	$(foreach package, $(PACKAGES), $(GO_INTEGRATION) -coverprofile=$(ARTEFACT_DIR)/cover.tmp $(package) && tail -n +1 $(ARTEFACT_DIR)/cover.tmp >> $(ARTEFACT_DIR)/cover-integration.out || exit;)
+endif
+
+.PHONY: test_integration
 
 clean: ## clean up
 	rm -rf tmp/
 
 .PHONY: clean
+
+bench: ## run benchmark tests
+	$(GO_BENCH) $(PACKAGES)
+
+.PHONY: bench
+
+coverage: test_integration ## generate and display coverage report
+	$(GO_COVER) -func=$(ARTEFACT_DIR)/cover-integration.out
+
+.PHONY: test_integration 
 
 pi : tmp/build/$(EXE_NAME)-linux-arm
 darwin: tmp/build/$(EXE_NAME)-darwin-amd64

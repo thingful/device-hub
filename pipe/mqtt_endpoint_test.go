@@ -1,6 +1,6 @@
 // +build integration
 
-package integration
+package pipe
 
 import (
 	"fmt"
@@ -9,7 +9,6 @@ import (
 	// TODO : move import to upstream project
 	"github.com/mdevilliers/go-compose/compose"
 	"github.com/stretchr/testify/assert"
-	"github.com/thingful/device-hub/pipe"
 )
 
 func TestMQTT_MultipleEndpoints(t *testing.T) {
@@ -30,8 +29,8 @@ services:
 
 	mqttAddress := fmt.Sprintf("tcp://%s:%d", compose.MustInferDockerHost(), c.Containers["mqtt"].MustGetFirstPublicPort(1883, "tcp"))
 
-	options := pipe.DefaultMQTTOptions(mqttAddress, "device-hub")
-	client := pipe.DefaultClient(options)
+	options := DefaultMQTTOptions(mqttAddress, "device-hub")
+	client := DefaultClient(options)
 
 	compose.MustConnectWithDefaults(func() error {
 		if token := client.Connect(); token.Wait() && token.Error() != nil {
@@ -43,10 +42,10 @@ services:
 
 	defer client.Disconnect(1)
 
-	channel1, err := pipe.NewMQTTChannel(client, "/a")
+	channel1, err := NewMQTTChannel(client, "/a")
 	assert.Nil(t, err)
 
-	channel2, err := pipe.NewMQTTChannel(client, "/b")
+	channel2, err := NewMQTTChannel(client, "/b")
 	assert.Nil(t, err)
 
 	client.Publish("/a", 0, false, "hello")
