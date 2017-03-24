@@ -58,6 +58,8 @@ func main() {
 	var channel pipe.Channel
 	var err error
 
+	router := pipe.DefaultRouter()
+
 	if in == "std" {
 
 		channel = pipe.NewStdInChannel(cancel)
@@ -78,7 +80,7 @@ func main() {
 		// TODO : set a sensible timeout
 		defer client.Disconnect(1000)
 
-		channel, err = pipe.NewMQTTChannel(client, "#")
+		channel, err = pipe.NewMQTTChannel("/xxx", client)
 
 		if err != nil {
 			exitWithError(err)
@@ -86,8 +88,6 @@ func main() {
 	}
 
 	if in == "http" {
-
-		router := pipe.DefaultRouter()
 
 		channel = pipe.NewHTTPChannel("/xxx", router)
 

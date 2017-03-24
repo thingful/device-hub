@@ -2,6 +2,7 @@ package pipe
 
 import (
 	"errors"
+	"strings"
 	"sync"
 	"time"
 
@@ -46,10 +47,14 @@ func DefaultClient(options *mqtt.ClientOptions) mqtt.Client {
 
 }
 
-func NewMQTTChannel(client mqtt.Client, topic string) (Channel, error) {
+func NewMQTTChannel(topic string, client mqtt.Client) (Channel, error) {
 
 	if topic == "" {
 		return nil, errors.New("mqtt topic is empty string")
+	}
+
+	if strings.Contains(topic, "#") {
+		return nil, errors.New("mqtt wildcard (#) is not allowed")
 	}
 
 	errors := make(chan error)

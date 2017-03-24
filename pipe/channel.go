@@ -8,6 +8,7 @@ type Channel interface {
 	Out() chan hub.Input
 }
 
+// defaultChannel is an implementation of Channel
 type defaultChannel struct {
 	errors chan error
 	out    chan hub.Input
