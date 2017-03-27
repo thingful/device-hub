@@ -90,7 +90,6 @@ func main() {
 	if in == "http" {
 
 		channel = pipe.NewHTTPChannel("/xxx", router)
-
 		pipe.StartDefaultHTTPListener(ctx, router, ":8085")
 
 	}
@@ -123,7 +122,11 @@ func main() {
 				exitWithError(err)
 			}
 
-			fmt.Println(string(bytes))
+			_, err = pipe.WriteToStdOut(bytes)
+
+			if err != nil {
+				log.Println(err)
+			}
 		}
 	}
 }
