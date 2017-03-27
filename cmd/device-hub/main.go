@@ -70,7 +70,7 @@ func main() {
 		// TODO : pick up connection options from somewhere
 		clientName := fmt.Sprintf("device-hub-%s", SourceVersion)
 		options := pipe.DefaultMQTTOptions("tcp://0.0.0.0:1883", clientName)
-		client := pipe.DefaultClient(options)
+		client := pipe.DefaultMQTTClient(options)
 
 		// TODO : set sensible wait time
 		if token := client.Connect(); token.Wait() && token.Error() != nil {

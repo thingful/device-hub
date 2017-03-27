@@ -22,7 +22,8 @@ func DefaultMQTTOptions(brokerAddress, clientID string) *mqtt.ClientOptions {
 	opts.SetClientID(clientID)
 
 	opts.SetKeepAlive(2 * time.Second)
-	opts.SetPingTimeout(1 * time.Second)
+	opts.SetPingTimeout(10 * time.Second)
+	opts.SetAutoReconnect(true)
 
 	return opts
 }
@@ -32,7 +33,7 @@ var (
 	client_lock sync.Mutex
 )
 
-func DefaultClient(options *mqtt.ClientOptions) mqtt.Client {
+func DefaultMQTTClient(options *mqtt.ClientOptions) mqtt.Client {
 
 	client_lock.Lock()
 	defer client_lock.Unlock()

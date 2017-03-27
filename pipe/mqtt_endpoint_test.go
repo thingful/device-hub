@@ -30,7 +30,7 @@ services:
 	mqttAddress := fmt.Sprintf("tcp://%s:%d", compose.MustInferDockerHost(), c.Containers["mqtt"].MustGetFirstPublicPort(1883, "tcp"))
 
 	options := DefaultMQTTOptions(mqttAddress, "device-hub")
-	client := DefaultClient(options)
+	client := DefaultMQTTClient(options)
 
 	compose.MustConnectWithDefaults(func() error {
 		if token := client.Connect(); token.Wait() && token.Error() != nil {
