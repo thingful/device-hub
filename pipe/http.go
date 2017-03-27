@@ -33,6 +33,11 @@ func NewHTTPChannel(uri string, router *router) Channel {
 func rootHandler(router *router) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
+		if r.Method != http.MethodPost {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
 		path := r.URL.Path
 
 		ok, channel := router.Match(path)

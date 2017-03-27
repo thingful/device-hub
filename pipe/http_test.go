@@ -24,6 +24,21 @@ func TestNotConfiguredURIGet404(t *testing.T) {
 
 }
 
+func TestNonPOSTRequestsGet400(t *testing.T) {
+	t.Parallel()
+
+	router := DefaultRouter()
+
+	req, _ := http.NewRequest("GET", "/abc", nil)
+
+	w := httptest.NewRecorder()
+	handler := http.HandlerFunc(rootHandler(router))
+
+	handler.ServeHTTP(w, req)
+	assert.Equal(t, w.Code, http.StatusBadRequest)
+
+}
+
 func TestConfiguredURINoContentGet400(t *testing.T) {
 	t.Parallel()
 
