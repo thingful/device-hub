@@ -3,15 +3,15 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"flag"
 	"fmt"
 	"log"
 	"os"
 
-	hub "github.com/thingful/device-hub"
 	"github.com/thingful/device-hub/engine"
 	"github.com/thingful/device-hub/pipe"
+	"github.com/thingful/device-hub/profile"
+	"github.com/thingful/device-hub/utils"
 )
 
 var (
@@ -20,15 +20,11 @@ var (
 
 func main() {
 
-	var scriptContents string
-	var in string
-	var out string
 	var showVersion bool
+	var configurationPath string
 
-	flag.StringVar(&in, "in", "", "read from specified input. Known values are 'std' or 'mqtt'.")
-	flag.StringVar(&out, "out", "std", "output to specified stream.")
-	flag.StringVar(&scriptContents, "script", "function decode( input ){ return input }", "js to transform input.")
-	flag.BoolVar(&showVersion, "version", false, "show version")
+	flag.StringVar(&configurationPath, "config", "./config.json", "path to a json configuration file.")
+	flag.BoolVar(&showVersion, "version", false, "show version.")
 
 	flag.Parse()
 
@@ -37,66 +33,62 @@ func main() {
 		return
 	}
 
-	if in == "" {
-		exitWithError(errors.New("must specify an -in flag"))
-	}
-	if out == "" {
-		exitWithError(errors.New("must specify an -out flag"))
+	// TODO : ensure ths path is constrained to a few well known paths
+	if !utils.FileExists(configurationPath) {
+		exitWithError(fmt.Errorf("configuration at %s doesn't exist", configurationPath))
 	}
 
-	scripter := engine.New()
+	configuration, err := profile.LoadProfile(configurationPath)
 
-	script := hub.Script{
-		Main:     "decode",
-		Runtime:  hub.Javascript,
-		Input:    hub.JSON,
-		Contents: scriptContents,
+	if err != nil {
+		exitWithError(err)
 	}
-
 	ctx, cancel := context.WithCancel(context.Background())
 
-	var channel pipe.Channel
-	var err error
+	for _, pipe := range configuration.Pipes {
 
-	router := pipe.DefaultRouter()
+		found, listenerConf := configuration.Listeners.FindByUID(pipe.Listener)
 
-	if in == "std" {
-
-		channel = pipe.NewStdInChannel(cancel)
-
-	}
-	if in == "mqtt" {
-
-		// TODO : pick up connection options from somewhere
-		clientName := fmt.Sprintf("device-hub-%s", SourceVersion)
-		options := pipe.DefaultMQTTOptions("tcp://0.0.0.0:1883", clientName)
-		client := pipe.DefaultMQTTClient(options)
-
-		// TODO : set sensible wait time
-		if token := client.Connect(); token.Wait() && token.Error() != nil {
-			exitWithError(token.Error())
+		if !found {
+			exitWithError(fmt.Errorf("listener with UID %s not found", pipe.Listener))
 		}
 
-		// TODO : set a sensible timeout
-		defer client.Disconnect(1000)
+		// TDDO : stop hardcoding the endpoint in
+		//found, endpointConf := configuration.Endpoints.FindByUID(pipe.Endpoint)
 
-		channel, err = pipe.NewMQTTChannel("/xxx", client)
+		//if !found {
+		//	exitWithError(fmt.Errorf("endpoint with UID %s not found", pipe.Endpoint))
+		//}
+
+		found, profile := configuration.Profiles.FindByUID(pipe.Profile)
+
+		if !found {
+			exitWithError(fmt.Errorf("profile with UID %s not found", pipe.Profile))
+		}
+
+		listener, err := StartListener(listenerConf, cancel)
 
 		if err != nil {
 			exitWithError(err)
 		}
+
+		channel, err := listener.NewChannel(pipe.Uri)
+
+		if err != nil {
+			exitWithError(err)
+		}
+
+		go StartPipe(ctx, listener, channel, profile)
+
 	}
 
-	if in == "http" {
+	<-ctx.Done()
 
-		channel = pipe.NewHTTPChannel("/xxx", router)
-		pipe.StartDefaultHTTPListener(ctx, router, ":8085")
+}
 
-	}
+func StartPipe(ctx context.Context, listener pipe.Listener, channel pipe.Channel, pro profile.Profile) {
 
-	if channel == nil {
-		exitWithError(errors.New("unable to create channel"))
-	}
+	scripter := engine.New()
 
 	for {
 
@@ -110,7 +102,7 @@ func main() {
 
 		case input := <-channel.Out():
 
-			output, err := scripter.Execute(script, input)
+			output, err := scripter.Execute(pro.Script, input)
 
 			if err != nil {
 				log.Println(err)
@@ -129,6 +121,36 @@ func main() {
 			}
 		}
 	}
+
+}
+
+func StartListener(endpoint profile.Endpoint, cancel context.CancelFunc) (pipe.Listener, error) {
+
+	if endpoint.Type == "std" {
+
+		return pipe.NewStdInListener(cancel)
+	}
+	if endpoint.Type == "mqtt" {
+
+		// TODO : pick up connection options from somewhere
+		clientName := fmt.Sprintf("device-hub-%s", SourceVersion)
+		options := pipe.DefaultMQTTOptions("tcp://0.0.0.0:1883", clientName)
+		client := pipe.DefaultMQTTClient(options)
+
+		// TODO : set sensible wait time
+		if token := client.Connect(); token.Wait() && token.Error() != nil {
+			exitWithError(token.Error())
+		}
+
+		return pipe.NewMQTTListener(endpoint.Configuration, client)
+	}
+
+	if endpoint.Type == "http" {
+		return pipe.NewHTTPListener(endpoint.Configuration)
+	}
+
+	return nil, fmt.Errorf("listener of type %s not found", endpoint.Type)
+
 }
 
 func exitWithError(err error) {

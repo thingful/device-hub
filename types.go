@@ -2,10 +2,10 @@ package expando
 
 type InputType string
 
-type Runtime int
+type Runtime string
 
 const (
-	Javascript Runtime = 1
+	Javascript Runtime = "javascript"
 
 	Raw  InputType = "raw"
 	CSV  InputType = "csv"
