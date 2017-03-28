@@ -55,14 +55,6 @@ func (p Profiles) FindByUID(uid UID) (bool, Profile) {
 	return false, Profile{}
 }
 
-/*type Script struct {
-	Name     string        `json:"name"`
-	Main     string        `json:"main"`
-	Runtime  hub.Runtime   `json:"runtime"`
-	Input    hub.InputType `json:"input"`
-	Contents string        `json:"contents"`
-}:w
-*/
 type Pipe struct {
 	Uri      string `json:"uri"`
 	Profile  UID    `json:"profile"`

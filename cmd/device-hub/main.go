@@ -133,7 +133,6 @@ func StartListener(endpoint profile.Endpoint, cancel context.CancelFunc) (pipe.L
 	}
 	if endpoint.Type == "mqtt" {
 
-		// TODO : pick up connection options from somewhere
 		clientName := fmt.Sprintf("device-hub-%s", SourceVersion)
 		options := pipe.DefaultMQTTOptions("tcp://0.0.0.0:1883", clientName)
 		client := pipe.DefaultMQTTClient(options)
