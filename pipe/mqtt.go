@@ -7,7 +7,6 @@ import (
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
-
 	hub "github.com/thingful/device-hub"
 )
 
@@ -48,7 +47,7 @@ func DefaultMQTTClient(options *mqtt.ClientOptions) mqtt.Client {
 
 }
 
-func NewMQTTListener(config map[string]interface{}, client mqtt.Client) (*mqttlistener, error) {
+func NewMQTTListener(client mqtt.Client) (*mqttlistener, error) {
 
 	if !client.IsConnected() {
 		return nil, errors.New("mqtt client is not connected")

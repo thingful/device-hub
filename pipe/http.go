@@ -1,7 +1,6 @@
 package pipe
 
 import (
-	"errors"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -9,17 +8,11 @@ import (
 	hub "github.com/thingful/device-hub"
 )
 
-func NewHTTPListener(config map[string]interface{}) (*httpListener, error) {
-
-	binding, found := config["HTTPBindingAddress"]
-
-	if !found {
-		return nil, errors.New("unable to find binding in configuration")
-	}
+func NewHTTPListener(binding string) (*httpListener, error) {
 
 	router := DefaultRouter()
 
-	startDefaultHTTPListener(router, binding.(string))
+	startDefaultHTTPListener(router, binding)
 
 	return &httpListener{
 		router: router,

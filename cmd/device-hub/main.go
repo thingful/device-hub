@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -142,11 +143,18 @@ func StartListener(endpoint profile.Endpoint, cancel context.CancelFunc) (pipe.L
 			exitWithError(token.Error())
 		}
 
-		return pipe.NewMQTTListener(endpoint.Configuration, client)
+		return pipe.NewMQTTListener(client)
 	}
 
 	if endpoint.Type == "http" {
-		return pipe.NewHTTPListener(endpoint.Configuration)
+
+		binding, found := endpoint.Configuration["HTTPBindingAddress"]
+
+		if !found {
+			return nil, errors.New("unable to find binding in configuration")
+		}
+
+		return pipe.NewHTTPListener(binding.(string))
 	}
 
 	return nil, fmt.Errorf("listener of type %s not found", endpoint.Type)
