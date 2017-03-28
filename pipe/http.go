@@ -1,7 +1,7 @@
 package pipe
 
 import (
-	"context"
+	"errors"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -9,25 +9,51 @@ import (
 	hub "github.com/thingful/device-hub"
 )
 
-func StartDefaultHTTPListener(ctx context.Context, router *router, binding string) {
+func NewHTTPListener(config map[string]interface{}) (*httpListener, error) {
 
-	http.HandleFunc("/", rootHandler(router))
+	binding, found := config["HTTPBindingAddress"]
 
-	go func() {
-		log.Fatal(http.ListenAndServe(binding, nil))
+	if !found {
+		return nil, errors.New("unable to find binding in configuration")
+	}
 
-	}()
+	router := DefaultRouter()
+
+	startDefaultHTTPListener(router, binding.(string))
+
+	return &httpListener{
+		router: router,
+	}, nil
 }
 
-func NewHTTPChannel(uri string, router *router) Channel {
+type httpListener struct {
+	router *router
+}
+
+func (h *httpListener) NewChannel(uri string) (Channel, error) {
 
 	errors := make(chan error)
 	out := make(chan hub.Input)
 
 	channel := defaultChannel{out: out, errors: errors}
 
-	router.register(uri, channel)
-	return channel
+	h.router.register(uri, channel)
+	return channel, nil
+}
+
+func (h *httpListener) Close() error {
+	return nil
+}
+
+func startDefaultHTTPListener(router *router, binding string) {
+
+	http.HandleFunc("/", rootHandler(router))
+
+	// TODO : shutdown nicely
+	go func() {
+		log.Fatal(http.ListenAndServe(binding, nil))
+
+	}()
 }
 
 func rootHandler(router *router) http.HandlerFunc {

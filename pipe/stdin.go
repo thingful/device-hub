@@ -9,7 +9,17 @@ import (
 	hub "github.com/thingful/device-hub"
 )
 
-func NewStdInChannel(cancel context.CancelFunc) *stdinChannel {
+func NewStdInListener(cancel context.CancelFunc) (stdinListener, error) {
+	return stdinListener{
+		cancel: cancel,
+	}, nil
+}
+
+type stdinListener struct {
+	cancel context.CancelFunc
+}
+
+func (s stdinListener) NewChannel(_ string) (Channel, error) {
 
 	errors := make(chan error)
 	out := make(chan hub.Input)
@@ -18,11 +28,15 @@ func NewStdInChannel(cancel context.CancelFunc) *stdinChannel {
 		defaultChannel: defaultChannel{
 			errors: errors,
 			out:    out,
-		}, cancel: cancel,
+		}, cancel: s.cancel,
 	}
 
 	go channel.next()
-	return channel
+	return channel, nil
+}
+
+func (stdinListener) Close() error {
+	return nil
 }
 
 type stdinChannel struct {

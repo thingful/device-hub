@@ -2,6 +2,11 @@ package pipe
 
 import hub "github.com/thingful/device-hub"
 
+type Listener interface {
+	NewChannel(string) (Channel, error)
+	Close() error
+}
+
 // Channel exposes errors and hub.Input channels
 type Channel interface {
 	Errors() chan error

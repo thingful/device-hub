@@ -48,7 +48,22 @@ func DefaultMQTTClient(options *mqtt.ClientOptions) mqtt.Client {
 
 }
 
-func NewMQTTChannel(topic string, client mqtt.Client) (Channel, error) {
+func NewMQTTListener(config map[string]interface{}, client mqtt.Client) (*mqttlistener, error) {
+
+	if !client.IsConnected() {
+		return nil, errors.New("mqtt client is not connected")
+	}
+
+	return &mqttlistener{
+		client: client,
+	}, nil
+}
+
+type mqttlistener struct {
+	client mqtt.Client
+}
+
+func (m *mqttlistener) NewChannel(topic string) (Channel, error) {
 
 	if topic == "" {
 		return nil, errors.New("mqtt topic is empty string")
@@ -73,9 +88,15 @@ func NewMQTTChannel(topic string, client mqtt.Client) (Channel, error) {
 
 	}
 
-	if token := client.Subscribe(topic, 0, handler); token.Wait() && token.Error() != nil {
+	if token := m.client.Subscribe(topic, 0, handler); token.Wait() && token.Error() != nil {
 		return NoOpChannel{}, token.Error()
 	}
 
 	return defaultChannel{out: out, errors: errors}, nil
+}
+
+func (m *mqttlistener) Close() error {
+	// TODO : set a sensible timeout
+	m.client.Disconnect(1000)
+	return nil
 }
