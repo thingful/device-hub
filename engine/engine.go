@@ -23,7 +23,7 @@ func New() engine {
 
 type engine struct{}
 
-func (e engine) Execute(script Script, input hub.Message) (interface{}, error) {
+func (e engine) Execute(script Script, input hub.Message) (hub.Message, error) {
 
 	var output otto.Value
 	var err error
@@ -41,7 +41,7 @@ func (e engine) Execute(script Script, input hub.Message) (interface{}, error) {
 		env, err := prepareCSV(input)
 
 		if err != nil {
-			return nil, err
+			return input, err
 		}
 
 		main := fmt.Sprintf("%s (__header, __lines);", script.Main)
@@ -61,16 +61,18 @@ func (e engine) Execute(script Script, input hub.Message) (interface{}, error) {
 	}
 
 	if err != nil {
-		return nil, err
+		return input, err
 	}
 
 	gov, err := output.Export()
 
 	if err != nil {
-		return nil, err
+		return input, err
 	}
 
-	return gov, nil
+	input.Output = gov
+
+	return input, nil
 }
 
 // run javascript engine in-process

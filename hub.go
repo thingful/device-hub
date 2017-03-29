@@ -14,6 +14,7 @@ type Channel interface {
 
 // Message contains a Payload and any Metadata collected
 type Message struct {
-	Payload  []byte
-	Metadata map[string]interface{}
+	Payload  []byte                 `json:"payload"`
+	Output   interface{}            `json:"output"`
+	Metadata map[string]interface{} `json:"metadata"`
 }

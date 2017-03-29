@@ -9,10 +9,6 @@ import (
 	hub "github.com/thingful/device-hub"
 )
 
-const (
-	TOPIC_NAME = "topic"
-)
-
 func DefaultMQTTOptions(brokerAddress, clientID string) *mqtt.ClientOptions {
 
 	opts := mqtt.NewClientOptions()
@@ -59,13 +55,7 @@ func (m *mqttlistener) NewChannel(topic string) (hub.Channel, error) {
 	out := make(chan hub.Message)
 
 	handler := func(client mqtt.Client, msg mqtt.Message) {
-		input := hub.Message{
-			Payload: msg.Payload(),
-			Metadata: map[string]interface{}{
-				TOPIC_NAME: msg.Topic(),
-			},
-		}
-
+		input := newHubMessage(msg.Payload(), "MQTT", msg.Topic())
 		out <- input
 
 	}

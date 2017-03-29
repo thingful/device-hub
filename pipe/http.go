@@ -79,9 +79,7 @@ func rootHandler(router *router) http.HandlerFunc {
 			return
 		}
 
-		input := hub.Message{
-			Payload: body,
-		}
+		input := newHubMessage(body, "HTTP", r.URL.Path)
 
 		channel.Out() <- input
 		w.WriteHeader(http.StatusAccepted)
