@@ -12,7 +12,7 @@ const (
 	PIPE_TIMESTAMP_KEY = "pipe:received_at"
 	PIPE_PROTOCOL_KEY  = "pipe:protocol"
 
-	PROFILE_UID_KEY     = "profile:uid"
+	PROFILE_NAME_KEY    = "profile:name"
 	PROFILE_VERSION_KEY = "profile:version"
 
 	RUNTIME_VERSION_KEY = "runtime:version"

@@ -108,7 +108,7 @@ func StartPipe(ctx context.Context, listener hub.Listener, channel hub.Channel, 
 				log.Println(err)
 			}
 
-			output.Metadata[hub.PROFILE_UID_KEY] = profile.UID
+			output.Metadata[hub.PROFILE_NAME_KEY] = profile.Name
 			output.Metadata[hub.PROFILE_VERSION_KEY] = profile.Version
 			output.Metadata[hub.RUNTIME_VERSION_KEY] = SourceVersion
 
