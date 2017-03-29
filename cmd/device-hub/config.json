@@ -6,6 +6,13 @@
       "configuration": {
         "HTTPBindingAddress": ":8085"
       }
+    },
+    {
+      "type": "mqtt",
+      "uid": "mqtt-one",
+      "configuration": {
+        "MQTTBrokerAddress": "tcp://0.0.0.0:1883"
+      }
     }
   ],
   "endpoints": [
@@ -34,6 +41,12 @@
       "uri": "/a",
       "profile": "xxx",
       "listener": "http-one",
+      "endpoint": "stdout-one"
+    },
+    {
+      "uri": "/b",
+      "profile": "xxx",
+      "listener": "mqtt-one",
       "endpoint": "stdout-one"
     }
   ]

@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -134,7 +133,10 @@ func StartListener(endpoint profile.Endpoint, cancel context.CancelFunc) (pipe.L
 	if endpoint.Type == "mqtt" {
 
 		clientName := fmt.Sprintf("device-hub-%s", SourceVersion)
-		options := pipe.DefaultMQTTOptions("tcp://0.0.0.0:1883", clientName)
+
+		brokerAddress := endpoint.Configuration.MString("MQTTBrokerAddress")
+
+		options := pipe.DefaultMQTTOptions(brokerAddress, clientName)
 		client := pipe.DefaultMQTTClient(options)
 
 		// TODO : set sensible wait time
@@ -147,13 +149,8 @@ func StartListener(endpoint profile.Endpoint, cancel context.CancelFunc) (pipe.L
 
 	if endpoint.Type == "http" {
 
-		binding, found := endpoint.Configuration["HTTPBindingAddress"]
-
-		if !found {
-			return nil, errors.New("unable to find binding in configuration")
-		}
-
-		return pipe.NewHTTPListener(binding.(string))
+		binding := endpoint.Configuration.MString("HTTPBindingAddress")
+		return pipe.NewHTTPListener(binding)
 	}
 
 	return nil, fmt.Errorf("listener of type %s not found", endpoint.Type)
