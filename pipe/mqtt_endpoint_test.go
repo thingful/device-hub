@@ -42,10 +42,13 @@ services:
 
 	defer client.Disconnect(1)
 
-	channel1, err := NewMQTTChannel("/a", client)
+	l, err := NewMQTTListener(client)
 	assert.Nil(t, err)
 
-	channel2, err := NewMQTTChannel("/b", client)
+	channel1, err := l.NewChannel("/a")
+	assert.Nil(t, err)
+
+	channel2, err := l.NewChannel("/b")
 	assert.Nil(t, err)
 
 	client.Publish("/a", 0, false, "hello")

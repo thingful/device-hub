@@ -1,6 +1,6 @@
 package hub
 
-// Listener encapsultates various transports e.g. MQTT, HTTP creating a stream of Inputs
+// Listener encapsulates various transports e.g. MQTT, HTTP creating a stream of Inputs
 type Listener interface {
 	NewChannel(string) (Channel, error)
 	Close() error

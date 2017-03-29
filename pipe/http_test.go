@@ -42,14 +42,14 @@ func TestNonPOSTRequestsGet400(t *testing.T) {
 func TestConfiguredURINoContentGet400(t *testing.T) {
 	t.Parallel()
 
-	router := DefaultRouter()
+	l := &httpListener{router: DefaultRouter()}
 
-	NewHTTPChannel("/abc", router)
+	l.NewChannel("/abc")
 
 	req, _ := http.NewRequest("POST", "/abc", nil)
 
 	w := httptest.NewRecorder()
-	handler := http.HandlerFunc(rootHandler(router))
+	handler := http.HandlerFunc(rootHandler(l.router))
 
 	handler.ServeHTTP(w, req)
 	assert.Equal(t, w.Code, http.StatusBadRequest)
@@ -59,9 +59,11 @@ func TestConfiguredURINoContentGet400(t *testing.T) {
 func TestConfiguredURIContentGet202(t *testing.T) {
 	t.Parallel()
 
-	router := DefaultRouter()
+	l := &httpListener{router: DefaultRouter()}
 
-	channel := NewHTTPChannel("/abc", router)
+	channel, err := l.NewChannel("/abc")
+
+	assert.Nil(t, err)
 
 	// ensure the 'out' channel is emptied
 	go func() { <-channel.Out() }()
@@ -71,7 +73,7 @@ func TestConfiguredURIContentGet202(t *testing.T) {
 	req, _ := http.NewRequest("POST", "/abc", strings.NewReader(request))
 
 	w := httptest.NewRecorder()
-	handler := http.HandlerFunc(rootHandler(router))
+	handler := http.HandlerFunc(rootHandler(l.router))
 
 	handler.ServeHTTP(w, req)
 	assert.Equal(t, w.Code, http.StatusAccepted)
