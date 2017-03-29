@@ -3,7 +3,6 @@ package pipe
 import (
 	"errors"
 	"strings"
-	"sync"
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
@@ -27,24 +26,8 @@ func DefaultMQTTOptions(brokerAddress, clientID string) *mqtt.ClientOptions {
 	return opts
 }
 
-var (
-	client      mqtt.Client
-	client_lock sync.Mutex
-)
-
 func DefaultMQTTClient(options *mqtt.ClientOptions) mqtt.Client {
-
-	client_lock.Lock()
-	defer client_lock.Unlock()
-
-	if client != nil {
-		return client
-	}
-
-	client = mqtt.NewClient(options)
-
-	return client
-
+	return mqtt.NewClient(options)
 }
 
 func NewMQTTListener(client mqtt.Client) (*mqttlistener, error) {
