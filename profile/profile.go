@@ -2,6 +2,7 @@ package profile
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 
 	hub "github.com/thingful/device-hub"
@@ -17,9 +18,9 @@ type Configuration struct {
 }
 
 type Endpoint struct {
-	Type          string                 `json:"type"`
-	UID           UID                    `json:"uid"`
-	Configuration map[string]interface{} `json:"configuration,omitempty"`
+	Type          string    `json:"type"`
+	UID           UID       `json:"uid"`
+	Configuration ConfigMap `json:"configuration,omitempty"`
 }
 
 type Endpoints []Endpoint
@@ -32,6 +33,27 @@ func (e Endpoints) FindByUID(uid UID) (bool, Endpoint) {
 		}
 	}
 	return false, Endpoint{}
+}
+
+type ConfigMap map[string]interface{}
+
+func (c ConfigMap) String(key string) (bool, string) {
+
+	v, f := c[key]
+
+	if !f {
+		return false, ""
+	}
+	return true, v.(string)
+}
+
+func (c ConfigMap) MString(key string) string {
+
+	found, v := c.String(key)
+	if !found {
+		panic(fmt.Errorf("value with key %s not found", key))
+	}
+	return v
 }
 
 type Profile struct {
