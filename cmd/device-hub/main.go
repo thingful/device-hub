@@ -8,10 +8,10 @@ import (
 	"log"
 	"os"
 
+	"github.com/thingful/device-hub/config"
 	"github.com/thingful/device-hub/engine"
 	"github.com/thingful/device-hub/pipe"
-	"github.com/thingful/device-hub/profile"
-	"github.com/thingful/device-hub/utils"
+	"github.com/thingful/go/file"
 )
 
 var (
@@ -34,11 +34,11 @@ func main() {
 	}
 
 	// TODO : ensure ths path is constrained to a few well known paths
-	if !utils.FileExists(configurationPath) {
+	if !file.Exists(configurationPath) {
 		exitWithError(fmt.Errorf("configuration at %s doesn't exist", configurationPath))
 	}
 
-	configuration, err := profile.LoadProfile(configurationPath)
+	configuration, err := config.LoadProfile(configurationPath)
 
 	if err != nil {
 		exitWithError(err)
@@ -86,7 +86,7 @@ func main() {
 
 }
 
-func StartPipe(ctx context.Context, listener pipe.Listener, channel pipe.Channel, pro profile.Profile) {
+func StartPipe(ctx context.Context, listener pipe.Listener, channel pipe.Channel, profile config.Profile) {
 
 	scripter := engine.New()
 
@@ -102,7 +102,7 @@ func StartPipe(ctx context.Context, listener pipe.Listener, channel pipe.Channel
 
 		case input := <-channel.Out():
 
-			output, err := scripter.Execute(pro.Script, input)
+			output, err := scripter.Execute(profile.Script, input)
 
 			if err != nil {
 				log.Println(err)
@@ -124,7 +124,7 @@ func StartPipe(ctx context.Context, listener pipe.Listener, channel pipe.Channel
 
 }
 
-func StartListener(endpoint profile.Endpoint, cancel context.CancelFunc) (pipe.Listener, error) {
+func StartListener(endpoint config.Endpoint, cancel context.CancelFunc) (pipe.Listener, error) {
 
 	if endpoint.Type == "std" {
 

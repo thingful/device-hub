@@ -1,9 +1,7 @@
-package profile
+package config
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 
 	hub "github.com/thingful/device-hub"
 )
@@ -35,27 +33,6 @@ func (e Endpoints) FindByUID(uid UID) (bool, Endpoint) {
 	return false, Endpoint{}
 }
 
-type ConfigMap map[string]interface{}
-
-func (c ConfigMap) String(key string) (bool, string) {
-
-	v, f := c[key]
-
-	if !f {
-		return false, ""
-	}
-	return true, v.(string)
-}
-
-func (c ConfigMap) MString(key string) string {
-
-	found, v := c.String(key)
-	if !found {
-		panic(fmt.Errorf("value with key %s not found", key))
-	}
-	return v
-}
-
 type Profile struct {
 	UID         UID    `json:"uid"`
 	Name        string `json:"name"`
@@ -84,25 +61,23 @@ type Pipe struct {
 	Endpoint UID    `json:"endpoint"`
 }
 
-func Unmarshal(bytes []byte) (*Configuration, error) {
+type ConfigMap map[string]interface{}
 
-	conf := Configuration{}
-	err := json.Unmarshal(bytes, &conf)
+func (c ConfigMap) String(key string) (bool, string) {
 
-	return &conf, err
-}
+	v, f := c[key]
 
-func Marshal(conf Configuration) ([]byte, error) {
-	return json.Marshal(conf)
-}
-
-func LoadProfile(path string) (*Configuration, error) {
-
-	bytes, err := ioutil.ReadFile(path)
-
-	if err != nil {
-		return nil, err
+	if !f {
+		return false, ""
 	}
+	return true, v.(string)
+}
 
-	return Unmarshal(bytes)
+func (c ConfigMap) MString(key string) string {
+
+	found, v := c.String(key)
+	if !found {
+		panic(fmt.Errorf("value with key %s not found", key))
+	}
+	return v
 }
