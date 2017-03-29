@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
@@ -16,7 +15,7 @@ import (
 )
 
 var (
-	SourceVersion string
+	SourceVersion = "DEVELOPMENT"
 )
 
 func main() {
@@ -107,15 +106,13 @@ func StartPipe(ctx context.Context, listener hub.Listener, channel hub.Channel, 
 
 			if err != nil {
 				log.Println(err)
-				continue
 			}
 
-			bytes, err := json.Marshal(output)
-			if err != nil {
-				exitWithError(err)
-			}
+			output.Metadata[hub.PROFILE_UID_KEY] = profile.UID
+			output.Metadata[hub.PROFILE_VERSION_KEY] = profile.Version
+			output.Metadata[hub.RUNTIME_VERSION_KEY] = SourceVersion
 
-			_, err = pipe.WriteToStdOut(bytes)
+			err = pipe.WriteToStdOut(output)
 
 			if err != nil {
 				log.Println(err)

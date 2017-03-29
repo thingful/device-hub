@@ -7,13 +7,6 @@ import (
 	hub "github.com/thingful/device-hub"
 )
 
-const (
-	URI_NAME_KEY  = "uri"
-	TIMESTAMP_KEY = "received_at"
-	PROTOCOL_KEY  = "protocol"
-	HOSTNAME_KEY  = "host"
-)
-
 func newHubMessage(payload []byte, protocol, uri string) hub.Message {
 
 	host, err := os.Hostname()
@@ -25,10 +18,10 @@ func newHubMessage(payload []byte, protocol, uri string) hub.Message {
 	m := hub.Message{
 		Payload: payload,
 		Metadata: map[string]interface{}{
-			URI_NAME_KEY:  uri,
-			PROTOCOL_KEY:  protocol,
-			TIMESTAMP_KEY: time.Now().UTC(),
-			HOSTNAME_KEY:  host,
+			hub.PIPE_URI_NAME_KEY:  uri,
+			hub.PIPE_PROTOCOL_KEY:  protocol,
+			hub.PIPE_TIMESTAMP_KEY: time.Now().UTC(),
+			hub.HOSTNAME_KEY:       host,
 		},
 	}
 	return m

@@ -1,10 +1,20 @@
 package pipe
 
-import "fmt"
+import (
+	"encoding/json"
+	"fmt"
 
-func WriteToStdOut(bytes []byte) (int, error) {
+	hub "github.com/thingful/device-hub"
+)
+
+func WriteToStdOut(message hub.Message) error {
+
+	bytes, err := json.Marshal(message)
+	if err != nil {
+		return err
+	}
 
 	fmt.Println(string(bytes))
-	return len(bytes), nil
+	return nil
 
 }
