@@ -28,11 +28,10 @@
       "description": "blah-blah",
       "version": "1.0.0-beta",
       "script": {
-        "Main": "decode",
-        "Runtime": "javascript",
-        "Input": "json",
-        "Contents": "function decode(x) { return x };",
-        "Metadata": null
+        "main": "decode",
+        "runtime": "javascript",
+        "input": "json",
+        "contents": "function decode(x) { return x };"
       }
     }
   ],
