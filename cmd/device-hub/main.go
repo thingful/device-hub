@@ -33,7 +33,7 @@ func main() {
 		return
 	}
 
-	// TODO : ensure ths path is constrained to a few well known paths
+	// TODO : ensure this path is constrained to a few well known paths
 	if !file.Exists(configurationPath) {
 		exitWithError(fmt.Errorf("configuration at %s doesn't exist", configurationPath))
 	}
