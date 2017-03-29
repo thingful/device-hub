@@ -3,7 +3,7 @@ package config
 import (
 	"fmt"
 
-	hub "github.com/thingful/device-hub"
+	"github.com/thingful/device-hub/engine"
 )
 
 type UID string
@@ -38,8 +38,8 @@ type Profile struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	// TODO : make this a semantic triple
-	Version string     `json:"version"`
-	Script  hub.Script `json:"script"`
+	Version string        `json:"version"`
+	Script  engine.Script `json:"script"`
 }
 
 type Profiles []Profile

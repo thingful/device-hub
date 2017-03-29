@@ -11,6 +11,6 @@ func (NoOpChannel) Errors() chan error {
 	return make(chan error)
 }
 
-func (NoOpChannel) Out() chan hub.Input {
-	return make(chan hub.Input)
+func (NoOpChannel) Out() chan hub.Message {
+	return make(chan hub.Message)
 }

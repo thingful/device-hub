@@ -23,10 +23,10 @@ type httpListener struct {
 	router *router
 }
 
-func (h *httpListener) NewChannel(uri string) (Channel, error) {
+func (h *httpListener) NewChannel(uri string) (hub.Channel, error) {
 
 	errors := make(chan error)
-	out := make(chan hub.Input)
+	out := make(chan hub.Message)
 
 	channel := defaultChannel{out: out, errors: errors}
 
@@ -79,7 +79,7 @@ func rootHandler(router *router) http.HandlerFunc {
 			return
 		}
 
-		input := hub.Input{
+		input := hub.Message{
 			Payload: body,
 		}
 

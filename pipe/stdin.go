@@ -19,10 +19,10 @@ type stdinListener struct {
 	cancel context.CancelFunc
 }
 
-func (s stdinListener) NewChannel(_ string) (Channel, error) {
+func (s stdinListener) NewChannel(_ string) (hub.Channel, error) {
 
 	errors := make(chan error)
-	out := make(chan hub.Input)
+	out := make(chan hub.Message)
 
 	channel := &stdinChannel{
 		defaultChannel: defaultChannel{
@@ -51,7 +51,7 @@ func (s stdinChannel) next() {
 	if err != nil {
 		s.errors <- err
 	} else {
-		s.out <- hub.Input{Payload: contents}
+		s.out <- hub.Message{Payload: contents}
 	}
 	s.cancel()
 }

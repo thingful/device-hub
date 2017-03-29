@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/robertkrimen/otto"
+
 	hub "github.com/thingful/device-hub"
 )
 
@@ -22,12 +23,12 @@ func New() engine {
 
 type engine struct{}
 
-func (e engine) Execute(script hub.Script, input hub.Input) (interface{}, error) {
+func (e engine) Execute(script Script, input hub.Message) (interface{}, error) {
 
 	var output otto.Value
 	var err error
 
-	if script.Input == hub.Raw {
+	if script.Input == Raw {
 		env := map[string]interface{}{
 			"__input": input.Payload,
 		}
@@ -35,7 +36,7 @@ func (e engine) Execute(script hub.Script, input hub.Input) (interface{}, error)
 		output, err = e.run(script.Contents, main, env, time.Second*1)
 
 	}
-	if script.Input == hub.CSV {
+	if script.Input == CSV {
 
 		env, err := prepareCSV(input)
 
@@ -48,7 +49,7 @@ func (e engine) Execute(script hub.Script, input hub.Input) (interface{}, error)
 
 	}
 
-	if script.Input == hub.JSON {
+	if script.Input == JSON {
 
 		env := map[string]interface{}{
 			"__input": string(input.Payload),
@@ -114,7 +115,7 @@ func (engine) run(code, main string, env map[string]interface{}, timeout time.Du
 	return vm.Run(fmt.Sprintf("%s;\n %s", code, main))
 }
 
-func prepareCSV(input hub.Input) (map[string]interface{}, error) {
+func prepareCSV(input hub.Message) (map[string]interface{}, error) {
 
 	r := csv.NewReader(strings.NewReader(string(input.Payload)))
 

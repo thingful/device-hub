@@ -62,7 +62,7 @@ type mqttlistener struct {
 	client mqtt.Client
 }
 
-func (m *mqttlistener) NewChannel(topic string) (Channel, error) {
+func (m *mqttlistener) NewChannel(topic string) (hub.Channel, error) {
 
 	if topic == "" {
 		return nil, errors.New("mqtt topic is empty string")
@@ -73,10 +73,10 @@ func (m *mqttlistener) NewChannel(topic string) (Channel, error) {
 	}
 
 	errors := make(chan error)
-	out := make(chan hub.Input)
+	out := make(chan hub.Message)
 
 	handler := func(client mqtt.Client, msg mqtt.Message) {
-		input := hub.Input{
+		input := hub.Message{
 			Payload: msg.Payload(),
 			Metadata: map[string]interface{}{
 				TOPIC_NAME: msg.Topic(),

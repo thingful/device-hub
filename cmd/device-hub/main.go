@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 
+	hub "github.com/thingful/device-hub"
 	"github.com/thingful/device-hub/config"
 	"github.com/thingful/device-hub/engine"
 	"github.com/thingful/device-hub/pipe"
@@ -86,7 +87,7 @@ func main() {
 
 }
 
-func StartPipe(ctx context.Context, listener pipe.Listener, channel pipe.Channel, profile config.Profile) {
+func StartPipe(ctx context.Context, listener hub.Listener, channel hub.Channel, profile config.Profile) {
 
 	scripter := engine.New()
 
@@ -124,7 +125,7 @@ func StartPipe(ctx context.Context, listener pipe.Listener, channel pipe.Channel
 
 }
 
-func StartListener(endpoint config.Endpoint, cancel context.CancelFunc) (pipe.Listener, error) {
+func StartListener(endpoint config.Endpoint, cancel context.CancelFunc) (hub.Listener, error) {
 
 	if endpoint.Type == "std" {
 

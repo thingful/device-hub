@@ -1,27 +1,19 @@
-package expando
+package hub
 
-type InputType string
-
-type Runtime string
-
-const (
-	Javascript Runtime = "javascript"
-
-	Raw  InputType = "raw"
-	CSV  InputType = "csv"
-	XML  InputType = "xml"
-	JSON InputType = "json"
-)
-
-type Script struct {
-	Main     string
-	Runtime  Runtime
-	Input    InputType
-	Contents string
-	Metadata map[string]interface{}
+// Listener encapsultates various transports e.g. MQTT, HTTP creating a stream of Inputs
+type Listener interface {
+	NewChannel(string) (Channel, error)
+	Close() error
 }
 
-type Input struct {
+// Channel exposes errors and Input channels
+type Channel interface {
+	Errors() chan error
+	Out() chan Message
+}
+
+// Message contains a Payload and any Metadata collected
+type Message struct {
 	Payload  []byte
 	Metadata map[string]interface{}
 }
