@@ -18,3 +18,7 @@ type Message struct {
 	Output   interface{}            `json:"output"`
 	Metadata map[string]interface{} `json:"metadata"`
 }
+
+type Endpoint interface {
+	Write(message Message) error
+}
