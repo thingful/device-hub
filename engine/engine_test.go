@@ -31,7 +31,7 @@ func TestRawDecodeValid(t *testing.T) {
 	initialValue := 22.33
 	binary.Write(buf, binary.BigEndian, int16(initialValue*100))
 
-	input := hub.Message{Payload: buf.Bytes()}
+	input := hub.Message{Payload: buf.Bytes(), Metadata: map[string]interface{}{}}
 
 	e := New()
 	result, err := e.Execute(script, input)
@@ -61,7 +61,7 @@ func TestCSVDecodeValid(t *testing.T) {
 	}
 
 	csv := "column1, column2\none, two\nthree, four\n five,six"
-	input := hub.Message{Payload: []byte(csv)}
+	input := hub.Message{Payload: []byte(csv), Metadata: map[string]interface{}{}}
 
 	e := New()
 	result, err := e.Execute(script, input)
@@ -87,7 +87,7 @@ func TestJSONDecodeValid(t *testing.T) {
 	}
 
 	json := "{ \"a\" : 1}"
-	input := hub.Message{Payload: []byte(json)}
+	input := hub.Message{Payload: []byte(json), Metadata: map[string]interface{}{}}
 
 	e := New()
 	result, err := e.Execute(script, input)
