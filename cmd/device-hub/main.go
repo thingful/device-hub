@@ -11,7 +11,7 @@ import (
 	"github.com/thingful/device-hub/config"
 	"github.com/thingful/device-hub/endpoint"
 	"github.com/thingful/device-hub/engine"
-	"github.com/thingful/device-hub/pipe"
+	"github.com/thingful/device-hub/listener"
 	"github.com/thingful/go/file"
 )
 
@@ -132,7 +132,7 @@ func StartListener(endpoint config.Endpoint, cancel context.CancelFunc) (hub.Lis
 
 	if endpoint.Type == "std" {
 
-		return pipe.NewStdInListener(cancel)
+		return listener.NewStdInListener(cancel)
 	}
 	if endpoint.Type == "mqtt" {
 
@@ -140,21 +140,21 @@ func StartListener(endpoint config.Endpoint, cancel context.CancelFunc) (hub.Lis
 
 		brokerAddress := endpoint.Configuration.MString("MQTTBrokerAddress")
 
-		options := pipe.DefaultMQTTOptions(brokerAddress, clientName)
-		client := pipe.DefaultMQTTClient(options)
+		options := listener.DefaultMQTTOptions(brokerAddress, clientName)
+		client := listener.DefaultMQTTClient(options)
 
 		// TODO : set sensible wait time
 		if token := client.Connect(); token.Wait() && token.Error() != nil {
 			exitWithError(token.Error())
 		}
 
-		return pipe.NewMQTTListener(client)
+		return listener.NewMQTTListener(client)
 	}
 
 	if endpoint.Type == "http" {
 
 		binding := endpoint.Configuration.MString("HTTPBindingAddress")
-		return pipe.NewHTTPListener(binding)
+		return listener.NewHTTPListener(binding)
 	}
 
 	return nil, fmt.Errorf("listener of type %s not found", endpoint.Type)
