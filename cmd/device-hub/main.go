@@ -13,6 +13,7 @@ import (
 	"github.com/thingful/device-hub/engine"
 	"github.com/thingful/device-hub/listener"
 	"github.com/thingful/go/file"
+	"github.com/thingful/tm/crypto"
 )
 
 var (
@@ -82,6 +83,20 @@ func main() {
 
 		if endpointConf.Type == "stdout" {
 			end = endpoint.NewStdOutEndpoint()
+		}
+		if endpointConf.Type == "multichain" {
+
+			publicKeyStr := endpointConf.Configuration.MString("publicKey")
+			deviceID := endpointConf.Configuration.MString("deviceID")
+			notifyURI := endpointConf.Configuration.MString("notifyURI")
+
+			publicKey, err := crypto.PublicKeyFromPEM(publicKeyStr)
+
+			if err != nil {
+				panic(err)
+			}
+
+			end = endpoint.NewMultichainEndpoint(publicKey, deviceID, notifyURI)
 		}
 
 		go StartPipe(ctx, listener, channel, profile, end)
