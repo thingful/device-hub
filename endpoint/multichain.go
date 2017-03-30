@@ -42,7 +42,7 @@ func (m multichain) Write(message hub.Message) error {
 		return err
 	}
 
-	dataBytes, err := encoders.JSONMarshaler{}.Marshal(message)
+	dataBytes, err := encoders.JSONMarshaler{}.Marshal(message.Output)
 
 	if err != nil {
 		return err

@@ -25,7 +25,7 @@
         "uid" : "multichain-one",
         "configuration": {
           "publicKey": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxqMnLeSOepNlscUGaQ2f\n3wS2JJ60261ryxybX0AGAjPkVDann7OOWHJ5E2JxJslchE97Ekl53giYebM1tldq\n1cHeOkNuDQu5MDJuP5tKAijLnXDuLNazNuTZIfkKjvHxEROZJOEh5qa8sE28RsUl\n3KJKS5IUCLEn5KR2u5ZB5ixm/bsluDX+oDTAoBKZnSnanVMExXJOoBIOqziT+3A3\nrEpHhz7Fo4O1KQzw1Q4MEL7twJZCISxENSTu5mSgC7i964gwNmmAArqtJKWeV22R\nTPSc9wbZbjpNlW/fT5hteV3XMDKsKzCf8nwOLULmDBQsj/dbYVYQ0UiG9DjHfVHy\nRwIDAQAB\n-----END PUBLIC KEY-----",
-          "deviceID": "device-123",
+          "deviceID": "device-23",
           "notifyURI": "user-1::entitlements"
        }
     }
