@@ -1,4 +1,4 @@
-package pipe
+package listener
 
 import (
 	hub "github.com/thingful/device-hub"

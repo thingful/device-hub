@@ -1,6 +1,6 @@
 // +build integration
 
-package pipe
+package listener
 
 import (
 	"fmt"

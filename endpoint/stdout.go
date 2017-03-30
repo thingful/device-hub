@@ -1,4 +1,4 @@
-package pipe
+package endpoint
 
 import (
 	"encoding/json"
@@ -7,7 +7,13 @@ import (
 	hub "github.com/thingful/device-hub"
 )
 
-func WriteToStdOut(message hub.Message) error {
+func NewStdOutEndpoint() stdout {
+	return stdout{}
+}
+
+type stdout struct{}
+
+func (stdout) Write(message hub.Message) error {
 
 	bytes, err := json.Marshal(message)
 	if err != nil {

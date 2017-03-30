@@ -9,8 +9,9 @@ import (
 
 	hub "github.com/thingful/device-hub"
 	"github.com/thingful/device-hub/config"
+	"github.com/thingful/device-hub/endpoint"
 	"github.com/thingful/device-hub/engine"
-	"github.com/thingful/device-hub/pipe"
+	"github.com/thingful/device-hub/listener"
 	"github.com/thingful/go/file"
 )
 
@@ -53,12 +54,11 @@ func main() {
 			exitWithError(fmt.Errorf("listener with UID %s not found", pipe.Listener))
 		}
 
-		// TDDO : stop hardcoding the endpoint in
-		//found, endpointConf := configuration.Endpoints.FindByUID(pipe.Endpoint)
+		found, endpointConf := configuration.Endpoints.FindByUID(pipe.Endpoint)
 
-		//if !found {
-		//	exitWithError(fmt.Errorf("endpoint with UID %s not found", pipe.Endpoint))
-		//}
+		if !found {
+			exitWithError(fmt.Errorf("endpoint with UID %s not found", pipe.Endpoint))
+		}
 
 		found, profile := configuration.Profiles.FindByUID(pipe.Profile)
 
@@ -78,7 +78,13 @@ func main() {
 			exitWithError(err)
 		}
 
-		go StartPipe(ctx, listener, channel, profile)
+		var end hub.Endpoint
+
+		if endpointConf.Type == "stdout" {
+			end = endpoint.NewStdOutEndpoint()
+		}
+
+		go StartPipe(ctx, listener, channel, profile, end)
 
 	}
 
@@ -86,7 +92,7 @@ func main() {
 
 }
 
-func StartPipe(ctx context.Context, listener hub.Listener, channel hub.Channel, profile config.Profile) {
+func StartPipe(ctx context.Context, listener hub.Listener, channel hub.Channel, profile config.Profile, endpoint hub.Endpoint) {
 
 	scripter := engine.New()
 
@@ -112,7 +118,7 @@ func StartPipe(ctx context.Context, listener hub.Listener, channel hub.Channel, 
 			output.Metadata[hub.PROFILE_VERSION_KEY] = profile.Version
 			output.Metadata[hub.RUNTIME_VERSION_KEY] = SourceVersion
 
-			err = pipe.WriteToStdOut(output)
+			err = endpoint.Write(output)
 
 			if err != nil {
 				log.Println(err)
@@ -126,7 +132,7 @@ func StartListener(endpoint config.Endpoint, cancel context.CancelFunc) (hub.Lis
 
 	if endpoint.Type == "std" {
 
-		return pipe.NewStdInListener(cancel)
+		return listener.NewStdInListener(cancel)
 	}
 	if endpoint.Type == "mqtt" {
 
@@ -134,21 +140,21 @@ func StartListener(endpoint config.Endpoint, cancel context.CancelFunc) (hub.Lis
 
 		brokerAddress := endpoint.Configuration.MString("MQTTBrokerAddress")
 
-		options := pipe.DefaultMQTTOptions(brokerAddress, clientName)
-		client := pipe.DefaultMQTTClient(options)
+		options := listener.DefaultMQTTOptions(brokerAddress, clientName)
+		client := listener.DefaultMQTTClient(options)
 
 		// TODO : set sensible wait time
 		if token := client.Connect(); token.Wait() && token.Error() != nil {
 			exitWithError(token.Error())
 		}
 
-		return pipe.NewMQTTListener(client)
+		return listener.NewMQTTListener(client)
 	}
 
 	if endpoint.Type == "http" {
 
 		binding := endpoint.Configuration.MString("HTTPBindingAddress")
-		return pipe.NewHTTPListener(binding)
+		return listener.NewHTTPListener(binding)
 	}
 
 	return nil, fmt.Errorf("listener of type %s not found", endpoint.Type)
