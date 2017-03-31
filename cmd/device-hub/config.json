@@ -40,13 +40,13 @@
       "uri": "/a",
       "profile": "xxx",
       "listener": "http-one",
-      "endpoint": "stdout-one"
+      "endpoints": ["stdout-one"]
     },
     {
       "uri": "/b",
       "profile": "xxx",
       "listener": "mqtt-one",
-      "endpoint": "stdout-one"
+      "endpoints": ["stdout-one", "stdout-one"]
     }
   ]
 }
