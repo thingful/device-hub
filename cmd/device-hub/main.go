@@ -81,7 +81,11 @@ func main() {
 		var end hub.Endpoint
 
 		if endpointConf.Type == "stdout" {
-			end = endpoint.NewStdOutEndpoint()
+
+			prettyPrint := endpointConf.Configuration.DBool("prettyprint", false)
+
+			end = endpoint.NewStdOutEndpoint(prettyPrint)
+
 		}
 
 		go StartPipe(ctx, listener, channel, profile, end)
