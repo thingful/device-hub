@@ -18,7 +18,10 @@
   "endpoints": [
     {
       "type": "stdout",
-      "uid": "stdout-one"
+      "uid": "stdout-one",
+      "configuration": {
+          "prettyprint": true
+      }
     },
     {
         "type" : "multichain",
