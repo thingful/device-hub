@@ -1,10 +1,6 @@
 package config
 
-import (
-	"fmt"
-
-	"github.com/thingful/device-hub/engine"
-)
+import "github.com/thingful/device-hub/engine"
 
 type UID string
 
@@ -59,25 +55,4 @@ type Pipe struct {
 	Profile   UID    `json:"profile"`
 	Listener  UID    `json:"listener"`
 	Endpoints []UID  `json:"endpoints"`
-}
-
-type ConfigMap map[string]interface{}
-
-func (c ConfigMap) String(key string) (bool, string) {
-
-	v, f := c[key]
-
-	if !f {
-		return false, ""
-	}
-	return true, v.(string)
-}
-
-func (c ConfigMap) MString(key string) string {
-
-	found, v := c.String(key)
-	if !found {
-		panic(fmt.Errorf("value with key %s not found", key))
-	}
-	return v
 }

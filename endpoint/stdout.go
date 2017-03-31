@@ -7,15 +7,30 @@ import (
 	hub "github.com/thingful/device-hub"
 )
 
-func NewStdOutEndpoint() stdout {
-	return stdout{}
+func NewStdOutEndpoint(prettyPrint bool) stdout {
+	return stdout{
+		prettyPrint: prettyPrint,
+	}
 }
 
-type stdout struct{}
+type stdout struct {
+	prettyPrint bool
+}
 
-func (stdout) Write(message hub.Message) error {
+func (s stdout) Write(message hub.Message) error {
 
-	bytes, err := json.Marshal(message)
+	var bytes []byte
+	var err error
+
+	if s.prettyPrint {
+
+		bytes, err = json.MarshalIndent(message, "", "    ")
+
+	} else {
+
+		bytes, err = json.Marshal(message)
+	}
+
 	if err != nil {
 		return err
 	}
