@@ -54,10 +54,20 @@ func main() {
 			exitWithError(fmt.Errorf("listener with UID %s not found", pipe.Listener))
 		}
 
-		found, endpointConf := configuration.Endpoints.FindByUID(pipe.Endpoint)
+		endpoints := []hub.Endpoint{}
 
-		if !found {
-			exitWithError(fmt.Errorf("endpoint with UID %s not found", pipe.Endpoint))
+		for e := range pipe.Endpoints {
+
+			found, endpointConf := configuration.Endpoints.FindByUID(pipe.Endpoints[e])
+
+			if !found {
+				exitWithError(fmt.Errorf("endpoint with UID %s not found", pipe.Endpoints[e]))
+			}
+
+			if endpointConf.Type == "stdout" {
+				endpoints = append(endpoints, endpoint.NewStdOutEndpoint())
+			}
+
 		}
 
 		found, profile := configuration.Profiles.FindByUID(pipe.Profile)
@@ -78,13 +88,7 @@ func main() {
 			exitWithError(err)
 		}
 
-		var end hub.Endpoint
-
-		if endpointConf.Type == "stdout" {
-			end = endpoint.NewStdOutEndpoint()
-		}
-
-		go StartPipe(ctx, listener, channel, profile, end)
+		go StartPipe(ctx, listener, channel, profile, endpoints)
 
 	}
 
@@ -92,7 +96,7 @@ func main() {
 
 }
 
-func StartPipe(ctx context.Context, listener hub.Listener, channel hub.Channel, profile config.Profile, endpoint hub.Endpoint) {
+func StartPipe(ctx context.Context, listener hub.Listener, channel hub.Channel, profile config.Profile, endpoints []hub.Endpoint) {
 
 	scripter := engine.New()
 
@@ -118,14 +122,18 @@ func StartPipe(ctx context.Context, listener hub.Listener, channel hub.Channel, 
 			output.Metadata[hub.PROFILE_VERSION_KEY] = profile.Version
 			output.Metadata[hub.RUNTIME_VERSION_KEY] = SourceVersion
 
-			err = endpoint.Write(output)
+			for e := range endpoints {
 
-			if err != nil {
-				log.Println(err)
+				err = endpoints[e].Write(output)
+
+				if err != nil {
+					log.Println(err)
+				}
+
 			}
 		}
-	}
 
+	}
 }
 
 func StartListener(endpoint config.Endpoint, cancel context.CancelFunc) (hub.Listener, error) {

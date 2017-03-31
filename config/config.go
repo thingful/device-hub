@@ -55,10 +55,10 @@ func (p Profiles) FindByUID(uid UID) (bool, Profile) {
 }
 
 type Pipe struct {
-	Uri      string `json:"uri"`
-	Profile  UID    `json:"profile"`
-	Listener UID    `json:"listener"`
-	Endpoint UID    `json:"endpoint"`
+	Uri       string `json:"uri"`
+	Profile   UID    `json:"profile"`
+	Listener  UID    `json:"listener"`
+	Endpoints []UID  `json:"endpoints"`
 }
 
 type ConfigMap map[string]interface{}
