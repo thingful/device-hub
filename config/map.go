@@ -1,10 +1,14 @@
 package config
 
-import "fmt"
+import (
+	"fmt"
 
-type ConfigMap map[string]interface{}
+	"github.com/spf13/cast"
+)
 
-func (c ConfigMap) String(key string) (bool, string) {
+type configMap map[string]interface{}
+
+func (c configMap) String(key string) (bool, string) {
 
 	v, f := c[key]
 
@@ -12,20 +16,38 @@ func (c ConfigMap) String(key string) (bool, string) {
 		return false, ""
 	}
 
-	// TODO : need smarter coercian
-	return true, v.(string)
+	str, err := cast.ToStringE(v)
+
+	if err != nil {
+		return false, ""
+	}
+
+	return true, str
 }
 
-func (c ConfigMap) MString(key string) string {
+func (c configMap) MString(key string) string {
 
 	found, v := c.String(key)
+
 	if !found {
 		panic(fmt.Errorf("value with key %s not found", key))
 	}
+
 	return v
 }
 
-func (c ConfigMap) Bool(key string) (bool, bool) {
+func (c configMap) DString(key, defaultValue string) string {
+
+	found, v := c.String(key)
+
+	if !found {
+		return defaultValue
+	}
+
+	return v
+}
+
+func (c configMap) Bool(key string) (bool, bool) {
 
 	v, f := c[key]
 
@@ -33,24 +55,35 @@ func (c ConfigMap) Bool(key string) (bool, bool) {
 		return false, false
 	}
 
-	// TODO : need smarter coercian
-	return true, v.(bool)
+	b, err := cast.ToBoolE(v)
+
+	if err != nil {
+		return false, false
+	}
+
+	return true, b
 }
 
-func (c ConfigMap) MBool(key string) bool {
+func (c configMap) MBool(key string) bool {
 
 	found, v := c.Bool(key)
+
 	if !found {
+
 		panic(fmt.Errorf("value with key %s not found", key))
+
 	}
 	return v
 }
 
-func (c ConfigMap) DBool(key string, defaultValue bool) bool {
+func (c configMap) DBool(key string, defaultValue bool) bool {
 
 	found, v := c.Bool(key)
+
 	if !found {
+
 		return defaultValue
 	}
+
 	return v
 }

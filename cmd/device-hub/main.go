@@ -65,7 +65,10 @@ func main() {
 			}
 
 			if endpointConf.Type == "stdout" {
-				endpoints = append(endpoints, endpoint.NewStdOutEndpoint())
+
+				prettyPrint := endpointConf.Configuration.DBool("prettyPrint", false)
+
+				endpoints = append(endpoints, endpoint.NewStdOutEndpoint(prettyPrint))
 			}
 
 		}
