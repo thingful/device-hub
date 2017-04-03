@@ -1,3 +1,5 @@
+// Copyright © 2017 thingful
+
 package config
 
 import "github.com/thingful/device-hub/engine"
