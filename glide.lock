@@ -1,5 +1,5 @@
 hash: c2000262a394f5141b2123a7aabdcff8d124b82030a998de669b922f918b2d03
-updated: 2017-03-24T12:48:15.182440378Z
+updated: 2017-04-03T16:00:31.098477394+01:00
 imports:
 - name: github.com/eclipse/paho.mqtt.golang
   version: 069f3a089e16f6aac97907342222cb8e13b92d85
@@ -14,6 +14,12 @@ imports:
   - parser
   - registry
   - token
+- name: github.com/spf13/cast
+  version: ce135a4ebeee6cfe9a26c93ee0d37825f26113c7
+- name: github.com/thingful/go
+  version: b4396920918c6d9693891d9de83553df09b4d752
+  subpackages:
+  - file
 - name: golang.org/x/net
   version: 47990a1ba55743e6ef1affd3a14e5bac8553615d
   subpackages:

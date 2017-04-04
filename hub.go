@@ -1,3 +1,5 @@
+// Copyright © 2017 thingful
+
 package hub
 
 // Listener encapsulates various transports e.g. MQTT, HTTP creating a stream of Inputs

@@ -1,3 +1,4 @@
+// Copyright © 2017 thingful
 package listener
 
 import (
