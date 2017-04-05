@@ -7,12 +7,9 @@ import (
 	"fmt"
 	"os"
 
+	hub "github.com/thingful/device-hub"
 	"github.com/thingful/device-hub/config"
 	"github.com/thingful/go/file"
-)
-
-var (
-	SourceVersion = "DEVELOPMENT"
 )
 
 func main() {
@@ -26,7 +23,7 @@ func main() {
 	flag.Parse()
 
 	if showVersion {
-		fmt.Println(SourceVersion)
+		fmt.Println(fmt.Sprintf("device-hub.0.1.%s", hub.SourceVersion))
 		return
 	}
 
