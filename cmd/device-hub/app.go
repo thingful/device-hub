@@ -11,7 +11,7 @@ import (
 	"github.com/thingful/device-hub/config"
 	_ "github.com/thingful/device-hub/endpoint"
 	"github.com/thingful/device-hub/engine"
-	"github.com/thingful/device-hub/listener"
+	_ "github.com/thingful/device-hub/listener"
 )
 
 type app struct {
@@ -30,7 +30,7 @@ func NewDeviceHub(config *config.Configuration) app {
 // Will return an error if the complete configuration is unable to start correctly.
 func (a app) Run() (context.Context, error) {
 
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx := context.Background()
 
 	for _, pipe := range a.config.Pipes {
 
@@ -50,7 +50,6 @@ func (a app) Run() (context.Context, error) {
 				return nil, fmt.Errorf("endpoint with UID %s not found", pipe.Endpoints[e])
 			}
 
-			// TODO : cache existing endpoints
 			newendpoint, err := hub.EndpointByName(string(endpointConf.UID), endpointConf.Type, endpointConf.Configuration)
 
 			if err != nil {
@@ -67,8 +66,7 @@ func (a app) Run() (context.Context, error) {
 			return nil, fmt.Errorf("profile with UID %s not found", pipe.Profile)
 		}
 
-		// TODO : keep a list of successfully started endpoints
-		listener, err := startListener(listenerConf, cancel)
+		listener, err := hub.ListenerByName(string(listenerConf.UID), listenerConf.Type, listenerConf.Configuration)
 
 		if err != nil {
 			return nil, err
@@ -111,7 +109,7 @@ func startPipe(ctx context.Context, listener hub.Listener, channel hub.Channel, 
 
 			output.Metadata[hub.PROFILE_NAME_KEY] = profile.Name
 			output.Metadata[hub.PROFILE_VERSION_KEY] = profile.Version
-			output.Metadata[hub.RUNTIME_VERSION_KEY] = SourceVersion
+			output.Metadata[hub.RUNTIME_VERSION_KEY] = hub.SourceVersion
 
 			for e := range endpoints {
 
@@ -127,6 +125,7 @@ func startPipe(ctx context.Context, listener hub.Listener, channel hub.Channel, 
 	}
 }
 
+/*
 func startListener(endpoint config.Endpoint, cancel context.CancelFunc) (hub.Listener, error) {
 
 	if endpoint.Type == "std" {
@@ -158,4 +157,4 @@ func startListener(endpoint config.Endpoint, cancel context.CancelFunc) (hub.Lis
 
 	return nil, fmt.Errorf("listener of type %s not found", endpoint.Type)
 
-}
+}*/

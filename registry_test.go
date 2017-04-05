@@ -3,7 +3,6 @@
 package hub
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -56,5 +55,4 @@ func TestErrorThrownForIncorrectType(t *testing.T) {
 	_, err := ListenerByName("foo", "endpoint", map[string]interface{}{})
 
 	assert.NotNil(t, err)
-	fmt.Println(err)
 }
