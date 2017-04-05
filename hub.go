@@ -21,6 +21,7 @@ type Message struct {
 	Metadata map[string]interface{} `json:"metadata"`
 }
 
+// Endpoint takes a processed message and forwards to another service e.g. an HTTP endpoint, Kafka etc
 type Endpoint interface {
 	Write(message Message) error
 }
