@@ -9,12 +9,6 @@ import (
 	hub "github.com/thingful/device-hub"
 )
 
-func NewStdOutEndpoint(prettyPrint bool) stdout {
-	return stdout{
-		prettyPrint: prettyPrint,
-	}
-}
-
 type stdout struct {
 	prettyPrint bool
 }

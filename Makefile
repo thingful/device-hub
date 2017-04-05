@@ -1,6 +1,6 @@
 
 SOURCE_VERSION = $(shell git rev-parse --short=6 HEAD)
-BUILD_FLAGS = -v -ldflags "-X main.SourceVersion=$(SOURCE_VERSION)"
+BUILD_FLAGS = -v -ldflags "-X github.com/thingful/device-hub.SourceVersion=$(SOURCE_VERSION)"
 PACKAGES := $(shell go list ./... | grep -v /vendor/ )
 
 EXE_NAME := 'device-hub'
