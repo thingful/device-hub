@@ -41,7 +41,7 @@ func main() {
 		exitWithError(err)
 	}
 
-	app := NewHub(configuration)
+	app := NewDeviceHub(configuration)
 
 	ctx, err := app.Run()
 

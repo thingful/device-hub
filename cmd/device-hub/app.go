@@ -9,7 +9,7 @@ import (
 
 	hub "github.com/thingful/device-hub"
 	"github.com/thingful/device-hub/config"
-	"github.com/thingful/device-hub/endpoint"
+	_ "github.com/thingful/device-hub/endpoint"
 	"github.com/thingful/device-hub/engine"
 	"github.com/thingful/device-hub/listener"
 )
@@ -18,13 +18,16 @@ type app struct {
 	config *config.Configuration
 }
 
-func NewHub(config *config.Configuration) app {
+func NewDeviceHub(config *config.Configuration) app {
 
 	return app{
 		config: config,
 	}
 }
 
+// Run attempts to start up the configuration by iterating thought the
+// pipes section ensuring that the endpoints and listneners exist.
+// Will return an error if the complete configuration is unable to start correctly.
 func (a app) Run() (context.Context, error) {
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -47,12 +50,14 @@ func (a app) Run() (context.Context, error) {
 				return nil, fmt.Errorf("endpoint with UID %s not found", pipe.Endpoints[e])
 			}
 
-			if endpointConf.Type == "stdout" {
+			// TODO : cache existing endpoints
+			newendpoint, err := hub.EndpointByName(string(endpointConf.UID), endpointConf.Type, endpointConf.Configuration)
 
-				prettyPrint := endpointConf.Configuration.DBool("prettyPrint", false)
-
-				endpoints = append(endpoints, endpoint.NewStdOutEndpoint(prettyPrint))
+			if err != nil {
+				return nil, err
 			}
+
+			endpoints = append(endpoints, newendpoint)
 
 		}
 
@@ -62,6 +67,7 @@ func (a app) Run() (context.Context, error) {
 			return nil, fmt.Errorf("profile with UID %s not found", pipe.Profile)
 		}
 
+		// TODO : keep a list of successfully started endpoints
 		listener, err := startListener(listenerConf, cancel)
 
 		if err != nil {
