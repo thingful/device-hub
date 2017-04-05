@@ -17,15 +17,15 @@ func init() {
 
 		brokerAddress := config.MString("MQTTBrokerAddress")
 
-		options := DefaultMQTTOptions(brokerAddress, clientName)
-		client := DefaultMQTTClient(options)
+		options := defaultMQTTOptions(brokerAddress, clientName)
+		client := defaultMQTTClient(options)
 
 		// TODO : set sensible wait time
 		if token := client.Connect(); token.Wait() && token.Error() != nil {
 			return nil, token.Error()
 		}
 
-		return NewMQTTListener(client)
+		return newMQTTListener(client)
 
 	})
 

@@ -11,7 +11,7 @@ import (
 	hub "github.com/thingful/device-hub"
 )
 
-func DefaultMQTTOptions(brokerAddress, clientID string) *mqtt.ClientOptions {
+func defaultMQTTOptions(brokerAddress, clientID string) *mqtt.ClientOptions {
 
 	opts := mqtt.NewClientOptions()
 	opts.AddBroker(brokerAddress)
@@ -24,11 +24,11 @@ func DefaultMQTTOptions(brokerAddress, clientID string) *mqtt.ClientOptions {
 	return opts
 }
 
-func DefaultMQTTClient(options *mqtt.ClientOptions) mqtt.Client {
+func defaultMQTTClient(options *mqtt.ClientOptions) mqtt.Client {
 	return mqtt.NewClient(options)
 }
 
-func NewMQTTListener(client mqtt.Client) (*mqttlistener, error) {
+func newMQTTListener(client mqtt.Client) (*mqttlistener, error) {
 
 	if !client.IsConnected() {
 		return nil, errors.New("mqtt client is not connected")
