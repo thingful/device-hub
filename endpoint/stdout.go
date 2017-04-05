@@ -7,20 +7,7 @@ import (
 	"fmt"
 
 	hub "github.com/thingful/device-hub"
-	"github.com/thingful/device-hub/utils"
 )
-
-func init() {
-
-	hub.RegisterEndpoint("stdout", func(config utils.TypedMap) (hub.Endpoint, error) {
-
-		prettyPrint := config.DBool("prettyPrint", false)
-
-		return stdout{
-			prettyPrint: prettyPrint,
-		}, nil
-	})
-}
 
 type stdout struct {
 	prettyPrint bool
