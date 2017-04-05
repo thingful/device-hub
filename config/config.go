@@ -2,7 +2,10 @@
 
 package config
 
-import "github.com/thingful/device-hub/engine"
+import (
+	"github.com/thingful/device-hub/engine"
+	"github.com/thingful/device-hub/utils"
+)
 
 // UID is a unique string-like value
 type UID string
@@ -21,9 +24,9 @@ type Configuration struct {
 
 // Endpoint contains a generic collection of configuration details
 type Endpoint struct {
-	Type          string    `json:"type"`
-	UID           UID       `json:"uid"`
-	Configuration configMap `json:"configuration,omitempty"`
+	Type          string         `json:"type"`
+	UID           UID            `json:"uid"`
+	Configuration utils.TypedMap `json:"configuration,omitempty"`
 }
 
 type endpoints []Endpoint

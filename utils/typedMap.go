@@ -1,6 +1,6 @@
 // Copyright © 2017 thingful
 
-package config
+package utils
 
 import (
 	"fmt"
@@ -8,9 +8,9 @@ import (
 	"github.com/spf13/cast"
 )
 
-type configMap map[string]interface{}
+type TypedMap map[string]interface{}
 
-func (c configMap) String(key string) (bool, string) {
+func (c TypedMap) String(key string) (bool, string) {
 
 	v, f := c[key]
 
@@ -27,7 +27,7 @@ func (c configMap) String(key string) (bool, string) {
 	return true, str
 }
 
-func (c configMap) MString(key string) string {
+func (c TypedMap) MString(key string) string {
 
 	found, v := c.String(key)
 
@@ -38,7 +38,7 @@ func (c configMap) MString(key string) string {
 	return v
 }
 
-func (c configMap) DString(key, defaultValue string) string {
+func (c TypedMap) DString(key, defaultValue string) string {
 
 	found, v := c.String(key)
 
@@ -49,7 +49,7 @@ func (c configMap) DString(key, defaultValue string) string {
 	return v
 }
 
-func (c configMap) Bool(key string) (bool, bool) {
+func (c TypedMap) Bool(key string) (bool, bool) {
 
 	v, f := c[key]
 
@@ -66,7 +66,7 @@ func (c configMap) Bool(key string) (bool, bool) {
 	return true, b
 }
 
-func (c configMap) MBool(key string) bool {
+func (c TypedMap) MBool(key string) bool {
 
 	found, v := c.Bool(key)
 
@@ -78,7 +78,7 @@ func (c configMap) MBool(key string) bool {
 	return v
 }
 
-func (c configMap) DBool(key string, defaultValue bool) bool {
+func (c TypedMap) DBool(key string, defaultValue bool) bool {
 
 	found, v := c.Bool(key)
 
