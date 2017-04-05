@@ -32,7 +32,7 @@ func init() {
 	hub.RegisterListener("http", func(config utils.TypedMap) (hub.Listener, error) {
 
 		binding := config.MString("HTTPBindingAddress")
-		return NewHTTPListener(binding)
+		return newHTTPListener(binding)
 
 	})
 }

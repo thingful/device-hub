@@ -10,7 +10,7 @@ import (
 	hub "github.com/thingful/device-hub"
 )
 
-func NewHTTPListener(binding string) (*httpListener, error) {
+func newHTTPListener(binding string) (*httpListener, error) {
 
 	router := DefaultRouter()
 
