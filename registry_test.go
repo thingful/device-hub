@@ -3,6 +3,7 @@
 package hub
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -17,7 +18,7 @@ func (m mockEndpoint) Write(v Message) error {
 	return nil
 }
 
-func TestEndpointsAreCached(t *testing.T) {
+func TestBuildersAreCached(t *testing.T) {
 
 	count := 0
 
@@ -42,4 +43,18 @@ func TestEndpointsAreCached(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotEqual(t, one, three)
 
+}
+
+func TestErrorThrownForIncorrectType(t *testing.T) {
+
+	RegisterEndpoint("endpoint", func(config utils.TypedMap) (Endpoint, error) {
+
+		return mockEndpoint{}, nil
+
+	})
+
+	_, err := ListenerByName("foo", "endpoint", map[string]interface{}{})
+
+	assert.NotNil(t, err)
+	fmt.Println(err)
 }
