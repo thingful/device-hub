@@ -124,37 +124,3 @@ func startPipe(ctx context.Context, listener hub.Listener, channel hub.Channel, 
 
 	}
 }
-
-/*
-func startListener(endpoint config.Endpoint, cancel context.CancelFunc) (hub.Listener, error) {
-
-	if endpoint.Type == "std" {
-
-		return listener.NewStdInListener(cancel)
-	}
-	if endpoint.Type == "mqtt" {
-
-		clientName := fmt.Sprintf("device-hub-%s", SourceVersion)
-
-		brokerAddress := endpoint.Configuration.MString("MQTTBrokerAddress")
-
-		options := listener.DefaultMQTTOptions(brokerAddress, clientName)
-		client := listener.DefaultMQTTClient(options)
-
-		// TODO : set sensible wait time
-		if token := client.Connect(); token.Wait() && token.Error() != nil {
-			exitWithError(token.Error())
-		}
-
-		return listener.NewMQTTListener(client)
-	}
-
-	if endpoint.Type == "http" {
-
-		binding := endpoint.Configuration.MString("HTTPBindingAddress")
-		return listener.NewHTTPListener(binding)
-	}
-
-	return nil, fmt.Errorf("listener of type %s not found", endpoint.Type)
-
-}*/
