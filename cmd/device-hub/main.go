@@ -45,6 +45,7 @@ func main() {
 		if err != nil {
 			fmt.Println("ERROR : ")
 			fmt.Println(err.Error())
+			return
 		}
 		fmt.Println("PASSED")
 		return

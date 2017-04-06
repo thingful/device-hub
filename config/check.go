@@ -48,8 +48,22 @@ func isEmpty(config *Configuration) (bool, *result) {
 
 	if len(config.Pipes) == 0 {
 		return false, &result{
-			Severity: WARNING,
+			Severity: ERROR,
 			Message:  "no pipes configured",
+		}
+	}
+
+	if len(config.Listeners) == 0 {
+		return false, &result{
+			Severity: ERROR,
+			Message:  "no listeners configured",
+		}
+	}
+
+	if len(config.Endpoints) == 0 {
+		return false, &result{
+			Severity: ERROR,
+			Message:  "no endpoints configured",
 		}
 	}
 
@@ -127,7 +141,7 @@ func validatePipes(config *Configuration) (bool, *result) {
 			ok = false
 			ret = &result{
 				Severity: ERROR,
-				Message:  fmt.Sprintf("missing profile ( %s ) for pipe with uri : %s", p.Profile, p.Uri),
+				Message:  fmt.Sprintf("missing profile (%s) for pipe with uri : %s", p.Profile, p.Uri),
 			}
 		}
 
@@ -137,7 +151,7 @@ func validatePipes(config *Configuration) (bool, *result) {
 			ok = false
 			ret = &result{
 				Severity: ERROR,
-				Message:  fmt.Sprintf("missing listener ( %s ) for pipe with uri : %s", p.Listener, p.Uri),
+				Message:  fmt.Sprintf("missing listener (%s) for pipe with uri : %s", p.Listener, p.Uri),
 			}
 		}
 
@@ -149,7 +163,7 @@ func validatePipes(config *Configuration) (bool, *result) {
 				ok = false
 				ret = &result{
 					Severity: ERROR,
-					Message:  fmt.Sprintf("missing endpoint ( %s ) for pipe with uri : %s", e, p.Uri),
+					Message:  fmt.Sprintf("missing endpoint (%s) for pipe with uri : %s", e, p.Uri),
 				}
 			}
 		}

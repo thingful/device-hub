@@ -18,6 +18,57 @@ func TestIsEmpty(t *testing.T) {
 	ok, _ = isEmpty(&Configuration{})
 	assert.False(t, ok)
 
+	// test no pipes
+	ok, _ = isEmpty(&Configuration{
+		Listeners: endpoints{
+			Endpoint{},
+		},
+		Endpoints: endpoints{
+			Endpoint{},
+		},
+	})
+
+	assert.False(t, ok)
+
+	// test no listeners
+	ok, _ = isEmpty(&Configuration{
+		Pipes: pipes{
+			pipe{},
+		},
+		Endpoints: endpoints{
+			Endpoint{},
+		},
+	})
+
+	assert.False(t, ok)
+
+	// test no endpoints
+	ok, _ = isEmpty(&Configuration{
+		Pipes: pipes{
+			pipe{},
+		},
+		Listeners: endpoints{
+			Endpoint{},
+		},
+	})
+
+	assert.False(t, ok)
+
+	// valid
+	ok, _ = isEmpty(&Configuration{
+		Pipes: pipes{
+			pipe{},
+		},
+		Listeners: endpoints{
+			Endpoint{},
+		},
+		Endpoints: endpoints{
+			Endpoint{},
+		},
+	})
+
+	assert.True(t, ok)
+
 }
 
 func TestUniqueUIDs(t *testing.T) {
