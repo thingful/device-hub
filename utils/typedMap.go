@@ -8,8 +8,10 @@ import (
 	"github.com/spf13/cast"
 )
 
+// TypedMap provides strongly typed access to a map[string] interface{}
 type TypedMap map[string]interface{}
 
+// String return true if a string value exists in the collection along with the value
 func (c TypedMap) String(key string) (bool, string) {
 
 	v, f := c[key]
@@ -27,17 +29,19 @@ func (c TypedMap) String(key string) (bool, string) {
 	return true, str
 }
 
+// MString returns the value as a string for the key or panics
 func (c TypedMap) MString(key string) string {
 
 	found, v := c.String(key)
 
 	if !found {
-		panic(fmt.Errorf("value with key %s not found", key))
+		panic(fmt.Errorf("string value with key %s not found", key))
 	}
 
 	return v
 }
 
+// DString returns the value as a string of the key or a default value
 func (c TypedMap) DString(key, defaultValue string) string {
 
 	found, v := c.String(key)
@@ -72,7 +76,7 @@ func (c TypedMap) MBool(key string) bool {
 
 	if !found {
 
-		panic(fmt.Errorf("value with key %s not found", key))
+		panic(fmt.Errorf("bool value with key %s not found", key))
 
 	}
 	return v
