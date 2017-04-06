@@ -15,10 +15,12 @@ import (
 func main() {
 
 	var showVersion bool
+	var checkConfig bool
 	var configurationPath string
 
 	flag.StringVar(&configurationPath, "config", "./config.json", "path to a json configuration file.")
 	flag.BoolVar(&showVersion, "version", false, "show version.")
+	flag.BoolVar(&checkConfig, "check", false, "validate configuration file.")
 
 	flag.Parse()
 
@@ -27,7 +29,6 @@ func main() {
 		return
 	}
 
-	// TODO : ensure this path is constrained to a few well known paths
 	if !file.Exists(configurationPath) {
 		exitWithError(fmt.Errorf("configuration at %s doesn't exist", configurationPath))
 	}
@@ -36,6 +37,16 @@ func main() {
 
 	if err != nil {
 		exitWithError(err)
+	}
+
+	if checkConfig {
+		err = config.Validate(configuration)
+		if err != nil {
+			fmt.Println("ERROR : ")
+			fmt.Println(err.Error())
+		}
+		fmt.Println("PASSED")
+		return
 	}
 
 	app := NewDeviceHub(configuration)
