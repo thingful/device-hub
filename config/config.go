@@ -19,7 +19,7 @@ type Configuration struct {
 	// Profiles are device specific, versioned processors of data and act inbetween the listeners and the endpoints
 	Profiles profiles `json:"profiles"`
 	// Pipes wire the above into a shallow series of steps
-	Pipes []pipe `json:"pipes"`
+	Pipes pipes `json:"pipes"`
 }
 
 // Endpoint contains a generic collection of configuration details
@@ -34,12 +34,25 @@ type endpoints []Endpoint
 // FindByUID looks for an endpoint by UID returning true if found, false if missing
 func (e endpoints) FindByUID(uid UID) (bool, Endpoint) {
 
-	for _, endpoint := range e {
-		if endpoint.UID == uid {
-			return true, endpoint
+	found := false
+	endpoint := Endpoint{}
+
+	e.mapper(func(a Endpoint) {
+		if a.UID == uid {
+			found = true
+			endpoint = a
 		}
+	})
+	return found, endpoint
+}
+
+// endpoint mapper is an action specialised for Endpoints
+type endpointMapper func(e Endpoint)
+
+func (e endpoints) mapper(f endpointMapper) {
+	for _, endpoint := range e {
+		f(endpoint)
 	}
-	return false, Endpoint{}
 }
 
 // Profile is a device profile
@@ -70,4 +83,14 @@ type pipe struct {
 	Profile   UID    `json:"profile"`
 	Listener  UID    `json:"listener"`
 	Endpoints []UID  `json:"endpoints"`
+}
+
+type pipes []pipe
+
+type pipeMapper func(p pipe)
+
+func (p pipes) mapper(f pipeMapper) {
+	for _, pipe := range p {
+		f(pipe)
+	}
 }

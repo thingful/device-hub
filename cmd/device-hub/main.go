@@ -39,14 +39,20 @@ func main() {
 		exitWithError(err)
 	}
 
+	err = config.Validate(configuration)
+
 	if checkConfig {
-		err = config.Validate(configuration)
 		if err != nil {
 			fmt.Println("ERROR : ")
 			fmt.Println(err.Error())
 		}
 		fmt.Println("PASSED")
 		return
+	}
+
+	// don't start with ANY error in the initial configuration file
+	if err != nil {
+		exitWithError(err)
 	}
 
 	app := NewDeviceHub(configuration)
