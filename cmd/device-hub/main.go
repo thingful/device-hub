@@ -33,7 +33,7 @@ func main() {
 		exitWithError(fmt.Errorf("configuration at %s doesn't exist", configurationPath))
 	}
 
-	configuration, err := config.LoadProfile(configurationPath)
+	configuration, err := config.LoadFromFile(configurationPath)
 
 	if err != nil {
 		exitWithError(err)

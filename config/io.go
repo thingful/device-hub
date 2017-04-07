@@ -21,8 +21,8 @@ func Marshal(conf Configuration) ([]byte, error) {
 	return json.Marshal(conf)
 }
 
-// LoadProfile loads a configuration from a location
-func LoadProfile(path string) (*Configuration, error) {
+// LoadFromFile loads a configuration from a location
+func LoadFromFile(path string) (*Configuration, error) {
 
 	bytes, err := ioutil.ReadFile(path)
 
