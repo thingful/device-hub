@@ -1,8 +1,9 @@
 device-hub
 -----------
 
-Takes output from one or many IOT devices and expands it either transforming it into JSON format and/or adding in some metadata. 
-The logic to transform the data is written in javascript.
+
+Takes output from one or many IOT devices using various protocols (HTTP, MQTT) and expands it either transforming it into JSON format and/or adding in some metadata.
+The logic to transform the data is written in java-script.
 
 ```javascript
 function decode (input) {
@@ -12,6 +13,11 @@ function decode (input) {
 }
 
 ```
+
+License
+-------
+
+Released under the terms of "DECODE Accepted Software License"
 
 Build
 -----

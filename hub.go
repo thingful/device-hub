@@ -1,4 +1,4 @@
-// Copyright © 2017 thingful
+// Copyright © 2017 thingfuli
 
 package hub
 
