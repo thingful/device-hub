@@ -17,6 +17,7 @@ function decode (input) {
 License
 -------
 
+Copyright © 2017 thingful
 Released under the terms of "DECODE Accepted Software License"
 
 Build
