@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"sync"
+	"time"
 
 	hub "github.com/thingful/device-hub"
 	"github.com/thingful/device-hub/config"
@@ -22,9 +23,10 @@ type manager struct {
 type state string
 
 const (
-	RUNNING     = state("RUNNING")
-	NOT_RUNNING = state("NOT_RUNNING")
-	ERRORED     = state("ERRORED")
+	UNKNOWN = state("UNKNOWN")
+	RUNNING = state("RUNNING")
+	STOPPED = state("STOPPED")
+	ERRORED = state("ERRORED")
 )
 
 type pipe struct {
@@ -32,8 +34,19 @@ type pipe struct {
 	Endpoints []config.Endpoint
 	Profile   config.Profile
 	Uri       string
-	State     state
-	// TODO : add last error, debug, stats etc
+
+	State   state
+	Started time.Time
+
+	MessageStatistics statistics
+
+	// TODO : add last error, debug etc
+}
+
+type statistics struct {
+	Total  uint64
+	Errors uint64
+	OK     uint64
 }
 
 func NewEndpointManager(ctx context.Context, c *config.Configuration) (*manager, error) {
@@ -73,7 +86,7 @@ func NewEndpointManager(ctx context.Context, c *config.Configuration) (*manager,
 			Listener:  listenerConf,
 			Endpoints: endpoints,
 			Profile:   profile,
-			State:     NOT_RUNNING})
+			State:     UNKNOWN})
 
 	}
 
@@ -88,7 +101,7 @@ func (m *manager) Start() error {
 	m.Lock()
 	defer m.Unlock()
 
-	for _, p := range m.pipes {
+	for n, p := range m.pipes {
 
 		if p.State != RUNNING {
 
@@ -118,8 +131,8 @@ func (m *manager) Start() error {
 				return err
 			}
 
-			go m.startOne(&p, listener, endpoints, channel)
-			p.State = RUNNING
+			go m.startOne(&m.pipes[n], listener, endpoints, channel)
+			m.pipes[n].State = RUNNING
 		}
 	}
 	return nil
@@ -134,18 +147,26 @@ func (m *manager) startOne(p *pipe, listener hub.Listener, endpoints []hub.Endpo
 		select {
 
 		case <-m.ctx.Done():
-			p.State = NOT_RUNNING
+			p.State = STOPPED
 			return
 
 		case err := <-channel.Errors():
+
+			p.MessageStatistics.Total++
+			p.MessageStatistics.Errors++
 			log.Println(err)
 
 		case input := <-channel.Out():
 
 			output, err := scripter.Execute(p.Profile.Script, input)
 
+			p.MessageStatistics.Total++
+
 			if err != nil {
+				p.MessageStatistics.Errors++
 				log.Println(err)
+			} else {
+				p.MessageStatistics.OK++
 			}
 
 			output.Metadata[hub.PROFILE_NAME_KEY] = p.Profile.Name

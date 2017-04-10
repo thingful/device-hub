@@ -48,7 +48,8 @@ func (s *server) PipeList(context.Context, *proto.PipeListRequest) (*proto.PipeL
 	for _, p := range pipes {
 
 		pipe_pb := &proto.Pipe{
-			Uri: p.Uri,
+			Uri:   p.Uri,
+			State: proto.PipeState(proto.PipeState_value[string(p.State)]),
 			Profile: &proto.Profile{
 				Name:        p.Profile.Name,
 				Description: p.Profile.Description,
@@ -59,6 +60,11 @@ func (s *server) PipeList(context.Context, *proto.PipeListRequest) (*proto.PipeL
 				Type: p.Listener.Type,
 			},
 			Endpoints: []*proto.Endpoint{},
+			MessageStats: &proto.Statistics{
+				Total:  p.MessageStatistics.Total,
+				Errors: p.MessageStatistics.Errors,
+				Ok:     p.MessageStatistics.OK,
+			},
 		}
 
 		for _, e := range p.Endpoints {

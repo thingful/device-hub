@@ -26,4 +26,11 @@ func main() {
 	r, err := c.PipeList(context.Background(), &proto.PipeListRequest{})
 
 	fmt.Println(r.Pipes, err)
+
+	for _, p := range r.Pipes {
+
+		fmt.Println(p.State)
+		fmt.Println(p.MessageStats)
+
+	}
 }

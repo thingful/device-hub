@@ -8,6 +8,8 @@ option java_outer_classname = "DeviceHubProto";
 
 package proto;
 
+//import "google/protobuf/timestamp.proto";
+
 service Hub {
   // list all running pipes
   rpc PipeList (PipeListRequest) returns (PipeListReply) {}
@@ -22,9 +24,14 @@ message PipeListReply {
 
 message Pipe {
   string uri = 1;
-  Profile profile = 2;
-  Endpoint listener = 3;
-  repeated Endpoint endpoints = 4;
+  // TODO : reinstate
+  //google.protobuf.Timestamp started = 2;
+  PipeState state = 2;
+  Profile profile = 3;
+  Endpoint listener = 4;
+  Statistics message_stats = 5;
+
+  repeated Endpoint endpoints = 6;
 }
 
 message Endpoint {
@@ -36,4 +43,17 @@ message Profile {
     string name = 1;
     string description = 2;
     string version = 3;
+}
+
+message Statistics {
+    uint64 total = 1;
+    uint64 errors = 2;
+    uint64 ok = 3;
+}
+
+enum PipeState {
+    UNKNOWN = 0;
+    RUNNING = 1;
+    STOPPED = 2;
+    ERRORED = 3;
 }
