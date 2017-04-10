@@ -19,6 +19,11 @@ func (r *router) register(uri string, channel hub.Channel) {
 	r.routes[uri] = channel
 }
 
+func (r *router) delete(uri string) error {
+	delete(r.routes, uri)
+	return nil
+}
+
 func (r *router) Match(uri string) (bool, hub.Channel) {
 	c, ok := r.routes[uri]
 	return ok, c

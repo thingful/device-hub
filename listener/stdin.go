@@ -45,6 +45,10 @@ type stdinChannel struct {
 	cancel context.CancelFunc
 }
 
+func (stdinChannel) Close() error {
+	return nil
+}
+
 func (s stdinChannel) next() {
 
 	contents, err := getInputFromStdIn()

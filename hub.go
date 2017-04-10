@@ -12,6 +12,7 @@ type Listener interface {
 type Channel interface {
 	Errors() chan error
 	Out() chan Message
+	Close() error
 }
 
 // Message contains a Payload, a processed Output and any Metadata collected

@@ -30,7 +30,9 @@ func (h *httpListener) NewChannel(uri string) (hub.Channel, error) {
 	errors := make(chan error)
 	out := make(chan hub.Message)
 
-	channel := defaultChannel{out: out, errors: errors}
+	channel := defaultChannel{out: out, errors: errors, close: func() error {
+		return h.router.delete(uri)
+	}}
 
 	h.router.register(uri, channel)
 	return channel, nil

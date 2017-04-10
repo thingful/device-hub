@@ -59,14 +59,17 @@ func (m *mqttlistener) NewChannel(topic string) (hub.Channel, error) {
 	handler := func(client mqtt.Client, msg mqtt.Message) {
 		input := newHubMessage(msg.Payload(), "MQTT", msg.Topic())
 		out <- input
-
 	}
 
 	if token := m.client.Subscribe(topic, 0, handler); token.Wait() && token.Error() != nil {
-		return NoOpChannel{}, token.Error()
+		return nil, token.Error()
 	}
 
-	return defaultChannel{out: out, errors: errors}, nil
+	return defaultChannel{out: out, errors: errors, close: func() error {
+		token := m.client.Unsubscribe(topic)
+		token.Wait()
+		return token.Error()
+	}}, nil
 }
 
 func (m *mqttlistener) Close() error {
