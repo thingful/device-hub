@@ -44,7 +44,7 @@ coverage: test_integration ## generate and display coverage report
 .PHONY: test_integration 
 
 proto: ## regenerate protobuf files
-	 protoc --go_out=plugin=grpc:. ./proto/*.proto
+	protoc --go_out=plugins=grpc:./proto/ ./proto/*.proto
 
 .PHONY: proto
 
