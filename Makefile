@@ -43,6 +43,11 @@ coverage: test_integration ## generate and display coverage report
 
 .PHONY: test_integration 
 
+proto: ## regenerate protobuf files
+	 protoc --go_out=plugin=grpc:. ./proto/*.proto
+
+.PHONY: proto
+
 pi : tmp/build/$(EXE_NAME)-linux-arm
 darwin: tmp/build/$(EXE_NAME)-darwin-amd64
 linux: tmp/build/$(EXE_NAME)-linux-amd64
