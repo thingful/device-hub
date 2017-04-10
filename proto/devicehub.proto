@@ -1,0 +1,39 @@
+// Copyright © 2017 thingful
+
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "io.thingful.devicehub";
+option java_outer_classname = "DeviceHubProto";
+
+package proto;
+
+service Hub {
+  // list all running pipes
+  rpc PipeList (PipeListRequest) returns (PipeListReply) {}
+}
+
+message PipeListRequest {
+}
+
+message PipeListReply {
+  repeated Pipe pipes = 1;
+}
+
+message Pipe {
+  string uri = 1;
+  Profile profile = 2;
+  Endpoint listener = 3;
+  repeated Endpoint endpoints = 4;
+}
+
+message Endpoint {
+    string uid = 1;
+    string type = 2;
+}
+
+message Profile {
+    string name = 1;
+    string description = 2;
+    string version = 3;
+}
