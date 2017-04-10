@@ -52,7 +52,6 @@ const (
 // information can be found in their respective documentation.
 // Numerous connection options may be specified by configuring a
 // and then supplying a ClientOptions type.
-
 type Client interface {
 	IsConnected() bool
 	Connect() Token
@@ -80,6 +79,8 @@ type client struct {
 	persist         Store
 	options         ClientOptions
 	pingResp        chan struct{}
+	packetResp      chan struct{}
+	keepaliveReset  chan struct{}
 	status          connStatus
 	workers         sync.WaitGroup
 }
@@ -114,10 +115,11 @@ func NewClient(o *ClientOptions) Client {
 }
 
 func (c *client) AddRoute(topic string, callback MessageHandler) {
-    if callback != nil {
-        c.msgRouter.addRoute(topic, callback)
-    }
+	if callback != nil {
+		c.msgRouter.addRoute(topic, callback)
+	}
 }
+
 // IsConnected returns a bool signifying whether
 // the client is connected or not.
 func (c *client) IsConnected() bool {
@@ -229,6 +231,8 @@ func (c *client) Connect() Token {
 		c.errors = make(chan error, 1)
 		c.stop = make(chan struct{})
 		c.pingResp = make(chan struct{}, 1)
+		c.packetResp = make(chan struct{}, 1)
+		c.keepaliveReset = make(chan struct{}, 1)
 
 		c.incomingPubChan = make(chan *packets.PublishPacket, c.options.MessageChannelDepth)
 		c.msgRouter.matchAndDispatch(c.incomingPubChan, c.options.Order, c)
@@ -587,6 +591,11 @@ func (c *client) Unsubscribe(topics ...string) Token {
 
 	DEBUG.Println(CLI, "exit Unsubscribe")
 	return token
+}
+
+func (c *client) OptionsReader() ClientOptionsReader {
+	r := ClientOptionsReader{options: &c.options}
+	return r
 }
 
 //DefaultConnectionLostHandler is a definition of a function that simply

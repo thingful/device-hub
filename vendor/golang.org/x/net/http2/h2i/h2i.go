@@ -1,9 +1,8 @@
 // Copyright 2015 The Go Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
-// See https://code.google.com/p/go/source/browse/CONTRIBUTORS
-// Licensed under the same terms as Go itself:
-// https://code.google.com/p/go/source/browse/LICENSE
+
+// +build !plan9,!solaris
 
 /*
 The h2i command is an interactive HTTP/2 console.
@@ -45,6 +44,7 @@ import (
 var (
 	flagNextProto = flag.String("nextproto", "h2,h2-14", "Comma-separated list of NPN/ALPN protocol names to negotiate.")
 	flagInsecure  = flag.Bool("insecure", false, "Whether to skip TLS cert validation")
+	flagSettings  = flag.String("settings", "empty", "comma-separated list of KEY=value settings for the initial SETTINGS frame. The magic value 'empty' sends an empty initial settings frame, and the magic value 'omit' causes no initial settings frame to be sent.")
 )
 
 type command struct {
@@ -56,8 +56,8 @@ type command struct {
 }
 
 var commands = map[string]command{
-	"ping": command{run: (*h2i).cmdPing},
-	"settings": command{
+	"ping": {run: (*h2i).cmdPing},
+	"settings": {
 		run: (*h2i).cmdSettings,
 		complete: func() []string {
 			return []string{
@@ -71,14 +71,13 @@ var commands = map[string]command{
 			}
 		},
 	},
-	"quit":    command{run: (*h2i).cmdQuit},
-	"headers": command{run: (*h2i).cmdHeaders},
+	"quit":    {run: (*h2i).cmdQuit},
+	"headers": {run: (*h2i).cmdHeaders},
 }
 
 func usage() {
 	fmt.Fprintf(os.Stderr, "Usage: h2i <hostname>\n\n")
 	flag.PrintDefaults()
-	os.Exit(1)
 }
 
 // withPort adds ":443" if another port isn't already present.
@@ -87,6 +86,14 @@ func withPort(host string) string {
 		return net.JoinHostPort(host, "443")
 	}
 	return host
+}
+
+// withoutPort strips the port from addr if present.
+func withoutPort(addr string) string {
+	if h, _, err := net.SplitHostPort(addr); err == nil {
+		return h
+	}
+	return addr
 }
 
 // h2i is the app's state.
@@ -111,6 +118,7 @@ func main() {
 	flag.Parse()
 	if flag.NArg() != 1 {
 		usage()
+		os.Exit(2)
 	}
 	log.SetFlags(0)
 
@@ -134,7 +142,7 @@ func main() {
 
 func (app *h2i) Main() error {
 	cfg := &tls.Config{
-		ServerName:         app.host,
+		ServerName:         withoutPort(app.host),
 		NextProtos:         strings.Split(*flagNextProto, ","),
 		InsecureSkipVerify: *flagInsecure,
 	}
@@ -168,7 +176,7 @@ func (app *h2i) Main() error {
 
 	app.framer = http2.NewFramer(tc, tc)
 
-	oldState, err := terminal.MakeRaw(0)
+	oldState, err := terminal.MakeRaw(int(os.Stdin.Fd()))
 	if err != nil {
 		return err
 	}
@@ -238,10 +246,22 @@ func (app *h2i) Main() error {
 }
 
 func (app *h2i) logf(format string, args ...interface{}) {
-	fmt.Fprintf(app.term, format+"\n", args...)
+	fmt.Fprintf(app.term, format+"\r\n", args...)
 }
 
 func (app *h2i) readConsole() error {
+	if s := *flagSettings; s != "omit" {
+		var args []string
+		if s != "empty" {
+			args = strings.Split(s, ",")
+		}
+		_, c, ok := lookupCommand("settings")
+		if !ok {
+			panic("settings command not found")
+		}
+		c.run(app, args)
+	}
+
 	for {
 		line, err := app.term.ReadLine()
 		if err == io.EOF {
@@ -423,9 +443,9 @@ func (app *h2i) readFrames() error {
 				return nil
 			})
 		case *http2.WindowUpdateFrame:
-			app.logf("  Window-Increment = %v\n", f.Increment)
+			app.logf("  Window-Increment = %v", f.Increment)
 		case *http2.GoAwayFrame:
-			app.logf("  Last-Stream-ID = %d; Error-Code = %v (%d)\n", f.LastStreamID, f.ErrCode, f.ErrCode)
+			app.logf("  Last-Stream-ID = %d; Error-Code = %v (%d)", f.LastStreamID, f.ErrCode, f.ErrCode)
 		case *http2.DataFrame:
 			app.logf("  %q", f.Data())
 		case *http2.HeadersFrame:
@@ -461,7 +481,7 @@ func (app *h2i) encodeHeaders(req *http.Request) []byte {
 		host = req.URL.Host
 	}
 
-	path := req.URL.Path
+	path := req.RequestURI
 	if path == "" {
 		path = "/"
 	}

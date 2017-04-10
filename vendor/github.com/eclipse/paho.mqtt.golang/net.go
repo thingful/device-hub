@@ -89,6 +89,10 @@ func incoming(c *client) {
 		DEBUG.Println(NET, "Received Message")
 		select {
 		case c.ibound <- cp:
+			// Notify keepalive logic that we recently received a packet
+			if c.options.KeepAlive != 0 {
+				c.packetResp <- struct{}{}
+			}
 		case <-c.stop:
 			// This avoids a deadlock should a message arrive while shutting down.
 			// In that case the "reader" of c.ibound might already be gone
@@ -166,7 +170,9 @@ func outgoing(c *client) {
 			}
 		}
 		// Reset ping timer after sending control packet.
-		c.pingResp <- struct{}{}
+		if c.options.KeepAlive != 0 {
+			c.keepaliveReset <- struct{}{}
+		}
 	}
 }
 
