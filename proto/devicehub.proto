@@ -11,8 +11,20 @@ package proto;
 //import "google/protobuf/timestamp.proto";
 
 service Hub {
+
+  // delete pipe by URI
+  rpc PipeDelete (PipeDeleteRequest) returns (PipeDeleteReply) {}
+
   // list all running pipes
   rpc PipeList (PipeListRequest) returns (PipeListReply) {}
+}
+
+message PipeDeleteRequest {
+    string uri = 1;
+}
+
+message PipeDeleteReply {
+    bool ok = 1;
 }
 
 message PipeListRequest {

@@ -16,7 +16,7 @@ import (
 
 type manager struct {
 	ctx   context.Context
-	pipes []pipe
+	pipes map[string]*pipe
 	sync.RWMutex
 }
 
@@ -40,6 +40,8 @@ type pipe struct {
 
 	MessageStatistics statistics
 
+	cancel context.CancelFunc
+
 	// TODO : add last error, debug etc
 }
 
@@ -51,7 +53,7 @@ type statistics struct {
 
 func NewEndpointManager(ctx context.Context, c *config.Configuration) (*manager, error) {
 
-	pipes := []pipe{}
+	pipes := map[string]*pipe{}
 
 	for _, p := range c.Pipes {
 
@@ -81,12 +83,12 @@ func NewEndpointManager(ctx context.Context, c *config.Configuration) (*manager,
 			return nil, fmt.Errorf("profile with UID %s not found", p.Profile)
 		}
 
-		pipes = append(pipes, pipe{
+		pipes[p.Uri] = &pipe{
 			Uri:       p.Uri,
 			Listener:  listenerConf,
 			Endpoints: endpoints,
 			Profile:   profile,
-			State:     UNKNOWN})
+			State:     UNKNOWN}
 
 	}
 
@@ -131,14 +133,19 @@ func (m *manager) Start() error {
 				return err
 			}
 
-			go m.startOne(&m.pipes[n], listener, endpoints, channel)
-			m.pipes[n].State = RUNNING
+			ctx, cancel := context.WithCancel(m.ctx)
+
+			pp := m.pipes[n]
+
+			go m.startOne(ctx, pp, listener, endpoints, channel)
+			pp.cancel = cancel
+			pp.State = RUNNING
 		}
 	}
 	return nil
 }
 
-func (m *manager) startOne(p *pipe, listener hub.Listener, endpoints []hub.Endpoint, channel hub.Channel) {
+func (m *manager) startOne(ctx context.Context, p *pipe, listener hub.Listener, endpoints []hub.Endpoint, channel hub.Channel) {
 
 	scripter := engine.New()
 
@@ -146,8 +153,14 @@ func (m *manager) startOne(p *pipe, listener hub.Listener, endpoints []hub.Endpo
 
 		select {
 
-		case <-m.ctx.Done():
+		case <-ctx.Done():
 			p.State = STOPPED
+			err := channel.Close()
+
+			if err != nil {
+				log.Println(err)
+			}
+
 			return
 
 		case err := <-channel.Errors():
@@ -190,5 +203,29 @@ func (m *manager) List() []pipe {
 
 	m.Lock()
 	defer m.Unlock()
-	return m.pipes
+
+	r := []pipe{}
+
+	for _, p := range m.pipes {
+		r = append(r, *p)
+	}
+
+	return r
+}
+
+func (m *manager) DeletePipeByUID(uri string) error {
+
+	m.Lock()
+	defer m.Unlock()
+
+	p, found := m.pipes[uri]
+	if !found {
+		return fmt.Errorf("pipe with uri : %s not found", uri)
+	}
+
+	p.cancel()
+
+	delete(m.pipes, uri)
+
+	return nil
 }

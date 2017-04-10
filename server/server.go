@@ -24,6 +24,7 @@ func Serve(manager *manager) {
 		log.Fatalf("failed to listen: %v", err)
 	}
 	s := grpc.NewServer()
+
 	proto.RegisterHubServer(s, &server{
 		manager: manager,
 	})
@@ -81,4 +82,20 @@ func (s *server) PipeList(context.Context, *proto.PipeListRequest) (*proto.PipeL
 	}
 
 	return &proto.PipeListReply{Pipes: pipes_pb}, nil
+}
+
+func (s *server) PipeDelete(ctx context.Context, request *proto.PipeDeleteRequest) (*proto.PipeDeleteReply, error) {
+
+	err := s.manager.DeletePipeByUID(request.Uri)
+
+	if err != nil {
+		log.Print(err.Error())
+		return &proto.PipeDeleteReply{
+			Ok: false,
+		}, err
+	}
+
+	return &proto.PipeDeleteReply{
+		Ok: true,
+	}, nil
 }
