@@ -48,6 +48,12 @@ proto: ## regenerate protobuf files
 
 .PHONY: proto
 
+docker_up: ## run dependencies as docker containers
+	docker-compose up -d
+	docker ps
+
+.PHONY: docker_up
+
 pi : tmp/build/$(EXE_NAME)-linux-arm
 darwin: tmp/build/$(EXE_NAME)-darwin-amd64
 linux: tmp/build/$(EXE_NAME)-linux-amd64
