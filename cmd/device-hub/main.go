@@ -3,12 +3,14 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
 	hub "github.com/thingful/device-hub"
 	"github.com/thingful/device-hub/config"
+	"github.com/thingful/device-hub/server"
 )
 
 var RootCmd = &cobra.Command{
@@ -18,6 +20,16 @@ var RootCmd = &cobra.Command{
 func init() {
 
 	var configurationPath string
+
+	// Client can run either in insecure mode or provide details for mutual tls
+	// The default is for secure connections to be used.
+	var options server.Options
+
+	RootCmd.PersistentFlags().StringVarP(&options.Binding, "binding", "b", ":50051", "RPC binding for the device-hub daemon.")
+	RootCmd.PersistentFlags().BoolVar(&options.Insecure, "insecure", false, "Switch off Mutual TLS authentication.")
+	RootCmd.PersistentFlags().StringVar(&options.CertFilePath, "cert-file", "", "Certificate used for SSL/TLS RPC connections to the device-hub daemon.")
+	RootCmd.PersistentFlags().StringVar(&options.KeyFilePath, "key-file", "", "Key file for the certificate (--cert-file).")
+	RootCmd.PersistentFlags().StringVar(&options.TrustedCAFilePath, "trusted-ca-file", "", "Trusted certificate authority.")
 
 	RootCmd.PersistentFlags().StringVarP(&configurationPath, "config", "c", "./config.json", "Path to configuration file.")
 
@@ -54,15 +66,16 @@ func init() {
 			if err != nil {
 				return err
 			}
-			app := NewDeviceHub(conf)
 
-			ctx, err := app.Run()
+			app := NewDeviceHub(options, conf)
+
+			ctx := context.Background()
+
+			err = app.Run(ctx)
 
 			if err != nil {
 				return err
 			}
-
-			<-ctx.Done()
 
 			return nil
 		},

@@ -9,7 +9,9 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"net/url"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 	hub "github.com/thingful/device-hub"
@@ -35,12 +37,12 @@ func init() {
 	var keyFilePath string
 	var trustedCAFilePath string
 
-	RootCmd.PersistentFlags().StringVarP(&hubAddress, "binding", "b", "localhost:50051", "RPC binding for the device-hub daemon")
+	RootCmd.PersistentFlags().StringVarP(&hubAddress, "binding", "b", "localhost:50051", "RPC binding for the device-hub daemon.")
 
-	RootCmd.PersistentFlags().BoolVar(&insecure, "insecure", false, "Switch off mutual SSL authentication")
+	RootCmd.PersistentFlags().BoolVar(&insecure, "insecure", false, "Switch off Mutual TLS authentication.")
 
-	RootCmd.PersistentFlags().StringVar(&certFilePath, "cert-file", "", "Certificate used for SSL/TLS connections to the device-hub daemon")
-	RootCmd.PersistentFlags().StringVar(&keyFilePath, "key-file", "", "Key for the certificate")
+	RootCmd.PersistentFlags().StringVar(&certFilePath, "cert-file", "", "Certificate used for SSL/TLS RPC connections to the device-hub daemon.")
+	RootCmd.PersistentFlags().StringVar(&keyFilePath, "key-file", "", "Key file for the certificate (--cert-file).")
 	RootCmd.PersistentFlags().StringVar(&trustedCAFilePath, "trusted-ca-file", "", "Trusted certificate authority.")
 
 	versionCommand := &cobra.Command{
@@ -73,12 +75,21 @@ func init() {
 
 			r, err := c.PipeList(context.Background(), &proto.PipeListRequest{})
 
-			fmt.Println(r.Pipes, err)
+			if err != nil {
+				return err
+			}
 
 			for _, p := range r.Pipes {
+				// TODO : find a really good terminal library!
+				fmt.Printf("URI: '%s' \tSTATUS: %s\n", p.Uri, p.State.String())
 
-				fmt.Println(p.State)
-				fmt.Println(p.MessageStats)
+				endpointsSummary := []string{}
+				for _, e := range p.Endpoints {
+					endpointsSummary = append(endpointsSummary, fmt.Sprintf("%s [%s]", e.Uid, e.Type))
+				}
+
+				fmt.Printf("%s [%s] -> %s [%s] -> %s\n", p.Listener.Uid, p.Listener.Type, p.Profile.Name, p.Profile.Version, strings.Join(endpointsSummary, " && "))
+				fmt.Printf("Ok: %d Errors: %d Total : %d\n", p.MessageStats.Ok, p.MessageStats.Errors, p.MessageStats.Total)
 
 			}
 
@@ -104,7 +115,11 @@ func init() {
 				Uri: uri,
 			})
 
-			fmt.Println(r, err)
+			if err != nil {
+				return err
+			}
+
+			fmt.Println(r)
 
 			return nil
 		}}
@@ -153,8 +168,15 @@ func secureGRPCConnection(address string, certFilePath, keyFilePath, trustedCAFi
 		return nil, errors.New("failed to append ca certs")
 	}
 
+	// Parse out the serverName
+	urz, err := url.Parse(address)
+
+	if err != nil {
+		return nil, err
+	}
+
 	creds := credentials.NewTLS(&tls.Config{
-		ServerName:   address,
+		ServerName:   urz.Host,
 		Certificates: []tls.Certificate{certificate},
 		RootCAs:      certPool,
 	})

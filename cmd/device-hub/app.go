@@ -12,38 +12,34 @@ import (
 )
 
 type app struct {
-	config *config.Configuration
+	config  *config.Configuration
+	options server.Options
 }
 
-func NewDeviceHub(config *config.Configuration) app {
+func NewDeviceHub(options server.Options, config *config.Configuration) app {
 
 	return app{
-		config: config,
+		config:  config,
+		options: options,
 	}
 }
 
 // Run attempts to start up the configuration by iterating thought the
 // pipes section ensuring that the endpoints and listeners exist.
 // Will return an error if the complete configuration is unable to start correctly.
-func (a app) Run() (context.Context, error) {
-
-	ctx := context.Background()
+func (a app) Run(ctx context.Context) error {
 
 	manager, err := server.NewEndpointManager(ctx, a.config)
 
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	err = manager.Start()
 
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	// launch RPC server
-	// TODO : configure this properly
-	go server.Serve(manager)
-
-	return ctx, nil
+	return server.Serve(a.options, manager)
 }

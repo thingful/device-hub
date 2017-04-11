@@ -3,6 +3,12 @@
 package server
 
 import (
+	"crypto/tls"
+	"crypto/x509"
+	"errors"
+	"fmt"
+	"io/ioutil"
+
 	context "golang.org/x/net/context"
 
 	"log"
@@ -11,34 +17,79 @@ import (
 	"github.com/thingful/device-hub/proto"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/reflection"
 )
 
-const (
-	port = ":50051"
-)
+func Serve(options Options, manager *manager) error {
 
-func Serve(manager *manager) {
-	lis, err := net.Listen("tcp", port)
-	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+	var grpcServer *grpc.Server
+
+	if options.Insecure {
+
+		grpcServer = grpc.NewServer()
+
+	} else {
+
+		// Load the certificates from disk
+		certificate, err := tls.LoadX509KeyPair(options.CertFilePath, options.KeyFilePath)
+		if err != nil {
+			return fmt.Errorf("could not load server key pair: %s", err)
+		}
+
+		// Create a certificate pool from the certificate authority
+		certPool := x509.NewCertPool()
+		ca, err := ioutil.ReadFile(options.TrustedCAFilePath)
+		if err != nil {
+			return fmt.Errorf("could not read ca certificate: %s", err)
+		}
+
+		// Append the client certificates from the CA
+		if ok := certPool.AppendCertsFromPEM(ca); !ok {
+			return errors.New("failed to append client certs")
+		}
+
+		// Create the TLS credentials
+		creds := credentials.NewTLS(&tls.Config{
+			ClientAuth:   tls.RequireAndVerifyClientCert,
+			Certificates: []tls.Certificate{certificate},
+			ClientCAs:    certPool,
+		})
+
+		// Create the gRPC server with the credentials
+		grpcServer = grpc.NewServer(grpc.Creds(creds))
+
 	}
-	s := grpc.NewServer()
 
-	proto.RegisterHubServer(s, &server{
+	proto.RegisterHubServer(grpcServer, &server{
 		manager: manager,
 	})
 
 	// Register reflection service on gRPC server.
-	reflection.Register(s)
+	reflection.Register(grpcServer)
 
-	if err := s.Serve(lis); err != nil {
-		log.Fatalf("failed to serve: %v", err)
+	listener, err := net.Listen("tcp", options.Binding)
+
+	if err != nil {
+		return fmt.Errorf("failed to listen: %v", err)
 	}
+
+	if err := grpcServer.Serve(listener); err != nil {
+		return err
+	}
+	return nil
 }
 
 type server struct {
 	manager *manager
+}
+
+type Options struct {
+	Binding           string
+	Insecure          bool
+	CertFilePath      string
+	KeyFilePath       string
+	TrustedCAFilePath string
 }
 
 func (s *server) PipeList(context.Context, *proto.PipeListRequest) (*proto.PipeListReply, error) {
@@ -91,8 +142,9 @@ func (s *server) PipeDelete(ctx context.Context, request *proto.PipeDeleteReques
 	if err != nil {
 		log.Print(err.Error())
 		return &proto.PipeDeleteReply{
-			Ok: false,
-		}, err
+			Ok:    false,
+			Error: err.Error(),
+		}, nil
 	}
 
 	return &proto.PipeDeleteReply{
