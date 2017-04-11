@@ -26,8 +26,3 @@ type Message struct {
 type Endpoint interface {
 	Write(message Message) error
 }
-
-var (
-	// SourceVersion is set via the makefile
-	SourceVersion = "DEVELOPMENT"
-)
