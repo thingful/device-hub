@@ -37,7 +37,7 @@ func init() {
 	var keyFilePath string
 	var trustedCAFilePath string
 
-	RootCmd.PersistentFlags().StringVarP(&hubAddress, "binding", "b", "localhost:50051", "RPC binding for the device-hub daemon.")
+	RootCmd.PersistentFlags().StringVarP(&hubAddress, "binding", "b", "127.0.0.1:50051", "RPC binding for the device-hub daemon.")
 
 	RootCmd.PersistentFlags().BoolVar(&insecure, "insecure", false, "Switch off Mutual TLS authentication.")
 
