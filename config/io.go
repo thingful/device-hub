@@ -30,5 +30,16 @@ func LoadFromFile(path string) (*Configuration, error) {
 		return nil, err
 	}
 
-	return Unmarshal(bytes)
+	conf, err := Unmarshal(bytes)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO : does validating every configuration file make sense
+	// as the error returned could be a warning rather than an
+	// error ?
+	err = Validate(conf)
+
+	return conf, err
 }
