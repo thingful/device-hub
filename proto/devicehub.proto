@@ -12,11 +12,26 @@ package proto;
 
 service Hub {
 
+  // add a pipe to an existing listener and endpoint 
+  rpc PipeAdd (PipeAddRequest) returns (PipeAddReply) {}
+
   // delete pipe by URI
   rpc PipeDelete (PipeDeleteRequest) returns (PipeDeleteReply) {}
 
   // list all running pipes
   rpc PipeList (PipeListRequest) returns (PipeListReply) {}
+}
+
+message PipeAddRequest {
+    string uri = 1;
+    string profile_uid = 2;
+    string listener_uid = 3;
+    repeated string endpoint_uids = 4;
+}
+
+message PipeAddReply {
+    bool ok = 1;
+    string error = 2;
 }
 
 message PipeDeleteRequest {
