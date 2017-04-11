@@ -97,6 +97,9 @@ func init() {
 		}}
 
 	var uri string
+	var profile string
+	var listener string
+	var endpoints []string
 
 	deleteCmd := &cobra.Command{
 		Use: "delete",
@@ -126,7 +129,42 @@ func init() {
 
 	deleteCmd.Flags().StringVar(&uri, "uri", "", "Uri of pipe to delete")
 
-	pipeCommands.AddCommand(listCommand, deleteCmd)
+	addCmd := &cobra.Command{
+		Use: "add",
+		RunE: func(cmd *cobra.Command, args []string) error {
+
+			conn, err := NewGRPCConnection(insecure, hubAddress, certFilePath, keyFilePath, trustedCAFilePath)
+
+			if err != nil {
+				return fmt.Errorf("did not connect: %v", err)
+			}
+
+			defer conn.Close()
+			c := proto.NewHubClient(conn)
+
+			r, err := c.PipeAdd(context.Background(), &proto.PipeAddRequest{
+				Uri:          uri,
+				ProfileUid:   profile,
+				ListenerUid:  listener,
+				EndpointUids: endpoints,
+			})
+
+			if err != nil {
+				return err
+			}
+
+			fmt.Println(r)
+
+			return nil
+		},
+	}
+
+	addCmd.Flags().StringVar(&uri, "uri", "", "Uri of pipe to add.")
+	addCmd.Flags().StringVar(&profile, "profile", "", "Uid of the profile.")
+	addCmd.Flags().StringVar(&listener, "listener", "", "Uid of the listener.")
+	addCmd.Flags().StringArrayVar(&endpoints, "endpoints", []string{}, "Uids for the destination endpoints.")
+
+	pipeCommands.AddCommand(listCommand, deleteCmd, addCmd)
 	RootCmd.AddCommand(pipeCommands)
 
 }

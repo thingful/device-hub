@@ -140,7 +140,7 @@ func (s *server) PipeDelete(ctx context.Context, request *proto.PipeDeleteReques
 	err := s.manager.DeletePipeByUID(request.Uri)
 
 	if err != nil {
-		log.Print(err.Error())
+		log.Print("PipeDelete", err.Error())
 		return &proto.PipeDeleteReply{
 			Ok:    false,
 			Error: err.Error(),
@@ -150,4 +150,22 @@ func (s *server) PipeDelete(ctx context.Context, request *proto.PipeDeleteReques
 	return &proto.PipeDeleteReply{
 		Ok: true,
 	}, nil
+}
+
+func (s *server) PipeAdd(ctx context.Context, request *proto.PipeAddRequest) (*proto.PipeAddReply, error) {
+
+	err := s.manager.AddPipe(request.Uri, request.ProfileUid, request.ListenerUid, request.EndpointUids)
+
+	if err != nil {
+		log.Print("PipeAdd", err.Error())
+		return &proto.PipeAddReply{
+			Ok:    false,
+			Error: err.Error(),
+		}, nil
+	}
+
+	return &proto.PipeAddReply{
+		Ok: true,
+	}, nil
+
 }
