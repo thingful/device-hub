@@ -33,7 +33,7 @@ func TestIsEmpty(t *testing.T) {
 	// test no listeners
 	ok, _ = isEmpty(&Configuration{
 		Pipes: pipes{
-			pipe{},
+			Pipe{},
 		},
 		Endpoints: endpoints{
 			Endpoint{},
@@ -45,7 +45,7 @@ func TestIsEmpty(t *testing.T) {
 	// test no endpoints
 	ok, _ = isEmpty(&Configuration{
 		Pipes: pipes{
-			pipe{},
+			Pipe{},
 		},
 		Listeners: endpoints{
 			Endpoint{},
@@ -57,7 +57,7 @@ func TestIsEmpty(t *testing.T) {
 	// valid
 	ok, _ = isEmpty(&Configuration{
 		Pipes: pipes{
-			pipe{},
+			Pipe{},
 		},
 		Listeners: endpoints{
 			Endpoint{},
@@ -135,8 +135,8 @@ func TestUniquePipeURIs(t *testing.T) {
 
 	config := &Configuration{
 		Pipes: pipes{
-			pipe{Uri: "foo"},
-			pipe{Uri: "foo"},
+			Pipe{Uri: "foo"},
+			Pipe{Uri: "foo"},
 		},
 	}
 
@@ -145,8 +145,8 @@ func TestUniquePipeURIs(t *testing.T) {
 
 	config2 := &Configuration{
 		Pipes: pipes{
-			pipe{Uri: "foo"},
-			pipe{Uri: "bar"},
+			Pipe{Uri: "foo"},
+			Pipe{Uri: "bar"},
 		},
 	}
 
@@ -170,7 +170,7 @@ func TestValidatePipes_WithValidConfig(t *testing.T) {
 			Profile{UID: UID("cat")},
 		},
 		Pipes: pipes{
-			pipe{
+			Pipe{
 				Uri:       "/one",
 				Profile:   UID("cat"),
 				Listener:  UID("foo"),
@@ -197,7 +197,7 @@ func TestValidatePipes_WithMissingListener(t *testing.T) {
 			Profile{UID: UID("cat")},
 		},
 		Pipes: pipes{
-			pipe{
+			Pipe{
 				Uri:       "/one",
 				Profile:   UID("cat"),
 				Listener:  UID("foo"),
@@ -224,7 +224,7 @@ func TestValidatePipes_WithMissingProfile(t *testing.T) {
 		},
 		Profiles: profiles{},
 		Pipes: pipes{
-			pipe{
+			Pipe{
 				Uri:       "/one",
 				Profile:   UID("cat"),
 				Listener:  UID("foo"),
@@ -251,7 +251,7 @@ func TestValidatePipes_WithMissingEndpoint(t *testing.T) {
 			Profile{UID: UID("cat")},
 		},
 		Pipes: pipes{
-			pipe{
+			Pipe{
 				Uri:       "/one",
 				Profile:   UID("cat"),
 				Listener:  UID("foo"),

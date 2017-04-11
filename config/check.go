@@ -104,7 +104,7 @@ func uniquePipeURIs(config *Configuration) (bool, *result) {
 	var ret *result
 	uris := map[string]bool{}
 
-	f := func(p pipe) {
+	f := func(p Pipe) {
 
 		alreadySeen, _ := uris[p.Uri]
 		if alreadySeen {
@@ -133,7 +133,7 @@ func validatePipes(config *Configuration) (bool, *result) {
 	ok := true
 	var ret *result
 
-	f := func(p pipe) {
+	f := func(p Pipe) {
 
 		profileExists, _ := config.Profiles.FindByUID(p.Profile)
 

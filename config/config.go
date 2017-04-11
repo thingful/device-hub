@@ -78,16 +78,16 @@ func (p profiles) FindByUID(uid UID) (bool, Profile) {
 	return false, Profile{}
 }
 
-type pipe struct {
+type Pipe struct {
 	Uri       string `json:"uri"`
 	Profile   UID    `json:"profile"`
 	Listener  UID    `json:"listener"`
 	Endpoints []UID  `json:"endpoints"`
 }
 
-type pipes []pipe
+type pipes []Pipe
 
-type pipeMapper func(p pipe)
+type pipeMapper func(p Pipe)
 
 func (p pipes) mapper(f pipeMapper) {
 	for _, pipe := range p {
