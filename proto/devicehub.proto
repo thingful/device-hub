@@ -25,6 +25,7 @@ message PipeDeleteRequest {
 
 message PipeDeleteReply {
     bool ok = 1;
+    string error = 2;
 }
 
 message PipeListRequest {
