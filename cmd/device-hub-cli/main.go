@@ -4,33 +4,161 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
+	"errors"
 	"fmt"
-	"log"
+	"io/ioutil"
+	"os"
 
+	"github.com/spf13/cobra"
+	hub "github.com/thingful/device-hub"
 	"github.com/thingful/device-hub/proto"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
-const (
-	address = "localhost:50051"
-)
+var RootCmd = &cobra.Command{
+	Use: "device-hub-cli",
+}
+
+func init() {
+
+	var hubAddress string
+
+	// Client can run either in insecure mode or provide details for mutual tls
+	// The default is for secure connections to be used.
+	var insecure bool
+
+	// if insecure == false the following need to be set
+	var certFilePath string
+	var keyFilePath string
+	var trustedCAFilePath string
+
+	RootCmd.PersistentFlags().StringVarP(&hubAddress, "binding", "b", "localhost:50051", "RPC binding for the device-hub daemon")
+
+	RootCmd.PersistentFlags().BoolVar(&insecure, "insecure", false, "Switch off mutual SSL authentication")
+
+	RootCmd.PersistentFlags().StringVar(&certFilePath, "cert-file", "", "Certificate used for SSL/TLS connections to the device-hub daemon")
+	RootCmd.PersistentFlags().StringVar(&keyFilePath, "key-file", "", "Key for the certificate")
+	RootCmd.PersistentFlags().StringVar(&trustedCAFilePath, "trusted-ca-file", "", "Trusted certificate authority.")
+
+	versionCommand := &cobra.Command{
+		Use:   "version",
+		Short: "Display version information",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			fmt.Println(hub.ClientVersionString())
+			return nil
+		},
+	}
+
+	RootCmd.AddCommand(versionCommand)
+
+	pipeCommands := &cobra.Command{
+		Use: "pipe",
+	}
+
+	listCommand := &cobra.Command{
+		Use: "list",
+		RunE: func(cmd *cobra.Command, args []string) error {
+
+			conn, err := NewGRPCConnection(insecure, hubAddress, certFilePath, keyFilePath, trustedCAFilePath)
+
+			if err != nil {
+				return fmt.Errorf("did not connect: %v", err)
+			}
+
+			defer conn.Close()
+			c := proto.NewHubClient(conn)
+
+			r, err := c.PipeList(context.Background(), &proto.PipeListRequest{})
+
+			fmt.Println(r.Pipes, err)
+
+			for _, p := range r.Pipes {
+
+				fmt.Println(p.State)
+				fmt.Println(p.MessageStats)
+
+			}
+
+			return nil
+		}}
+
+	var uri string
+
+	deleteCmd := &cobra.Command{
+		Use: "delete",
+		RunE: func(cmd *cobra.Command, args []string) error {
+
+			conn, err := NewGRPCConnection(insecure, hubAddress, certFilePath, keyFilePath, trustedCAFilePath)
+
+			if err != nil {
+				return fmt.Errorf("did not connect: %v", err)
+			}
+
+			defer conn.Close()
+			c := proto.NewHubClient(conn)
+
+			r, err := c.PipeDelete(context.Background(), &proto.PipeDeleteRequest{
+				Uri: uri,
+			})
+
+			fmt.Println(r, err)
+
+			return nil
+		}}
+
+	deleteCmd.Flags().StringVar(&uri, "uri", "", "Uri of pipe to delete")
+
+	pipeCommands.AddCommand(listCommand, deleteCmd)
+	RootCmd.AddCommand(pipeCommands)
+
+}
 
 func main() {
-	conn, err := grpc.Dial(address, grpc.WithInsecure())
+	if err := RootCmd.Execute(); err != nil {
+		os.Exit(-1)
+	}
+}
+
+func NewGRPCConnection(insecure bool, address string, certFilePath, keyFilePath, trustedCAFilePath string) (*grpc.ClientConn, error) {
+
+	if insecure {
+		return insecureGRPCConnection(address)
+	}
+	return secureGRPCConnection(address, certFilePath, keyFilePath, trustedCAFilePath)
+}
+
+func insecureGRPCConnection(address string) (*grpc.ClientConn, error) {
+	return grpc.Dial(address, grpc.WithInsecure())
+}
+
+func secureGRPCConnection(address string, certFilePath, keyFilePath, trustedCAFilePath string) (*grpc.ClientConn, error) {
+
+	certificate, err := tls.LoadX509KeyPair(certFilePath, keyFilePath)
 	if err != nil {
-		log.Fatalf("did not connect: %v", err)
+		return nil, fmt.Errorf("could not load client key pair: %s", err)
 	}
-	defer conn.Close()
-	c := proto.NewHubClient(conn)
 
-	r, err := c.PipeList(context.Background(), &proto.PipeListRequest{})
-
-	fmt.Println(r.Pipes, err)
-
-	for _, p := range r.Pipes {
-
-		fmt.Println(p.State)
-		fmt.Println(p.MessageStats)
-
+	// Create a certificate pool from the certificate authority
+	certPool := x509.NewCertPool()
+	ca, err := ioutil.ReadFile(trustedCAFilePath)
+	if err != nil {
+		return nil, fmt.Errorf("could not read ca certificate: %s", err)
 	}
+
+	// Append the certificates from the CA
+	if ok := certPool.AppendCertsFromPEM(ca); !ok {
+		return nil, errors.New("failed to append ca certs")
+	}
+
+	creds := credentials.NewTLS(&tls.Config{
+		ServerName:   address,
+		Certificates: []tls.Certificate{certificate},
+		RootCAs:      certPool,
+	})
+
+	// Create a connection with the TLS credentials
+	return grpc.Dial(address, grpc.WithTransportCredentials(creds))
 }

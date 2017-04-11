@@ -3,71 +3,76 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"os"
 
+	"github.com/spf13/cobra"
 	hub "github.com/thingful/device-hub"
 	"github.com/thingful/device-hub/config"
-	"github.com/thingful/go/file"
 )
 
-func main() {
-
-	var showVersion bool
-	var checkConfig bool
-	var configurationPath string
-
-	flag.StringVar(&configurationPath, "config", "./config.json", "path to a json configuration file.")
-	flag.BoolVar(&showVersion, "version", false, "show version.")
-	flag.BoolVar(&checkConfig, "check", false, "validate configuration file.")
-
-	flag.Parse()
-
-	if showVersion {
-		fmt.Println(fmt.Sprintf("device-hub.0.1.%s", hub.SourceVersion))
-		return
-	}
-
-	if !file.Exists(configurationPath) {
-		exitWithError(fmt.Errorf("configuration at %s doesn't exist", configurationPath))
-	}
-
-	configuration, err := config.LoadFromFile(configurationPath)
-
-	if err != nil {
-		exitWithError(err)
-	}
-
-	err = config.Validate(configuration)
-
-	if checkConfig {
-		if err != nil {
-			fmt.Println("ERROR : ")
-			fmt.Println(err.Error())
-			return
-		}
-		fmt.Println("PASSED")
-		return
-	}
-
-	// don't start with ANY error in the initial configuration file
-	if err != nil {
-		exitWithError(err)
-	}
-
-	app := NewDeviceHub(configuration)
-
-	ctx, err := app.Run()
-
-	if err != nil {
-		exitWithError(err)
-	}
-
-	<-ctx.Done()
+var RootCmd = &cobra.Command{
+	Use: "device-hub",
 }
 
-func exitWithError(err error) {
-	fmt.Fprintf(os.Stderr, "error: %v\n", err)
-	os.Exit(1)
+func init() {
+
+	var configurationPath string
+
+	RootCmd.PersistentFlags().StringVarP(&configurationPath, "config", "c", "./config.json", "Path to configuration file.")
+
+	versionCommand := &cobra.Command{
+		Use:   "version",
+		Short: "Display version information",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			fmt.Println(hub.DaemonVersionString())
+			return nil
+		},
+	}
+
+	RootCmd.AddCommand(versionCommand)
+
+	checkConfig := &cobra.Command{
+		Use:   "check",
+		Short: "Load,parse and check the configuration file.",
+		RunE: func(cmd *cobra.Command, args []string) error {
+
+			_, err := config.LoadFromFile(configurationPath)
+			return err
+		},
+	}
+
+	RootCmd.AddCommand(checkConfig)
+
+	daemon := &cobra.Command{
+		Use:   "start",
+		Short: "Start device hub.",
+		RunE: func(cmd *cobra.Command, args []string) error {
+
+			conf, err := config.LoadFromFile(configurationPath)
+
+			if err != nil {
+				return err
+			}
+			app := NewDeviceHub(conf)
+
+			ctx, err := app.Run()
+
+			if err != nil {
+				return err
+			}
+
+			<-ctx.Done()
+
+			return nil
+		},
+	}
+	RootCmd.AddCommand(daemon)
+
+}
+
+func main() {
+	if err := RootCmd.Execute(); err != nil {
+		os.Exit(-1)
+	}
 }
