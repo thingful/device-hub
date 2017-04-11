@@ -1,5 +1,5 @@
 hash: 41413bf9dbab29817253dcad6608086361e41d9a982a08c8e06404f838dc8d1e
-updated: 2017-04-10T09:28:30.189540377+01:00
+updated: 2017-04-11T10:06:45.339698572+01:00
 imports:
 - name: github.com/eclipse/paho.mqtt.golang
   version: 69afaac643519c4a3d3e7877e3b8ad5b48b15568
@@ -10,6 +10,8 @@ imports:
   subpackages:
   - proto
   - protoc-gen-go/descriptor
+- name: github.com/inconshreveable/mousetrap
+  version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/robertkrimen/otto
   version: 1861f2408b93febb6dca3e39483fa6fe63d6e70f
   subpackages:
@@ -21,10 +23,10 @@ imports:
   - token
 - name: github.com/spf13/cast
   version: ce135a4ebeee6cfe9a26c93ee0d37825f26113c7
-- name: github.com/thingful/go
-  version: b4396920918c6d9693891d9de83553df09b4d752
-  subpackages:
-  - file
+- name: github.com/spf13/cobra
+  version: 5deb57bbca49eb370538fc295ba4b2988f9f5e09
+- name: github.com/spf13/pflag
+  version: 9a906f17374922ed0f74e1b2f593d3723f2ffb00
 - name: golang.org/x/net
   version: d1e1b351919c6738fdeb9893d5c998b161464f0c
   subpackages:
@@ -65,7 +67,7 @@ imports:
   - base64vlq
 testImports:
 - name: github.com/davecgh/go-spew
-  version: 04cdfd42973bb9c8589fd6a731800cf222fde1a9
+  version: 6d212800a42e8ab5c146b8ace3490ee17e5225f9
   subpackages:
   - spew
 - name: github.com/mdevilliers/go-compose
