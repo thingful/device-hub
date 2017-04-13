@@ -92,47 +92,74 @@ type Options struct {
 	TrustedCAFilePath string
 }
 
+func (s *server) EndpointAdd(ctx context.Context, request *proto.EndpointAddRequest) (*proto.EndpointAddReply, error) {
+	panic("not implemented")
+}
+
+func (s *server) EndpointDelete(ctx context.Context, request *proto.EndpointDeleteRequest) (*proto.EndpointDeleteReply, error) {
+	panic("not implemented")
+}
+
+func (s *server) EndpointList(ctx context.Context, request *proto.EndpointListRequest) (*proto.EndpointListReply, error) {
+	panic("not implemented")
+}
+
+func (s *server) ListenerAdd(ctx context.Context, request *proto.ListenerAddRequest) (*proto.ListenerAddReply, error) {
+	panic("not implemented")
+}
+
+func (s *server) ListenerDelete(ctx context.Context, request *proto.ListenerDeleteRequest) (*proto.ListenerDeleteReply, error) {
+	panic("not implemented")
+}
+
+func (s *server) ListenerList(ctx context.Context, request *proto.ListenerListRequest) (*proto.ListenerListReply, error) {
+	panic("not implemented")
+}
+
 func (s *server) PipeList(context.Context, *proto.PipeListRequest) (*proto.PipeListReply, error) {
 
-	pipes := s.manager.List()
-	pipes_pb := []*proto.Pipe{}
+	/*
+		pipes := s.manager.List()
+		pipes_pb := []*proto.Pipe{}
 
-	for _, p := range pipes {
+		for _, p := range pipes {
 
-		pipe_pb := &proto.Pipe{
-			Uri:   p.Uri,
-			State: proto.PipeState(proto.PipeState_value[string(p.State)]),
-			Profile: &proto.Profile{
-				Name:        p.Profile.Name,
-				Description: p.Profile.Description,
-				Version:     p.Profile.Version,
-			},
-			Listener: &proto.Endpoint{
-				Uid:  string(p.Listener.UID),
-				Type: p.Listener.Type,
-			},
-			Endpoints: []*proto.Endpoint{},
-			MessageStats: &proto.Statistics{
-				Total:  p.MessageStatistics.Total,
-				Errors: p.MessageStatistics.Errors,
-				Ok:     p.MessageStatistics.OK,
-			},
-		}
-
-		for _, e := range p.Endpoints {
-
-			endpoint_pb := &proto.Endpoint{
-				Uid:  string(e.UID),
-				Type: e.Type,
+			pipe_pb := &proto.Pipe{
+				Uri:   p.Uri,
+				State: proto.PipeState(proto.PipeState_value[string(p.State)]),
+				Profile: &proto.Profile{
+					Name:        p.Profile.Name,
+					Description: p.Profile.Description,
+					Version:     p.Profile.Version,
+				},
+				Listener: &proto.Endpoint{
+					Uid:  string(p.Listener.UID),
+					Type: p.Listener.Type,
+				},
+				Endpoints: []*proto.Endpoint{},
+				MessageStats: &proto.Statistics{
+					Total:  p.MessageStatistics.Total,
+					Errors: p.MessageStatistics.Errors,
+					Ok:     p.MessageStatistics.OK,
+				},
 			}
 
-			pipe_pb.Endpoints = append(pipe_pb.Endpoints, endpoint_pb)
+			for _, e := range p.Endpoints {
+
+				endpoint_pb := &proto.Endpoint{
+					Uid:  string(e.UID),
+					Type: e.Type,
+				}
+
+				pipe_pb.Endpoints = append(pipe_pb.Endpoints, endpoint_pb)
+			}
+
+			pipes_pb = append(pipes_pb, pipe_pb)
 		}
 
-		pipes_pb = append(pipes_pb, pipe_pb)
-	}
-
-	return &proto.PipeListReply{Pipes: pipes_pb}, nil
+		return &proto.PipeListReply{Pipes: pipes_pb}, nil
+	*/
+	return &proto.PipeListReply{}, nil
 }
 
 func (s *server) PipeDelete(ctx context.Context, request *proto.PipeDeleteRequest) (*proto.PipeDeleteReply, error) {
@@ -168,4 +195,8 @@ func (s *server) PipeAdd(ctx context.Context, request *proto.PipeAddRequest) (*p
 		Ok: true,
 	}, nil
 
+}
+
+func (s *server) Stats(ctx context.Context, request *proto.StatsRequest) (*proto.StatsReply, error) {
+	panic("not implemented")
 }
