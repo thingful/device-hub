@@ -9,6 +9,18 @@ It is generated from these files:
 	proto/devicehub.proto
 
 It has these top-level messages:
+	EndpointAddRequest
+	EndpointAddReply
+	EndpointDeleteRequest
+	EndpointDeleteReply
+	EndpointListRequest
+	EndpointListReply
+	ListenerAddRequest
+	ListenerAddReply
+	ListenerDeleteRequest
+	ListenerDeleteReply
+	ListenerListRequest
+	ListenerListReply
 	PipeAddRequest
 	PipeAddReply
 	PipeDeleteRequest
@@ -16,8 +28,13 @@ It has these top-level messages:
 	PipeListRequest
 	PipeListReply
 	Pipe
+	PipeStatus
 	Endpoint
+	Listener
 	Profile
+	Script
+	StatsRequest
+	StatsReply
 	Statistics
 */
 package proto
@@ -42,44 +59,296 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto1.ProtoPackageIsVersion2 // please upgrade the proto package
 
-type PipeState int32
+type PipeStatus_State int32
 
 const (
-	PipeState_UNKNOWN PipeState = 0
-	PipeState_RUNNING PipeState = 1
-	PipeState_STOPPED PipeState = 2
-	PipeState_ERRORED PipeState = 3
+	PipeStatus_UNKNOWN PipeStatus_State = 0
+	PipeStatus_RUNNING PipeStatus_State = 1
+	PipeStatus_STOPPED PipeStatus_State = 2
+	PipeStatus_ERRORED PipeStatus_State = 3
 )
 
-var PipeState_name = map[int32]string{
+var PipeStatus_State_name = map[int32]string{
 	0: "UNKNOWN",
 	1: "RUNNING",
 	2: "STOPPED",
 	3: "ERRORED",
 }
-var PipeState_value = map[string]int32{
+var PipeStatus_State_value = map[string]int32{
 	"UNKNOWN": 0,
 	"RUNNING": 1,
 	"STOPPED": 2,
 	"ERRORED": 3,
 }
 
-func (x PipeState) String() string {
-	return proto1.EnumName(PipeState_name, int32(x))
+func (x PipeStatus_State) String() string {
+	return proto1.EnumName(PipeStatus_State_name, int32(x))
 }
-func (PipeState) EnumDescriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
+func (PipeStatus_State) EnumDescriptor() ([]byte, []int) { return fileDescriptor0, []int{19, 0} }
+
+type Profile_Type int32
+
+const (
+	Profile_Script Profile_Type = 0
+)
+
+var Profile_Type_name = map[int32]string{
+	0: "Script",
+}
+var Profile_Type_value = map[string]int32{
+	"Script": 0,
+}
+
+func (x Profile_Type) String() string {
+	return proto1.EnumName(Profile_Type_name, int32(x))
+}
+func (Profile_Type) EnumDescriptor() ([]byte, []int) { return fileDescriptor0, []int{22, 0} }
+
+type Script_Type int32
+
+const (
+	Script_JAVASCRIPT Script_Type = 0
+)
+
+var Script_Type_name = map[int32]string{
+	0: "JAVASCRIPT",
+}
+var Script_Type_value = map[string]int32{
+	"JAVASCRIPT": 0,
+}
+
+func (x Script_Type) String() string {
+	return proto1.EnumName(Script_Type_name, int32(x))
+}
+func (Script_Type) EnumDescriptor() ([]byte, []int) { return fileDescriptor0, []int{23, 0} }
+
+type Script_Input int32
+
+const (
+	Script_JSON Script_Input = 0
+	Script_CSV  Script_Input = 1
+	Script_XML  Script_Input = 2
+)
+
+var Script_Input_name = map[int32]string{
+	0: "JSON",
+	1: "CSV",
+	2: "XML",
+}
+var Script_Input_value = map[string]int32{
+	"JSON": 0,
+	"CSV":  1,
+	"XML":  2,
+}
+
+func (x Script_Input) String() string {
+	return proto1.EnumName(Script_Input_name, int32(x))
+}
+func (Script_Input) EnumDescriptor() ([]byte, []int) { return fileDescriptor0, []int{23, 1} }
+
+type EndpointAddRequest struct {
+}
+
+func (m *EndpointAddRequest) Reset()                    { *m = EndpointAddRequest{} }
+func (m *EndpointAddRequest) String() string            { return proto1.CompactTextString(m) }
+func (*EndpointAddRequest) ProtoMessage()               {}
+func (*EndpointAddRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
+
+type EndpointAddReply struct {
+	Ok    bool   `protobuf:"varint,1,opt,name=ok" json:"ok"`
+	Error string `protobuf:"bytes,2,opt,name=error" json:"error"`
+}
+
+func (m *EndpointAddReply) Reset()                    { *m = EndpointAddReply{} }
+func (m *EndpointAddReply) String() string            { return proto1.CompactTextString(m) }
+func (*EndpointAddReply) ProtoMessage()               {}
+func (*EndpointAddReply) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
+
+func (m *EndpointAddReply) GetOk() bool {
+	if m != nil {
+		return m.Ok
+	}
+	return false
+}
+
+func (m *EndpointAddReply) GetError() string {
+	if m != nil {
+		return m.Error
+	}
+	return ""
+}
+
+type EndpointDeleteRequest struct {
+}
+
+func (m *EndpointDeleteRequest) Reset()                    { *m = EndpointDeleteRequest{} }
+func (m *EndpointDeleteRequest) String() string            { return proto1.CompactTextString(m) }
+func (*EndpointDeleteRequest) ProtoMessage()               {}
+func (*EndpointDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{2} }
+
+type EndpointDeleteReply struct {
+	Ok    bool   `protobuf:"varint,1,opt,name=ok" json:"ok"`
+	Error string `protobuf:"bytes,2,opt,name=error" json:"error"`
+}
+
+func (m *EndpointDeleteReply) Reset()                    { *m = EndpointDeleteReply{} }
+func (m *EndpointDeleteReply) String() string            { return proto1.CompactTextString(m) }
+func (*EndpointDeleteReply) ProtoMessage()               {}
+func (*EndpointDeleteReply) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{3} }
+
+func (m *EndpointDeleteReply) GetOk() bool {
+	if m != nil {
+		return m.Ok
+	}
+	return false
+}
+
+func (m *EndpointDeleteReply) GetError() string {
+	if m != nil {
+		return m.Error
+	}
+	return ""
+}
+
+type EndpointListRequest struct {
+}
+
+func (m *EndpointListRequest) Reset()                    { *m = EndpointListRequest{} }
+func (m *EndpointListRequest) String() string            { return proto1.CompactTextString(m) }
+func (*EndpointListRequest) ProtoMessage()               {}
+func (*EndpointListRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{4} }
+
+type EndpointListReply struct {
+	Ok    bool   `protobuf:"varint,1,opt,name=ok" json:"ok"`
+	Error string `protobuf:"bytes,2,opt,name=error" json:"error"`
+}
+
+func (m *EndpointListReply) Reset()                    { *m = EndpointListReply{} }
+func (m *EndpointListReply) String() string            { return proto1.CompactTextString(m) }
+func (*EndpointListReply) ProtoMessage()               {}
+func (*EndpointListReply) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{5} }
+
+func (m *EndpointListReply) GetOk() bool {
+	if m != nil {
+		return m.Ok
+	}
+	return false
+}
+
+func (m *EndpointListReply) GetError() string {
+	if m != nil {
+		return m.Error
+	}
+	return ""
+}
+
+type ListenerAddRequest struct {
+}
+
+func (m *ListenerAddRequest) Reset()                    { *m = ListenerAddRequest{} }
+func (m *ListenerAddRequest) String() string            { return proto1.CompactTextString(m) }
+func (*ListenerAddRequest) ProtoMessage()               {}
+func (*ListenerAddRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{6} }
+
+type ListenerAddReply struct {
+	Ok    bool   `protobuf:"varint,1,opt,name=ok" json:"ok"`
+	Error string `protobuf:"bytes,2,opt,name=error" json:"error"`
+}
+
+func (m *ListenerAddReply) Reset()                    { *m = ListenerAddReply{} }
+func (m *ListenerAddReply) String() string            { return proto1.CompactTextString(m) }
+func (*ListenerAddReply) ProtoMessage()               {}
+func (*ListenerAddReply) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{7} }
+
+func (m *ListenerAddReply) GetOk() bool {
+	if m != nil {
+		return m.Ok
+	}
+	return false
+}
+
+func (m *ListenerAddReply) GetError() string {
+	if m != nil {
+		return m.Error
+	}
+	return ""
+}
+
+type ListenerDeleteRequest struct {
+}
+
+func (m *ListenerDeleteRequest) Reset()                    { *m = ListenerDeleteRequest{} }
+func (m *ListenerDeleteRequest) String() string            { return proto1.CompactTextString(m) }
+func (*ListenerDeleteRequest) ProtoMessage()               {}
+func (*ListenerDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{8} }
+
+type ListenerDeleteReply struct {
+	Ok    bool   `protobuf:"varint,1,opt,name=ok" json:"ok"`
+	Error string `protobuf:"bytes,2,opt,name=error" json:"error"`
+}
+
+func (m *ListenerDeleteReply) Reset()                    { *m = ListenerDeleteReply{} }
+func (m *ListenerDeleteReply) String() string            { return proto1.CompactTextString(m) }
+func (*ListenerDeleteReply) ProtoMessage()               {}
+func (*ListenerDeleteReply) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{9} }
+
+func (m *ListenerDeleteReply) GetOk() bool {
+	if m != nil {
+		return m.Ok
+	}
+	return false
+}
+
+func (m *ListenerDeleteReply) GetError() string {
+	if m != nil {
+		return m.Error
+	}
+	return ""
+}
+
+type ListenerListRequest struct {
+}
+
+func (m *ListenerListRequest) Reset()                    { *m = ListenerListRequest{} }
+func (m *ListenerListRequest) String() string            { return proto1.CompactTextString(m) }
+func (*ListenerListRequest) ProtoMessage()               {}
+func (*ListenerListRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{10} }
+
+type ListenerListReply struct {
+	Ok    bool   `protobuf:"varint,1,opt,name=ok" json:"ok"`
+	Error string `protobuf:"bytes,2,opt,name=error" json:"error"`
+}
+
+func (m *ListenerListReply) Reset()                    { *m = ListenerListReply{} }
+func (m *ListenerListReply) String() string            { return proto1.CompactTextString(m) }
+func (*ListenerListReply) ProtoMessage()               {}
+func (*ListenerListReply) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{11} }
+
+func (m *ListenerListReply) GetOk() bool {
+	if m != nil {
+		return m.Ok
+	}
+	return false
+}
+
+func (m *ListenerListReply) GetError() string {
+	if m != nil {
+		return m.Error
+	}
+	return ""
+}
 
 type PipeAddRequest struct {
-	Uri          string   `protobuf:"bytes,1,opt,name=uri" json:"uri,omitempty"`
-	ProfileUid   string   `protobuf:"bytes,2,opt,name=profile_uid,json=profileUid" json:"profile_uid,omitempty"`
-	ListenerUid  string   `protobuf:"bytes,3,opt,name=listener_uid,json=listenerUid" json:"listener_uid,omitempty"`
-	EndpointUids []string `protobuf:"bytes,4,rep,name=endpoint_uids,json=endpointUids" json:"endpoint_uids,omitempty"`
+	Uri          string   `protobuf:"bytes,1,opt,name=uri" json:"uri"`
+	ProfileUid   string   `protobuf:"bytes,2,opt,name=profile_uid,json=profileUid" json:"profile_uid"`
+	ListenerUid  string   `protobuf:"bytes,3,opt,name=listener_uid,json=listenerUid" json:"listener_uid"`
+	EndpointUids []string `protobuf:"bytes,4,rep,name=endpoint_uids,json=endpointUids" json:"endpoint_uids"`
 }
 
 func (m *PipeAddRequest) Reset()                    { *m = PipeAddRequest{} }
 func (m *PipeAddRequest) String() string            { return proto1.CompactTextString(m) }
 func (*PipeAddRequest) ProtoMessage()               {}
-func (*PipeAddRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
+func (*PipeAddRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{12} }
 
 func (m *PipeAddRequest) GetUri() string {
 	if m != nil {
@@ -110,14 +379,14 @@ func (m *PipeAddRequest) GetEndpointUids() []string {
 }
 
 type PipeAddReply struct {
-	Ok    bool   `protobuf:"varint,1,opt,name=ok" json:"ok,omitempty"`
-	Error string `protobuf:"bytes,2,opt,name=error" json:"error,omitempty"`
+	Ok    bool   `protobuf:"varint,1,opt,name=ok" json:"ok"`
+	Error string `protobuf:"bytes,2,opt,name=error" json:"error"`
 }
 
 func (m *PipeAddReply) Reset()                    { *m = PipeAddReply{} }
 func (m *PipeAddReply) String() string            { return proto1.CompactTextString(m) }
 func (*PipeAddReply) ProtoMessage()               {}
-func (*PipeAddReply) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
+func (*PipeAddReply) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{13} }
 
 func (m *PipeAddReply) GetOk() bool {
 	if m != nil {
@@ -134,13 +403,13 @@ func (m *PipeAddReply) GetError() string {
 }
 
 type PipeDeleteRequest struct {
-	Uri string `protobuf:"bytes,1,opt,name=uri" json:"uri,omitempty"`
+	Uri string `protobuf:"bytes,1,opt,name=uri" json:"uri"`
 }
 
 func (m *PipeDeleteRequest) Reset()                    { *m = PipeDeleteRequest{} }
 func (m *PipeDeleteRequest) String() string            { return proto1.CompactTextString(m) }
 func (*PipeDeleteRequest) ProtoMessage()               {}
-func (*PipeDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{2} }
+func (*PipeDeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{14} }
 
 func (m *PipeDeleteRequest) GetUri() string {
 	if m != nil {
@@ -150,14 +419,14 @@ func (m *PipeDeleteRequest) GetUri() string {
 }
 
 type PipeDeleteReply struct {
-	Ok    bool   `protobuf:"varint,1,opt,name=ok" json:"ok,omitempty"`
-	Error string `protobuf:"bytes,2,opt,name=error" json:"error,omitempty"`
+	Ok    bool   `protobuf:"varint,1,opt,name=ok" json:"ok"`
+	Error string `protobuf:"bytes,2,opt,name=error" json:"error"`
 }
 
 func (m *PipeDeleteReply) Reset()                    { *m = PipeDeleteReply{} }
 func (m *PipeDeleteReply) String() string            { return proto1.CompactTextString(m) }
 func (*PipeDeleteReply) ProtoMessage()               {}
-func (*PipeDeleteReply) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{3} }
+func (*PipeDeleteReply) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{15} }
 
 func (m *PipeDeleteReply) GetOk() bool {
 	if m != nil {
@@ -179,16 +448,16 @@ type PipeListRequest struct {
 func (m *PipeListRequest) Reset()                    { *m = PipeListRequest{} }
 func (m *PipeListRequest) String() string            { return proto1.CompactTextString(m) }
 func (*PipeListRequest) ProtoMessage()               {}
-func (*PipeListRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{4} }
+func (*PipeListRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{16} }
 
 type PipeListReply struct {
-	Pipes []*Pipe `protobuf:"bytes,1,rep,name=pipes" json:"pipes,omitempty"`
+	Pipes []*Pipe `protobuf:"bytes,1,rep,name=pipes" json:"pipes"`
 }
 
 func (m *PipeListReply) Reset()                    { *m = PipeListReply{} }
 func (m *PipeListReply) String() string            { return proto1.CompactTextString(m) }
 func (*PipeListReply) ProtoMessage()               {}
-func (*PipeListReply) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{5} }
+func (*PipeListReply) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{17} }
 
 func (m *PipeListReply) GetPipes() []*Pipe {
 	if m != nil {
@@ -198,33 +467,22 @@ func (m *PipeListReply) GetPipes() []*Pipe {
 }
 
 type Pipe struct {
-	Uri string `protobuf:"bytes,1,opt,name=uri" json:"uri,omitempty"`
-	// TODO : reinstate
-	// google.protobuf.Timestamp started = 2;
-	State        PipeState   `protobuf:"varint,2,opt,name=state,enum=proto.PipeState" json:"state,omitempty"`
-	Profile      *Profile    `protobuf:"bytes,3,opt,name=profile" json:"profile,omitempty"`
-	Listener     *Endpoint   `protobuf:"bytes,4,opt,name=listener" json:"listener,omitempty"`
-	MessageStats *Statistics `protobuf:"bytes,5,opt,name=message_stats,json=messageStats" json:"message_stats,omitempty"`
-	Endpoints    []*Endpoint `protobuf:"bytes,6,rep,name=endpoints" json:"endpoints,omitempty"`
+	Uri       string      `protobuf:"bytes,1,opt,name=uri" json:"uri"`
+	Profile   *Profile    `protobuf:"bytes,3,opt,name=profile" json:"profile"`
+	Listener  *Endpoint   `protobuf:"bytes,4,opt,name=listener" json:"listener"`
+	Endpoints []*Endpoint `protobuf:"bytes,6,rep,name=endpoints" json:"endpoints"`
 }
 
 func (m *Pipe) Reset()                    { *m = Pipe{} }
 func (m *Pipe) String() string            { return proto1.CompactTextString(m) }
 func (*Pipe) ProtoMessage()               {}
-func (*Pipe) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{6} }
+func (*Pipe) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{18} }
 
 func (m *Pipe) GetUri() string {
 	if m != nil {
 		return m.Uri
 	}
 	return ""
-}
-
-func (m *Pipe) GetState() PipeState {
-	if m != nil {
-		return m.State
-	}
-	return PipeState_UNKNOWN
 }
 
 func (m *Pipe) GetProfile() *Profile {
@@ -241,13 +499,6 @@ func (m *Pipe) GetListener() *Endpoint {
 	return nil
 }
 
-func (m *Pipe) GetMessageStats() *Statistics {
-	if m != nil {
-		return m.MessageStats
-	}
-	return nil
-}
-
 func (m *Pipe) GetEndpoints() []*Endpoint {
 	if m != nil {
 		return m.Endpoints
@@ -255,15 +506,40 @@ func (m *Pipe) GetEndpoints() []*Endpoint {
 	return nil
 }
 
+type PipeStatus struct {
+	State PipeStatus_State `protobuf:"varint,1,opt,name=state,enum=proto.PipeStatus_State" json:"state"`
+	Stats *Statistics      `protobuf:"bytes,2,opt,name=stats" json:"stats"`
+}
+
+func (m *PipeStatus) Reset()                    { *m = PipeStatus{} }
+func (m *PipeStatus) String() string            { return proto1.CompactTextString(m) }
+func (*PipeStatus) ProtoMessage()               {}
+func (*PipeStatus) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{19} }
+
+func (m *PipeStatus) GetState() PipeStatus_State {
+	if m != nil {
+		return m.State
+	}
+	return PipeStatus_UNKNOWN
+}
+
+func (m *PipeStatus) GetStats() *Statistics {
+	if m != nil {
+		return m.Stats
+	}
+	return nil
+}
+
 type Endpoint struct {
-	Uid  string `protobuf:"bytes,1,opt,name=uid" json:"uid,omitempty"`
-	Type string `protobuf:"bytes,2,opt,name=type" json:"type,omitempty"`
+	Uid           string            `protobuf:"bytes,1,opt,name=uid" json:"uid"`
+	Type          string            `protobuf:"bytes,2,opt,name=type" json:"type"`
+	Configuration map[string]string `protobuf:"bytes,3,rep,name=configuration" json:"configuration" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 }
 
 func (m *Endpoint) Reset()                    { *m = Endpoint{} }
 func (m *Endpoint) String() string            { return proto1.CompactTextString(m) }
 func (*Endpoint) ProtoMessage()               {}
-func (*Endpoint) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{7} }
+func (*Endpoint) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{20} }
 
 func (m *Endpoint) GetUid() string {
 	if m != nil {
@@ -279,22 +555,78 @@ func (m *Endpoint) GetType() string {
 	return ""
 }
 
+func (m *Endpoint) GetConfiguration() map[string]string {
+	if m != nil {
+		return m.Configuration
+	}
+	return nil
+}
+
+type Listener struct {
+	Uid           string            `protobuf:"bytes,1,opt,name=uid" json:"uid"`
+	Type          string            `protobuf:"bytes,2,opt,name=type" json:"type"`
+	Configuration map[string]string `protobuf:"bytes,3,rep,name=configuration" json:"configuration" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+}
+
+func (m *Listener) Reset()                    { *m = Listener{} }
+func (m *Listener) String() string            { return proto1.CompactTextString(m) }
+func (*Listener) ProtoMessage()               {}
+func (*Listener) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{21} }
+
+func (m *Listener) GetUid() string {
+	if m != nil {
+		return m.Uid
+	}
+	return ""
+}
+
+func (m *Listener) GetType() string {
+	if m != nil {
+		return m.Type
+	}
+	return ""
+}
+
+func (m *Listener) GetConfiguration() map[string]string {
+	if m != nil {
+		return m.Configuration
+	}
+	return nil
+}
+
 type Profile struct {
-	Name        string `protobuf:"bytes,1,opt,name=name" json:"name,omitempty"`
-	Description string `protobuf:"bytes,2,opt,name=description" json:"description,omitempty"`
-	Version     string `protobuf:"bytes,3,opt,name=version" json:"version,omitempty"`
+	Uid         string       `protobuf:"bytes,1,opt,name=uid" json:"uid"`
+	Name        string       `protobuf:"bytes,2,opt,name=name" json:"name"`
+	Type        Profile_Type `protobuf:"varint,3,opt,name=type,enum=proto.Profile_Type" json:"type"`
+	Description string       `protobuf:"bytes,4,opt,name=description" json:"description"`
+	Version     string       `protobuf:"bytes,5,opt,name=version" json:"version"`
+	Script      *Script      `protobuf:"bytes,6,opt,name=script" json:"script"`
 }
 
 func (m *Profile) Reset()                    { *m = Profile{} }
 func (m *Profile) String() string            { return proto1.CompactTextString(m) }
 func (*Profile) ProtoMessage()               {}
-func (*Profile) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{8} }
+func (*Profile) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{22} }
+
+func (m *Profile) GetUid() string {
+	if m != nil {
+		return m.Uid
+	}
+	return ""
+}
 
 func (m *Profile) GetName() string {
 	if m != nil {
 		return m.Name
 	}
 	return ""
+}
+
+func (m *Profile) GetType() Profile_Type {
+	if m != nil {
+		return m.Type
+	}
+	return Profile_Script
 }
 
 func (m *Profile) GetDescription() string {
@@ -311,16 +643,95 @@ func (m *Profile) GetVersion() string {
 	return ""
 }
 
+func (m *Profile) GetScript() *Script {
+	if m != nil {
+		return m.Script
+	}
+	return nil
+}
+
+type Script struct {
+	Main     string       `protobuf:"bytes,1,opt,name=main" json:"main"`
+	Runtime  Script_Type  `protobuf:"varint,2,opt,name=runtime,enum=proto.Script_Type" json:"runtime"`
+	Input    Script_Input `protobuf:"varint,3,opt,name=input,enum=proto.Script_Input" json:"input"`
+	Contents string       `protobuf:"bytes,4,opt,name=contents" json:"contents"`
+}
+
+func (m *Script) Reset()                    { *m = Script{} }
+func (m *Script) String() string            { return proto1.CompactTextString(m) }
+func (*Script) ProtoMessage()               {}
+func (*Script) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{23} }
+
+func (m *Script) GetMain() string {
+	if m != nil {
+		return m.Main
+	}
+	return ""
+}
+
+func (m *Script) GetRuntime() Script_Type {
+	if m != nil {
+		return m.Runtime
+	}
+	return Script_JAVASCRIPT
+}
+
+func (m *Script) GetInput() Script_Input {
+	if m != nil {
+		return m.Input
+	}
+	return Script_JSON
+}
+
+func (m *Script) GetContents() string {
+	if m != nil {
+		return m.Contents
+	}
+	return ""
+}
+
+type StatsRequest struct {
+}
+
+func (m *StatsRequest) Reset()                    { *m = StatsRequest{} }
+func (m *StatsRequest) String() string            { return proto1.CompactTextString(m) }
+func (*StatsRequest) ProtoMessage()               {}
+func (*StatsRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{24} }
+
+type StatsReply struct {
+	Ok    bool   `protobuf:"varint,1,opt,name=ok" json:"ok"`
+	Error string `protobuf:"bytes,2,opt,name=error" json:"error"`
+}
+
+func (m *StatsReply) Reset()                    { *m = StatsReply{} }
+func (m *StatsReply) String() string            { return proto1.CompactTextString(m) }
+func (*StatsReply) ProtoMessage()               {}
+func (*StatsReply) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{25} }
+
+func (m *StatsReply) GetOk() bool {
+	if m != nil {
+		return m.Ok
+	}
+	return false
+}
+
+func (m *StatsReply) GetError() string {
+	if m != nil {
+		return m.Error
+	}
+	return ""
+}
+
 type Statistics struct {
-	Total  uint64 `protobuf:"varint,1,opt,name=total" json:"total,omitempty"`
-	Errors uint64 `protobuf:"varint,2,opt,name=errors" json:"errors,omitempty"`
-	Ok     uint64 `protobuf:"varint,3,opt,name=ok" json:"ok,omitempty"`
+	Total  uint64 `protobuf:"varint,1,opt,name=total" json:"total"`
+	Errors uint64 `protobuf:"varint,2,opt,name=errors" json:"errors"`
+	Ok     uint64 `protobuf:"varint,3,opt,name=ok" json:"ok"`
 }
 
 func (m *Statistics) Reset()                    { *m = Statistics{} }
 func (m *Statistics) String() string            { return proto1.CompactTextString(m) }
 func (*Statistics) ProtoMessage()               {}
-func (*Statistics) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{9} }
+func (*Statistics) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{26} }
 
 func (m *Statistics) GetTotal() uint64 {
 	if m != nil {
@@ -344,6 +755,18 @@ func (m *Statistics) GetOk() uint64 {
 }
 
 func init() {
+	proto1.RegisterType((*EndpointAddRequest)(nil), "proto.EndpointAddRequest")
+	proto1.RegisterType((*EndpointAddReply)(nil), "proto.EndpointAddReply")
+	proto1.RegisterType((*EndpointDeleteRequest)(nil), "proto.EndpointDeleteRequest")
+	proto1.RegisterType((*EndpointDeleteReply)(nil), "proto.EndpointDeleteReply")
+	proto1.RegisterType((*EndpointListRequest)(nil), "proto.EndpointListRequest")
+	proto1.RegisterType((*EndpointListReply)(nil), "proto.EndpointListReply")
+	proto1.RegisterType((*ListenerAddRequest)(nil), "proto.ListenerAddRequest")
+	proto1.RegisterType((*ListenerAddReply)(nil), "proto.ListenerAddReply")
+	proto1.RegisterType((*ListenerDeleteRequest)(nil), "proto.ListenerDeleteRequest")
+	proto1.RegisterType((*ListenerDeleteReply)(nil), "proto.ListenerDeleteReply")
+	proto1.RegisterType((*ListenerListRequest)(nil), "proto.ListenerListRequest")
+	proto1.RegisterType((*ListenerListReply)(nil), "proto.ListenerListReply")
 	proto1.RegisterType((*PipeAddRequest)(nil), "proto.PipeAddRequest")
 	proto1.RegisterType((*PipeAddReply)(nil), "proto.PipeAddReply")
 	proto1.RegisterType((*PipeDeleteRequest)(nil), "proto.PipeDeleteRequest")
@@ -351,10 +774,18 @@ func init() {
 	proto1.RegisterType((*PipeListRequest)(nil), "proto.PipeListRequest")
 	proto1.RegisterType((*PipeListReply)(nil), "proto.PipeListReply")
 	proto1.RegisterType((*Pipe)(nil), "proto.Pipe")
+	proto1.RegisterType((*PipeStatus)(nil), "proto.PipeStatus")
 	proto1.RegisterType((*Endpoint)(nil), "proto.Endpoint")
+	proto1.RegisterType((*Listener)(nil), "proto.Listener")
 	proto1.RegisterType((*Profile)(nil), "proto.Profile")
+	proto1.RegisterType((*Script)(nil), "proto.Script")
+	proto1.RegisterType((*StatsRequest)(nil), "proto.StatsRequest")
+	proto1.RegisterType((*StatsReply)(nil), "proto.StatsReply")
 	proto1.RegisterType((*Statistics)(nil), "proto.Statistics")
-	proto1.RegisterEnum("proto.PipeState", PipeState_name, PipeState_value)
+	proto1.RegisterEnum("proto.PipeStatus_State", PipeStatus_State_name, PipeStatus_State_value)
+	proto1.RegisterEnum("proto.Profile_Type", Profile_Type_name, Profile_Type_value)
+	proto1.RegisterEnum("proto.Script_Type", Script_Type_name, Script_Type_value)
+	proto1.RegisterEnum("proto.Script_Input", Script_Input_name, Script_Input_value)
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -368,12 +799,19 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for Hub service
 
 type HubClient interface {
+	EndpointAdd(ctx context.Context, in *EndpointAddRequest, opts ...grpc.CallOption) (*EndpointAddReply, error)
+	EndpointDelete(ctx context.Context, in *EndpointDeleteRequest, opts ...grpc.CallOption) (*EndpointDeleteReply, error)
+	EndpointList(ctx context.Context, in *EndpointListRequest, opts ...grpc.CallOption) (*EndpointListReply, error)
+	ListenerAdd(ctx context.Context, in *ListenerAddRequest, opts ...grpc.CallOption) (*ListenerAddReply, error)
+	ListenerDelete(ctx context.Context, in *ListenerDeleteRequest, opts ...grpc.CallOption) (*ListenerDeleteReply, error)
+	ListenerList(ctx context.Context, in *ListenerListRequest, opts ...grpc.CallOption) (*ListenerListReply, error)
 	// add a pipe to an existing listener and endpoint
 	PipeAdd(ctx context.Context, in *PipeAddRequest, opts ...grpc.CallOption) (*PipeAddReply, error)
 	// delete pipe by URI
 	PipeDelete(ctx context.Context, in *PipeDeleteRequest, opts ...grpc.CallOption) (*PipeDeleteReply, error)
 	// list all running pipes
 	PipeList(ctx context.Context, in *PipeListRequest, opts ...grpc.CallOption) (*PipeListReply, error)
+	Stats(ctx context.Context, in *StatsRequest, opts ...grpc.CallOption) (*StatsReply, error)
 }
 
 type hubClient struct {
@@ -382,6 +820,60 @@ type hubClient struct {
 
 func NewHubClient(cc *grpc.ClientConn) HubClient {
 	return &hubClient{cc}
+}
+
+func (c *hubClient) EndpointAdd(ctx context.Context, in *EndpointAddRequest, opts ...grpc.CallOption) (*EndpointAddReply, error) {
+	out := new(EndpointAddReply)
+	err := grpc.Invoke(ctx, "/proto.Hub/EndpointAdd", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *hubClient) EndpointDelete(ctx context.Context, in *EndpointDeleteRequest, opts ...grpc.CallOption) (*EndpointDeleteReply, error) {
+	out := new(EndpointDeleteReply)
+	err := grpc.Invoke(ctx, "/proto.Hub/EndpointDelete", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *hubClient) EndpointList(ctx context.Context, in *EndpointListRequest, opts ...grpc.CallOption) (*EndpointListReply, error) {
+	out := new(EndpointListReply)
+	err := grpc.Invoke(ctx, "/proto.Hub/EndpointList", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *hubClient) ListenerAdd(ctx context.Context, in *ListenerAddRequest, opts ...grpc.CallOption) (*ListenerAddReply, error) {
+	out := new(ListenerAddReply)
+	err := grpc.Invoke(ctx, "/proto.Hub/ListenerAdd", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *hubClient) ListenerDelete(ctx context.Context, in *ListenerDeleteRequest, opts ...grpc.CallOption) (*ListenerDeleteReply, error) {
+	out := new(ListenerDeleteReply)
+	err := grpc.Invoke(ctx, "/proto.Hub/ListenerDelete", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *hubClient) ListenerList(ctx context.Context, in *ListenerListRequest, opts ...grpc.CallOption) (*ListenerListReply, error) {
+	out := new(ListenerListReply)
+	err := grpc.Invoke(ctx, "/proto.Hub/ListenerList", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *hubClient) PipeAdd(ctx context.Context, in *PipeAddRequest, opts ...grpc.CallOption) (*PipeAddReply, error) {
@@ -411,19 +903,143 @@ func (c *hubClient) PipeList(ctx context.Context, in *PipeListRequest, opts ...g
 	return out, nil
 }
 
+func (c *hubClient) Stats(ctx context.Context, in *StatsRequest, opts ...grpc.CallOption) (*StatsReply, error) {
+	out := new(StatsReply)
+	err := grpc.Invoke(ctx, "/proto.Hub/Stats", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for Hub service
 
 type HubServer interface {
+	EndpointAdd(context.Context, *EndpointAddRequest) (*EndpointAddReply, error)
+	EndpointDelete(context.Context, *EndpointDeleteRequest) (*EndpointDeleteReply, error)
+	EndpointList(context.Context, *EndpointListRequest) (*EndpointListReply, error)
+	ListenerAdd(context.Context, *ListenerAddRequest) (*ListenerAddReply, error)
+	ListenerDelete(context.Context, *ListenerDeleteRequest) (*ListenerDeleteReply, error)
+	ListenerList(context.Context, *ListenerListRequest) (*ListenerListReply, error)
 	// add a pipe to an existing listener and endpoint
 	PipeAdd(context.Context, *PipeAddRequest) (*PipeAddReply, error)
 	// delete pipe by URI
 	PipeDelete(context.Context, *PipeDeleteRequest) (*PipeDeleteReply, error)
 	// list all running pipes
 	PipeList(context.Context, *PipeListRequest) (*PipeListReply, error)
+	Stats(context.Context, *StatsRequest) (*StatsReply, error)
 }
 
 func RegisterHubServer(s *grpc.Server, srv HubServer) {
 	s.RegisterService(&_Hub_serviceDesc, srv)
+}
+
+func _Hub_EndpointAdd_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(EndpointAddRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(HubServer).EndpointAdd(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.Hub/EndpointAdd",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(HubServer).EndpointAdd(ctx, req.(*EndpointAddRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Hub_EndpointDelete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(EndpointDeleteRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(HubServer).EndpointDelete(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.Hub/EndpointDelete",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(HubServer).EndpointDelete(ctx, req.(*EndpointDeleteRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Hub_EndpointList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(EndpointListRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(HubServer).EndpointList(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.Hub/EndpointList",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(HubServer).EndpointList(ctx, req.(*EndpointListRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Hub_ListenerAdd_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListenerAddRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(HubServer).ListenerAdd(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.Hub/ListenerAdd",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(HubServer).ListenerAdd(ctx, req.(*ListenerAddRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Hub_ListenerDelete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListenerDeleteRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(HubServer).ListenerDelete(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.Hub/ListenerDelete",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(HubServer).ListenerDelete(ctx, req.(*ListenerDeleteRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Hub_ListenerList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListenerListRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(HubServer).ListenerList(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.Hub/ListenerList",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(HubServer).ListenerList(ctx, req.(*ListenerListRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _Hub_PipeAdd_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -480,10 +1096,52 @@ func _Hub_PipeList_Handler(srv interface{}, ctx context.Context, dec func(interf
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Hub_Stats_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(StatsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(HubServer).Stats(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.Hub/Stats",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(HubServer).Stats(ctx, req.(*StatsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Hub_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "proto.Hub",
 	HandlerType: (*HubServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "EndpointAdd",
+			Handler:    _Hub_EndpointAdd_Handler,
+		},
+		{
+			MethodName: "EndpointDelete",
+			Handler:    _Hub_EndpointDelete_Handler,
+		},
+		{
+			MethodName: "EndpointList",
+			Handler:    _Hub_EndpointList_Handler,
+		},
+		{
+			MethodName: "ListenerAdd",
+			Handler:    _Hub_ListenerAdd_Handler,
+		},
+		{
+			MethodName: "ListenerDelete",
+			Handler:    _Hub_ListenerDelete_Handler,
+		},
+		{
+			MethodName: "ListenerList",
+			Handler:    _Hub_ListenerList_Handler,
+		},
 		{
 			MethodName: "PipeAdd",
 			Handler:    _Hub_PipeAdd_Handler,
@@ -496,6 +1154,10 @@ var _Hub_serviceDesc = grpc.ServiceDesc{
 			MethodName: "PipeList",
 			Handler:    _Hub_PipeList_Handler,
 		},
+		{
+			MethodName: "Stats",
+			Handler:    _Hub_Stats_Handler,
+		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "proto/devicehub.proto",
@@ -504,42 +1166,68 @@ var _Hub_serviceDesc = grpc.ServiceDesc{
 func init() { proto1.RegisterFile("proto/devicehub.proto", fileDescriptor0) }
 
 var fileDescriptor0 = []byte{
-	// 592 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0x8c, 0x54, 0x5f, 0x6f, 0xd3, 0x3e,
-	0x14, 0x5d, 0x9a, 0xf4, 0xdf, 0x4d, 0xdb, 0xa5, 0xfe, 0xad, 0x53, 0xd4, 0x97, 0x5f, 0x17, 0x04,
-	0x2a, 0x20, 0x0a, 0x2a, 0x88, 0x49, 0xbc, 0x00, 0x53, 0x2b, 0xc6, 0x1f, 0xa5, 0x95, 0x47, 0x85,
-	0x78, 0x9a, 0xda, 0xc6, 0xdb, 0xac, 0x66, 0x71, 0x88, 0x9d, 0x49, 0xfd, 0x0c, 0x7c, 0x25, 0x3e,
-	0x1b, 0x42, 0x76, 0x9c, 0x26, 0xb0, 0x21, 0xf1, 0x54, 0x9f, 0x73, 0xcf, 0xb9, 0xb6, 0x8f, 0x6f,
-	0x0a, 0xbd, 0x38, 0x61, 0x82, 0x3d, 0x0d, 0xc8, 0x0d, 0x5d, 0x93, 0xab, 0x74, 0x35, 0x52, 0x18,
-	0x55, 0xd5, 0x8f, 0xf7, 0xdd, 0x80, 0xce, 0x9c, 0xc6, 0xe4, 0x6d, 0x10, 0x60, 0xf2, 0x2d, 0x25,
-	0x5c, 0x20, 0x07, 0xcc, 0x34, 0xa1, 0xae, 0x31, 0x30, 0x86, 0x4d, 0x2c, 0x97, 0xe8, 0x7f, 0xb0,
-	0xe3, 0x84, 0x5d, 0xd0, 0x90, 0x9c, 0xa7, 0x34, 0x70, 0x2b, 0xaa, 0x02, 0x9a, 0x5a, 0xd0, 0x00,
-	0x1d, 0x41, 0x2b, 0xa4, 0x5c, 0x90, 0x88, 0x24, 0x4a, 0x61, 0x2a, 0x85, 0x9d, 0x73, 0x52, 0x72,
-	0x0f, 0xda, 0x24, 0x0a, 0x62, 0x46, 0x23, 0x21, 0x25, 0xdc, 0xb5, 0x06, 0xe6, 0xb0, 0x89, 0x5b,
-	0x39, 0xb9, 0xa0, 0x01, 0xf7, 0x5e, 0x40, 0x6b, 0x77, 0x98, 0x38, 0xdc, 0xa2, 0x0e, 0x54, 0xd8,
-	0x46, 0x9d, 0xa4, 0x81, 0x2b, 0x6c, 0x83, 0x0e, 0xa0, 0x4a, 0x92, 0x84, 0x25, 0xfa, 0x08, 0x19,
-	0xf0, 0xee, 0x43, 0x57, 0xba, 0x26, 0x24, 0x24, 0x82, 0xfc, 0xf5, 0x16, 0xde, 0x31, 0xec, 0x97,
-	0x65, 0xff, 0xde, 0xbf, 0x9b, 0x19, 0x3f, 0x51, 0x2e, 0x74, 0x77, 0x6f, 0x0c, 0xed, 0x82, 0x92,
-	0x9d, 0x8e, 0xa0, 0x1a, 0xd3, 0x98, 0x70, 0xd7, 0x18, 0x98, 0x43, 0x7b, 0x6c, 0x67, 0x29, 0x8f,
-	0xa4, 0x08, 0x67, 0x15, 0xef, 0xa7, 0x01, 0x96, 0xc4, 0x77, 0x04, 0xfc, 0x00, 0xaa, 0x5c, 0x2c,
-	0x05, 0x51, 0xfb, 0x76, 0xc6, 0x4e, 0xc9, 0x7d, 0x26, 0x79, 0x9c, 0x95, 0xd1, 0x10, 0xea, 0x3a,
-	0x75, 0x15, 0xb1, 0x3d, 0xee, 0xe4, 0xca, 0x8c, 0xc5, 0x79, 0x19, 0x3d, 0x86, 0x46, 0x9e, 0xbe,
-	0x6b, 0x29, 0xe9, 0xbe, 0x96, 0x4e, 0x75, 0xe0, 0x78, 0x27, 0x40, 0x2f, 0xa1, 0x7d, 0x4d, 0x38,
-	0x5f, 0x5e, 0x92, 0x73, 0xb9, 0x0f, 0x77, 0xab, 0xca, 0xd1, 0xd5, 0x0e, 0x79, 0x04, 0xca, 0x05,
-	0x5d, 0x73, 0xdc, 0xd2, 0x3a, 0x49, 0x71, 0xf4, 0x04, 0x9a, 0xf9, 0xf3, 0x71, 0xb7, 0xa6, 0x2e,
-	0x7e, 0x6b, 0x97, 0x42, 0xe1, 0x3d, 0x83, 0x46, 0x4e, 0xab, 0x0c, 0x68, 0xb0, 0xcb, 0x80, 0x06,
-	0x08, 0x81, 0x25, 0xb6, 0x31, 0xd1, 0xd1, 0xab, 0xb5, 0xf7, 0x15, 0xea, 0xfa, 0x66, 0xb2, 0x1c,
-	0x2d, 0xaf, 0x89, 0x76, 0xa8, 0x35, 0x1a, 0x80, 0x1d, 0x10, 0xbe, 0x4e, 0x68, 0x2c, 0x28, 0x8b,
-	0xb4, 0xb3, 0x4c, 0x21, 0x17, 0xea, 0x37, 0x24, 0xe1, 0xb2, 0x9a, 0xcd, 0x64, 0x0e, 0xbd, 0x0f,
-	0x00, 0xc5, 0xbd, 0xe4, 0xc3, 0x0b, 0x26, 0x96, 0xa1, 0x6a, 0x6f, 0xe1, 0x0c, 0xa0, 0x43, 0xa8,
-	0xa9, 0x09, 0xe0, 0xaa, 0xb5, 0x85, 0x35, 0xd2, 0x63, 0x63, 0x2a, 0xae, 0xc2, 0x36, 0x8f, 0x5e,
-	0x43, 0x73, 0xf7, 0x54, 0xc8, 0x86, 0xfa, 0xc2, 0xff, 0xe8, 0xcf, 0xbe, 0xf8, 0xce, 0x9e, 0x04,
-	0x78, 0xe1, 0xfb, 0xef, 0xfd, 0x77, 0x8e, 0x21, 0xc1, 0xd9, 0xe7, 0xd9, 0x7c, 0x3e, 0x9d, 0x38,
-	0x15, 0x09, 0xa6, 0x18, 0xcf, 0xf0, 0x74, 0xe2, 0x98, 0xe3, 0x1f, 0x06, 0x98, 0xa7, 0xe9, 0x0a,
-	0x1d, 0x43, 0x5d, 0xcf, 0x3f, 0xea, 0x95, 0x66, 0xa0, 0xf8, 0x38, 0xfb, 0xff, 0xfd, 0x49, 0xc7,
-	0xe1, 0xd6, 0xdb, 0x43, 0x6f, 0x00, 0x8a, 0xd9, 0x46, 0x6e, 0x49, 0xf4, 0xdb, 0x57, 0xd1, 0x3f,
-	0xbc, 0xa3, 0x92, 0x75, 0x78, 0x05, 0x8d, 0x7c, 0xa2, 0x51, 0x59, 0x55, 0x9a, 0xfa, 0xfe, 0xc1,
-	0x2d, 0x5e, 0x79, 0x4f, 0x1e, 0x42, 0x8f, 0xb2, 0x91, 0xb8, 0xa2, 0xd1, 0xe5, 0x45, 0x1a, 0x8e,
-	0x76, 0x7f, 0x35, 0x27, 0x9d, 0x89, 0x5a, 0x9e, 0xa6, 0xab, 0xb9, 0x34, 0xce, 0x8d, 0x55, 0x4d,
-	0x75, 0x78, 0xfe, 0x2b, 0x00, 0x00, 0xff, 0xff, 0xce, 0x63, 0xe9, 0x2c, 0x96, 0x04, 0x00, 0x00,
+	// 1008 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0xbc, 0x56, 0x5b, 0x6e, 0xdb, 0x56,
+	0x13, 0x36, 0x45, 0xdd, 0x3c, 0xb4, 0x15, 0x6a, 0x6c, 0xd9, 0xfc, 0x85, 0x1f, 0xa8, 0xc2, 0x20,
+	0x88, 0x82, 0x36, 0x2a, 0xaa, 0x16, 0x48, 0x9a, 0xbc, 0xc4, 0x91, 0xd5, 0xda, 0xae, 0x2b, 0x0b,
+	0x94, 0x9d, 0xf6, 0xad, 0x90, 0xc5, 0xe3, 0xe4, 0x40, 0x0a, 0xc9, 0xf2, 0x62, 0x40, 0x6b, 0xe8,
+	0x1e, 0x0a, 0xf4, 0xa1, 0xbb, 0xe8, 0x1a, 0xda, 0x2d, 0x15, 0xe7, 0x46, 0x91, 0x94, 0x0a, 0x28,
+	0x40, 0xd1, 0x27, 0x9d, 0x99, 0xf9, 0xbe, 0xd1, 0x7c, 0xc3, 0x73, 0x19, 0x68, 0x05, 0xa1, 0x1f,
+	0xfb, 0x9f, 0xbb, 0xe4, 0x9e, 0xce, 0xc8, 0xfb, 0xe4, 0xb6, 0xc7, 0x6d, 0xac, 0xf0, 0x1f, 0xfb,
+	0x10, 0x70, 0xe8, 0xb9, 0x81, 0x4f, 0xbd, 0xf8, 0xc4, 0x75, 0x1d, 0xf2, 0x73, 0x42, 0xa2, 0xd8,
+	0x7e, 0x01, 0x66, 0xce, 0x1b, 0x2c, 0x96, 0xd8, 0x80, 0x92, 0x3f, 0xb7, 0xb4, 0x8e, 0xd6, 0xad,
+	0x3b, 0x25, 0x7f, 0x8e, 0x87, 0x50, 0x21, 0x61, 0xe8, 0x87, 0x56, 0xa9, 0xa3, 0x75, 0x77, 0x1d,
+	0x61, 0xd8, 0xc7, 0xd0, 0x52, 0xcc, 0x53, 0xb2, 0x20, 0x31, 0x51, 0x29, 0x5f, 0xc1, 0x41, 0x31,
+	0xb0, 0x7d, 0xd6, 0xd6, 0x8a, 0x7c, 0x49, 0xa3, 0x58, 0xe5, 0xfc, 0x1a, 0x9a, 0x79, 0xf7, 0xf6,
+	0x19, 0x0f, 0x01, 0x19, 0x85, 0x78, 0x24, 0xcc, 0xeb, 0xce, 0x79, 0x3f, 0x4a, 0xb7, 0x62, 0xae,
+	0xe9, 0x2e, 0x06, 0x3e, 0x4a, 0xb7, 0x22, 0x17, 0x74, 0xe7, 0xdd, 0xdb, 0x67, 0xfc, 0x45, 0x83,
+	0xc6, 0x98, 0x06, 0x64, 0x25, 0x1a, 0x4d, 0xd0, 0x93, 0x90, 0x72, 0xe6, 0xae, 0xc3, 0x96, 0xf8,
+	0x09, 0x18, 0x41, 0xe8, 0xdf, 0xd1, 0x05, 0xf9, 0x29, 0xa1, 0xae, 0x4c, 0x00, 0xd2, 0x75, 0x43,
+	0x5d, 0x7c, 0x08, 0x7b, 0x0b, 0x59, 0x00, 0x47, 0xe8, 0x1c, 0x61, 0x28, 0x1f, 0x83, 0x3c, 0x82,
+	0x7d, 0x22, 0xbf, 0x0d, 0x83, 0x44, 0x56, 0xb9, 0xa3, 0x77, 0x77, 0x9d, 0x3d, 0xe5, 0xbc, 0xa1,
+	0x6e, 0x64, 0x7f, 0x05, 0x7b, 0x69, 0x31, 0xdb, 0x6b, 0x78, 0x0c, 0x4d, 0xc6, 0xca, 0xf5, 0x79,
+	0x5d, 0x85, 0xfd, 0x1c, 0x1e, 0x64, 0x61, 0xdb, 0xe7, 0x6f, 0x0a, 0x62, 0xb6, 0xe3, 0x7d, 0xd8,
+	0x5f, 0xb9, 0x58, 0xa6, 0x87, 0x50, 0x09, 0x68, 0x40, 0x22, 0x4b, 0xeb, 0xe8, 0x5d, 0xa3, 0x6f,
+	0x88, 0x53, 0xd5, 0x63, 0x20, 0x47, 0x44, 0xec, 0x5f, 0x35, 0x28, 0x33, 0x7b, 0x43, 0x83, 0xbb,
+	0x50, 0x93, 0xdd, 0xe4, 0xad, 0x33, 0xfa, 0x0d, 0xc5, 0x17, 0x5e, 0x47, 0x85, 0xf1, 0x53, 0xa8,
+	0xab, 0xae, 0x5a, 0x65, 0x0e, 0x7d, 0x20, 0xa1, 0x6a, 0xe7, 0x3b, 0x29, 0x00, 0x9f, 0xc1, 0xae,
+	0x6a, 0x6f, 0x64, 0x55, 0x79, 0x61, 0x6b, 0xe8, 0x15, 0xc2, 0xfe, 0x4d, 0x03, 0x60, 0x05, 0x4e,
+	0xe2, 0x69, 0x9c, 0x44, 0xf8, 0x0c, 0x2a, 0x51, 0x3c, 0x8d, 0x09, 0x2f, 0xb4, 0xd1, 0x3f, 0xce,
+	0x48, 0x12, 0x88, 0x1e, 0xfb, 0x21, 0x8e, 0x40, 0xe1, 0x13, 0x01, 0x8f, 0x78, 0xef, 0x8c, 0x7e,
+	0x53, 0xc2, 0x19, 0x86, 0x46, 0x31, 0x9d, 0x45, 0x02, 0x18, 0xd9, 0xaf, 0xa0, 0xc2, 0x89, 0x68,
+	0x40, 0xed, 0x66, 0xf4, 0xdd, 0xe8, 0xea, 0x87, 0x91, 0xb9, 0xc3, 0x0c, 0xe7, 0x66, 0x34, 0x3a,
+	0x1f, 0x7d, 0x6b, 0x6a, 0xcc, 0x98, 0x5c, 0x5f, 0x8d, 0xc7, 0xc3, 0x53, 0xb3, 0xc4, 0x8c, 0xa1,
+	0xe3, 0x5c, 0x39, 0xc3, 0x53, 0x53, 0xb7, 0xff, 0xd0, 0xa0, 0xae, 0x6a, 0xe7, 0x8d, 0xa4, 0x6e,
+	0xda, 0x48, 0xea, 0x22, 0x42, 0x39, 0x5e, 0x06, 0x44, 0x7e, 0x3f, 0xbe, 0xc6, 0x33, 0xd8, 0x9f,
+	0xf9, 0xde, 0x1d, 0x7d, 0x97, 0x84, 0xd3, 0x98, 0xfa, 0x9e, 0xa5, 0xf3, 0x4e, 0xd8, 0x85, 0x4e,
+	0xf4, 0x06, 0x59, 0xd0, 0xd0, 0x8b, 0xc3, 0xa5, 0x93, 0x27, 0xb6, 0x5f, 0x03, 0xae, 0x83, 0x58,
+	0x15, 0x73, 0xb2, 0x54, 0x55, 0xcc, 0xc9, 0x92, 0x6d, 0xa3, 0xfb, 0xe9, 0x22, 0x51, 0x65, 0x08,
+	0xe3, 0x65, 0xe9, 0x85, 0xc6, 0xcb, 0x57, 0x47, 0xf5, 0xdf, 0x29, 0x5f, 0x65, 0xfb, 0x4f, 0xca,
+	0xff, 0x4b, 0x83, 0x9a, 0xdc, 0x92, 0x9b, 0xab, 0xf7, 0xa6, 0x1f, 0xd2, 0xea, 0xd9, 0x1a, 0x9f,
+	0x48, 0x45, 0x3a, 0xdf, 0x43, 0x07, 0xf9, 0x6d, 0xdd, 0xbb, 0x5e, 0x06, 0x44, 0xca, 0xec, 0x80,
+	0xe1, 0x92, 0x68, 0x16, 0xd2, 0x80, 0x8b, 0x2c, 0x8b, 0x1b, 0x24, 0xe3, 0x42, 0x0b, 0x6a, 0xf7,
+	0x24, 0x8c, 0x58, 0xb4, 0xc2, 0xa3, 0xca, 0xc4, 0xc7, 0x50, 0x15, 0x30, 0xab, 0xca, 0xf7, 0xde,
+	0xbe, 0xda, 0x7b, 0xdc, 0xe9, 0xc8, 0xa0, 0x8d, 0x50, 0x66, 0x7f, 0x88, 0x00, 0x55, 0x11, 0x31,
+	0x77, 0xec, 0x3f, 0x35, 0x65, 0xb0, 0xf2, 0x3f, 0x4c, 0xa9, 0x27, 0x15, 0xf1, 0x35, 0x7e, 0x06,
+	0xb5, 0x30, 0xf1, 0x62, 0x2a, 0x55, 0x35, 0xfa, 0x98, 0x4b, 0x2d, 0x04, 0x28, 0x08, 0x3e, 0x85,
+	0x0a, 0xf5, 0x82, 0x24, 0x2e, 0xa8, 0x95, 0xd8, 0x73, 0x16, 0x72, 0x04, 0x02, 0xdb, 0x50, 0x9f,
+	0xf9, 0x5e, 0x4c, 0xd8, 0xc9, 0x14, 0x5a, 0x53, 0xdb, 0x3e, 0x92, 0x75, 0x36, 0x00, 0x2e, 0x4e,
+	0xde, 0x9e, 0x4c, 0x06, 0xce, 0xf9, 0xf8, 0xda, 0xdc, 0xb1, 0x1f, 0x41, 0x85, 0xe7, 0xc0, 0x3a,
+	0x94, 0x2f, 0x26, 0x57, 0xec, 0xd4, 0xd4, 0x40, 0x1f, 0x4c, 0xde, 0x9a, 0x1a, 0x5b, 0xfc, 0xf8,
+	0xfd, 0xa5, 0x59, 0xb2, 0x1b, 0xb0, 0xc7, 0x4e, 0x57, 0xb4, 0xba, 0xa9, 0x40, 0xda, 0xdb, 0x5f,
+	0x78, 0x17, 0x82, 0x23, 0x8e, 0x2d, 0xc3, 0xc4, 0x7e, 0x3c, 0x5d, 0x70, 0x5a, 0xd9, 0x11, 0x06,
+	0x1e, 0x41, 0x95, 0x83, 0xc5, 0x79, 0x2f, 0x3b, 0xd2, 0x92, 0xff, 0xa0, 0x73, 0x5f, 0xc9, 0x9f,
+	0xf7, 0x7f, 0xaf, 0x80, 0x7e, 0x96, 0xdc, 0xe2, 0x00, 0x8c, 0xcc, 0x08, 0x81, 0xff, 0x2b, 0x9c,
+	0xbe, 0xd5, 0xfb, 0xd3, 0x3e, 0xde, 0x14, 0x0a, 0x16, 0x4b, 0x7b, 0x07, 0x2f, 0xa1, 0x91, 0x1f,
+	0x1a, 0xf0, 0xff, 0x05, 0x70, 0xee, 0x11, 0x68, 0xb7, 0xff, 0x21, 0x2a, 0xb2, 0x7d, 0x03, 0x7b,
+	0xd9, 0x71, 0x01, 0x8b, 0xe8, 0xcc, 0x85, 0xdf, 0xb6, 0x36, 0xc6, 0x44, 0x9e, 0x01, 0x18, 0x99,
+	0x29, 0x21, 0x95, 0xb6, 0x3e, 0x4f, 0xa4, 0xd2, 0x8a, 0x43, 0x85, 0x90, 0x96, 0x9f, 0x0b, 0x52,
+	0x69, 0x1b, 0xe7, 0x88, 0x54, 0xda, 0x86, 0x61, 0x42, 0x48, 0xcb, 0x4e, 0x04, 0x58, 0x44, 0x6f,
+	0x92, 0xb6, 0x36, 0x42, 0xd8, 0x3b, 0xf8, 0x1c, 0x6a, 0xf2, 0x41, 0xc6, 0x56, 0xe6, 0xfe, 0xcf,
+	0x48, 0x3a, 0x28, 0xba, 0x05, 0xf1, 0xb5, 0x78, 0x4a, 0xa4, 0x14, 0x2b, 0x03, 0xca, 0xcb, 0x38,
+	0xda, 0x10, 0x11, 0x19, 0x5e, 0x42, 0x5d, 0x3d, 0xb1, 0x98, 0x45, 0x65, 0x4b, 0x3f, 0x5c, 0xf3,
+	0x0b, 0xee, 0x17, 0xe2, 0x89, 0x89, 0xf0, 0x20, 0xf3, 0x0a, 0xa9, 0x23, 0xd1, 0x6e, 0xe6, 0x9d,
+	0x9c, 0xf2, 0xe6, 0x29, 0xb4, 0xa8, 0xdf, 0x8b, 0xdf, 0x53, 0xef, 0xdd, 0x5d, 0xb2, 0xe8, 0xa5,
+	0xe3, 0xf1, 0x9b, 0xc6, 0x29, 0x5f, 0x9e, 0x25, 0xb7, 0x63, 0xc6, 0x1a, 0x6b, 0xb7, 0x55, 0x4e,
+	0xff, 0xf2, 0xef, 0x00, 0x00, 0x00, 0xff, 0xff, 0xb2, 0xec, 0xb0, 0xee, 0x4a, 0x0b, 0x00, 0x00,
 }

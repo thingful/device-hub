@@ -12,14 +12,56 @@ package proto;
 
 service Hub {
 
-  // add a pipe to an existing listener and endpoint 
-  rpc PipeAdd (PipeAddRequest) returns (PipeAddReply) {}
+    rpc EndpointAdd (EndpointAddRequest) returns (EndpointAddReply) {}
+    rpc EndpointDelete (EndpointDeleteRequest) returns (EndpointDeleteReply) {}
+    rpc EndpointList (EndpointListRequest) returns (EndpointListReply) {}
 
-  // delete pipe by URI
-  rpc PipeDelete (PipeDeleteRequest) returns (PipeDeleteReply) {}
+    rpc ListenerAdd (ListenerAddRequest) returns (ListenerAddReply) {}
+    rpc ListenerDelete (ListenerDeleteRequest) returns (ListenerDeleteReply) {}
+    rpc ListenerList (ListenerListRequest) returns (ListenerListReply) {}
 
-  // list all running pipes
-  rpc PipeList (PipeListRequest) returns (PipeListReply) {}
+    // add a pipe to an existing listener and endpoint
+    rpc PipeAdd (PipeAddRequest) returns (PipeAddReply) {}
+
+    // delete pipe by URI
+    rpc PipeDelete (PipeDeleteRequest) returns (PipeDeleteReply) {}
+
+    // list all running pipes
+    rpc PipeList (PipeListRequest) returns (PipeListReply) {}
+
+    rpc Stats (StatsRequest) returns (StatsReply) {}
+}
+
+message EndpointAddRequest{}
+message EndpointAddReply{
+    bool ok = 1;
+    string error = 2;
+}
+message EndpointDeleteRequest{}
+message EndpointDeleteReply{
+    bool ok = 1;
+    string error = 2;
+}
+message EndpointListRequest{}
+message EndpointListReply{
+    bool ok = 1;
+    string error = 2;
+}
+
+message ListenerAddRequest{}
+message ListenerAddReply{
+    bool ok = 1;
+    string error = 2;
+}
+message ListenerDeleteRequest{}
+message ListenerDeleteReply{
+    bool ok = 1;
+    string error = 2;
+}
+message ListenerListRequest{}
+message ListenerListReply{
+    bool ok = 1;
+    string error = 2;
 }
 
 message PipeAddRequest {
@@ -47,41 +89,86 @@ message PipeListRequest {
 }
 
 message PipeListReply {
-  repeated Pipe pipes = 1;
+    repeated Pipe pipes = 1;
 }
 
 message Pipe {
-  string uri = 1;
-  // TODO : reinstate
-  //google.protobuf.Timestamp started = 2;
-  PipeState state = 2;
-  Profile profile = 3;
-  Endpoint listener = 4;
-  Statistics message_stats = 5;
+    string uri = 1;
+    Profile profile = 3;
+    Endpoint listener = 4;
+    repeated Endpoint endpoints = 6;
+}
 
-  repeated Endpoint endpoints = 6;
+message PipeStatus {
+
+    enum State {
+        UNKNOWN = 0;
+        RUNNING = 1;
+        STOPPED = 2;
+        ERRORED = 3;
+    }
+
+    State state = 1;
+    Statistics stats = 2;
+    // TODO : reinstate
+    //google.protobuf.Timestamp started = 2;
+
 }
 
 message Endpoint {
     string uid = 1;
     string type = 2;
+    map<string, string> configuration = 3;
+}
+
+message Listener {
+    string uid = 1;
+    string type = 2;
+    map<string, string> configuration = 3;
 }
 
 message Profile {
-    string name = 1;
-    string description = 2;
-    string version = 3;
+    string uid = 1;
+    string name = 2;
+
+    enum Type {
+        Script = 0;
+    }
+
+    Type type = 3;
+    string description = 4;
+    string version = 5;
+
+    Script script = 6;
 }
 
+message Script {
+
+    string main = 1;
+
+    enum Type {
+        JAVASCRIPT = 0;
+    }
+
+    Type runtime = 2;
+
+    enum Input{
+        JSON = 0;
+        CSV = 1;
+        XML = 2;
+    }
+
+    Input input = 3;
+    string contents = 4;
+}
+
+message StatsRequest{}
+message StatsReply{
+    bool ok = 1;
+    string error = 2;
+}
 message Statistics {
     uint64 total = 1;
     uint64 errors = 2;
     uint64 ok = 3;
-}
-
-enum PipeState {
-    UNKNOWN = 0;
-    RUNNING = 1;
-    STOPPED = 2;
-    ERRORED = 3;
 }
