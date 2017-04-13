@@ -32,11 +32,16 @@ service Hub {
     rpc Stats (StatsRequest) returns (StatsReply) {}
 }
 
-message EndpointAddRequest{}
+message EndpointAddRequest{
+    Endpoint endpoint = 1;
+}
+
 message EndpointAddReply{
     bool ok = 1;
     string error = 2;
+    string uid = 3;
 }
+
 message EndpointDeleteRequest{}
 message EndpointDeleteReply{
     bool ok = 1;

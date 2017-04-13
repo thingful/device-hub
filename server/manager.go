@@ -56,26 +56,27 @@ type statistics struct {
 }
 
 // NewEndpointManager turns a config.Configuration into a collection of managed pipes.
-func NewEndpointManager(ctx context.Context, c *config.Configuration) (*manager, error) {
+func NewEndpointManager(ctx context.Context) (*manager, error) {
+	/*
+		c := &config.Configuration{}
+		pipes := map[string]*pipe{}
 
-	pipes := map[string]*pipe{}
+		for _, p := range c.Pipes {
 
-	for _, p := range c.Pipes {
+			pipe, err := newRuntimeInstance(p, c)
 
-		pipe, err := newRuntimeInstance(p, c)
+			if err != nil {
+				return nil, err
+			}
 
-		if err != nil {
-			return nil, err
+			pipes[p.Uri] = pipe
+
 		}
-
-		pipes[p.Uri] = pipe
-
-	}
-
+	*/
 	return &manager{
-		pipes: pipes,
-		ctx:   ctx,
-		conf:  c,
+		//		pipes: pipes,
+		ctx: ctx,
+		//		conf:  c,
 	}, nil
 }
 
