@@ -24,6 +24,7 @@
   "profiles": [
     {
       "uid": "xxx",
+      "type": "script",
       "name": "some-device-profile",
       "description": "blah-blah",
       "version": "1.0.0-beta",

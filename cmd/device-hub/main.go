@@ -3,84 +3,58 @@
 package main
 
 import (
-	"context"
-	"fmt"
 	"os"
 
+	"google.golang.org/grpc"
+
+	"github.com/kelseyhightower/envconfig"
 	"github.com/spf13/cobra"
-	hub "github.com/thingful/device-hub"
-	"github.com/thingful/device-hub/config"
-	"github.com/thingful/device-hub/server"
+	"github.com/spf13/pflag"
 )
 
 var RootCmd = &cobra.Command{
 	Use: "device-hub",
 }
 
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the grpc package it is being compiled against.
+const _ = grpc.SupportPackageIsVersion4
+
+var _config = newConfig()
+
+type config struct {
+	Binding    string `envconfig:"BINDING" default:":50051"`
+	TLS        bool   `envconfig:"TLS"`
+	ServerName string `envconfig:"TLS_SERVER_NAME"`
+	CACertFile string `envconfig:"TLS_CA_CERT_FILE"`
+	CertFile   string `envconfig:"TLS_CERT_FILE"`
+	KeyFile    string `envconfig:"TLS_KEY_FILE"`
+	Data       string `envconfig:"DATA"`
+}
+
+func newConfig() *config {
+	c := &config{}
+	envconfig.Process("", c)
+	return c
+}
+
+func (o *config) AddFlags(fs *pflag.FlagSet) {
+	fs.StringVarP(&o.Binding, "binding", "b", o.Binding, "binding address in form of {ip}:port")
+	fs.BoolVar(&o.TLS, "tls", o.TLS, "enable tls")
+	fs.StringVar(&o.CACertFile, "tls-ca-cert-file", o.CACertFile, "ca certificate file")
+	fs.StringVar(&o.CertFile, "tls-cert-file", o.CertFile, "client certificate file")
+	fs.StringVar(&o.KeyFile, "tls-key-file", o.KeyFile, "client key file")
+	fs.StringVar(&o.Data, "data", o.Data, "path to db folder")
+
+}
+
 func init() {
-
-	var configurationPath string
-
-	// Client can run either in insecure mode or provide details for mutual tls
-	// The default is for secure connections to be used.
-	var options server.Options
-
-	RootCmd.PersistentFlags().StringVarP(&options.Binding, "binding", "b", ":50051", "RPC binding for the device-hub daemon.")
-	RootCmd.PersistentFlags().BoolVar(&options.Insecure, "insecure", false, "Switch off Mutual TLS authentication.")
-	RootCmd.PersistentFlags().StringVar(&options.CertFilePath, "cert-file", "", "Certificate used for SSL/TLS RPC connections to the device-hub daemon.")
-	RootCmd.PersistentFlags().StringVar(&options.KeyFilePath, "key-file", "", "Key file for the certificate (--cert-file).")
-	RootCmd.PersistentFlags().StringVar(&options.TrustedCAFilePath, "trusted-ca-file", "", "Trusted certificate authority.")
-
-	RootCmd.PersistentFlags().StringVarP(&configurationPath, "config", "c", "./config.json", "Path to configuration file.")
-
-	versionCommand := &cobra.Command{
-		Use:   "version",
-		Short: "Display version information",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			fmt.Println(hub.DaemonVersionString())
-			return nil
-		},
-	}
 
 	RootCmd.AddCommand(versionCommand)
 
-	checkConfig := &cobra.Command{
-		Use:   "check",
-		Short: "Load,parse and check the configuration file.",
-		RunE: func(cmd *cobra.Command, args []string) error {
+	RootCmd.AddCommand(serverCommand)
 
-			_, err := config.LoadFromFile(configurationPath)
-			return err
-		},
-	}
-
-	RootCmd.AddCommand(checkConfig)
-
-	daemon := &cobra.Command{
-		Use:   "start",
-		Short: "Start device hub.",
-		RunE: func(cmd *cobra.Command, args []string) error {
-
-			conf, err := config.LoadFromFile(configurationPath)
-
-			if err != nil {
-				return err
-			}
-
-			app := NewDeviceHub(options, conf)
-
-			ctx := context.Background()
-
-			err = app.Run(ctx)
-
-			if err != nil {
-				return err
-			}
-
-			return nil
-		},
-	}
-	RootCmd.AddCommand(daemon)
+	_config.AddFlags(RootCmd.PersistentFlags())
 
 }
 
