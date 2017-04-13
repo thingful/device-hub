@@ -23,7 +23,7 @@ const _ = grpc.SupportPackageIsVersion4
 var _config = newConfig()
 
 type config struct {
-	ServerAddr         string        `envconfig:"SERVER_ADDR" default:"localhost:8080"`
+	ServerAddr         string        `envconfig:"SERVER_ADDR" default:"127.0.0.1:50051"`
 	RequestFile        string        `envconfig:"REQUEST_FILE"`
 	PrintSampleRequest bool          `envconfig:"PRINT_SAMPLE_REQUEST"`
 	ResponseFormat     string        `envconfig:"RESPONSE_FORMAT" default:"json"`
@@ -70,6 +70,7 @@ func init() {
 	pipeCommand.AddCommand(pipeListCommand, pipeAddCommand, pipeDeleteCommand)
 	RootCmd.AddCommand(pipeCommand)
 
+	endpointCommand.AddCommand(endpointAddCommand)
 	RootCmd.AddCommand(endpointCommand)
 	RootCmd.AddCommand(listenerCommand)
 	RootCmd.AddCommand(statsCommand)

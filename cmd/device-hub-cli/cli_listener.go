@@ -1,3 +1,5 @@
+// Copyright © 2017 thingful
+
 package main
 
 import "github.com/spf13/cobra"

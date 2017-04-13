@@ -1,3 +1,5 @@
+// Copyright © 2017 thingful
+
 package main
 
 import (
@@ -59,7 +61,7 @@ All caps and s/-/_, e.g. SERVER_ADDR.`,
 Save a sample request to a file (or refer to your protobuf descriptor to create one):
 	device-hub-cli pipe add -p > req.json
 Submit request using file:
-	device-hub-cli add -f req.json`,
+	device-hub-cli pipe add -f req.json`,
 	Run: func(cmd *cobra.Command, args []string) {
 		var v proto.PipeAddRequest
 		err := roundTrip(v, func(cli proto.HubClient, in iocodec.Decoder, out iocodec.Encoder) error {
