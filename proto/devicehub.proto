@@ -42,15 +42,21 @@ message EndpointAddReply{
     string uid = 3;
 }
 
-message EndpointDeleteRequest{}
+message EndpointDeleteRequest{
+    string uid = 1;
+}
+
 message EndpointDeleteReply{
     bool ok = 1;
     string error = 2;
 }
+
 message EndpointListRequest{}
+
 message EndpointListReply{
     bool ok = 1;
     string error = 2;
+    repeated Endpoint endpoints = 3;
 }
 
 message ListenerAddRequest{}
