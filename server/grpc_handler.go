@@ -3,6 +3,7 @@
 package server
 
 import (
+	"fmt"
 	"log"
 
 	context "golang.org/x/net/context"
@@ -27,6 +28,12 @@ func (s *handler) EndpointAdd(ctx context.Context, request *proto.EndpointAddReq
 			Error: err.Error(),
 		}, nil
 	}
+
+	//	s.store.List(endPoints, nil)
+	pp := proto.Endpoint{}
+	s.store.Get(endPoints, uid, &pp)
+
+	fmt.Println(pp, pp.Type)
 
 	return &proto.EndpointAddReply{
 		Ok:  true,

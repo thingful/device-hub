@@ -8,6 +8,7 @@ import (
 	"fmt"
 
 	"github.com/boltdb/bolt"
+	"github.com/thingful/device-hub/proto"
 )
 
 type store struct {
@@ -61,11 +62,92 @@ func (s *store) Insert(bucket bucket, data interface{}) (string, error) {
 
 		uid = fmt.Sprintf("%s-%d", bucket, id)
 
-		return b.Put(itob(id), buf)
+		return b.Put([]byte(uid), buf)
 
 	})
 	return uid, err
 
+}
+
+func (s *store) Update(bucket bucket, uid string, data interface{}) error {
+
+	err := s.db.Update(func(tx *bolt.Tx) error {
+
+		b := tx.Bucket(bucket)
+
+		buf, err := json.Marshal(data)
+		if err != nil {
+			return err
+		}
+
+		return b.Put([]byte(uid), buf)
+
+	})
+	return err
+}
+
+func (s *store) Delete(bucket bucket, uid string) error {
+
+	err := s.db.Update(func(tx *bolt.Tx) error {
+
+		b := tx.Bucket(bucket)
+
+		return b.Delete([]byte(uid))
+	})
+
+	return err
+}
+
+func (s *store) Get(b bucket, uid string, out interface{}) error {
+
+	err := s.db.View(func(tx *bolt.Tx) error {
+
+		b := tx.Bucket(b)
+
+		bytes := b.Get([]byte(uid))
+
+		if len(bytes) > 0 {
+
+			err := json.Unmarshal(bytes, &out)
+
+			if err != nil {
+				return err
+			}
+
+			e, ok := out.(*proto.Endpoint)
+
+			if ok {
+				e.Uid = uid
+			}
+
+		}
+
+		return nil
+	})
+
+	return err
+}
+
+func (s *store) List(bucket bucket, out []interface{}) error {
+
+	err := s.db.View(func(tx *bolt.Tx) error {
+
+		b := tx.Bucket(bucket)
+
+		b.ForEach(func(k, v []byte) error {
+
+			fmt.Printf("key=%s, value=%s\n", k, v)
+			return nil
+		})
+
+		return nil
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func itob(v uint64) []byte {
