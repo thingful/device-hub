@@ -3,12 +3,14 @@
 package server
 
 import (
+	"encoding/json"
 	"fmt"
-	"log"
+	"hash/crc32"
+	"strings"
 
-	context "golang.org/x/net/context"
-
+	hashids "github.com/speps/go-hashids"
 	"github.com/thingful/device-hub/proto"
+	context "golang.org/x/net/context"
 )
 
 type handler struct {
@@ -16,6 +18,73 @@ type handler struct {
 	store   *store
 }
 
+func (s *handler) Create(ctx context.Context, request *proto.CreateRequest) (*proto.CreateReply, error) {
+
+	hash, err := hash(request)
+
+	if err != nil {
+		return &proto.CreateReply{
+			Error: err.Error(),
+		}, nil
+	}
+
+	var bucket bucket
+
+	switch strings.ToLower(request.Type) {
+	case "listener":
+		bucket = listeners
+	case "endpoint":
+		bucket = endpoints
+
+	default:
+		return &proto.CreateReply{
+			Error: fmt.Sprintf("type : %s not registered", request.Type),
+		}, nil
+	}
+
+	err = s.store.Insert(bucket, hash, request)
+
+	if err != nil {
+		return &proto.CreateReply{
+			Error: err.Error(),
+		}, nil
+	}
+
+	return &proto.CreateReply{
+		Uid: string(hash),
+		Ok:  true,
+	}, nil
+}
+
+func hash(data interface{}) ([]byte, error) {
+
+	j, err := json.Marshal(data)
+
+	if err != nil {
+		return []byte{}, err
+	}
+
+	checksum := crc32.ChecksumIEEE(j)
+	h := hashids.New()
+
+	uid, err := h.Encode([]int{int(checksum)})
+
+	if err != nil {
+		return []byte{}, err
+	}
+	return []byte(uid), nil
+
+}
+
+func (s *handler) Delete(ctx context.Context, request *proto.DeleteRequest) (*proto.DeleteReply, error) {
+	return nil, nil
+}
+
+func (s *handler) Get(ctx context.Context, request *proto.GetRequest) (*proto.GetReply, error) {
+	return nil, nil
+}
+
+/*
 func (s *handler) EndpointAdd(ctx context.Context, request *proto.EndpointAddRequest) (*proto.EndpointAddReply, error) {
 
 	uid, err := s.store.Insert(endPoints, request.Endpoint)
@@ -103,8 +172,8 @@ func (s *handler) PipeList(context.Context, *proto.PipeListRequest) (*proto.Pipe
 		}
 
 		return &proto.PipeListReply{Pipes: pipes_pb}, nil
-	*/
-	return &proto.PipeListReply{}, nil
+*/
+/*	return &proto.PipeListReply{}, nil
 }
 
 func (s *handler) PipeDelete(ctx context.Context, request *proto.PipeDeleteRequest) (*proto.PipeDeleteReply, error) {
@@ -144,4 +213,4 @@ func (s *handler) PipeAdd(ctx context.Context, request *proto.PipeAddRequest) (*
 
 func (s *handler) Stats(ctx context.Context, request *proto.StatsRequest) (*proto.StatsReply, error) {
 	panic("not implemented")
-}
+}*/

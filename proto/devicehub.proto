@@ -8,10 +8,59 @@ option java_outer_classname = "DeviceHubProto";
 
 package proto;
 
+//import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 //import "google/protobuf/timestamp.proto";
 
 service Hub {
+    rpc Create (CreateRequest) returns (CreateReply) {}
+    rpc Delete (DeleteRequest) returns (DeleteReply) {}
+    rpc Get (GetRequest) returns (GetReply) {}
+}
 
+message CreateRequest {
+/*
+    enum Type {
+        ENDPOINT = 0;
+        LISTENER  = 1;
+    }
+
+    enum ListenerKind {
+        MQTT = 0;
+        HTTP = 1;
+        STDIN = 2;
+    }
+
+    enum EndpointKind {
+        STDOUT = 0;
+    }
+*/
+    string type = 1;
+    string kind = 2;
+
+    map<string, string> configuration = 4;
+
+}
+
+message CreateReply {
+    bool ok = 1;
+    string error = 2;
+    string uid = 3;
+}
+
+message DeleteRequest {
+
+}
+message DeleteReply {
+
+}
+
+message GetRequest {
+
+}
+
+message GetReply {}
+
+/*
     rpc EndpointAdd (EndpointAddRequest) returns (EndpointAddReply) {}
     rpc EndpointDelete (EndpointDeleteRequest) returns (EndpointDeleteReply) {}
     rpc EndpointList (EndpointListRequest) returns (EndpointListReply) {}
@@ -183,3 +232,5 @@ message Statistics {
     uint64 errors = 2;
     uint64 ok = 3;
 }
+*/
+

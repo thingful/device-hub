@@ -2,15 +2,7 @@
 
 package main
 
-import (
-	"context"
-	"log"
-
-	"github.com/fiorix/protoc-gen-cobra/iocodec"
-	"github.com/spf13/cobra"
-	"github.com/thingful/device-hub/proto"
-)
-
+/*
 var pipeCommand = &cobra.Command{
 	Use:   "pipe",
 	Short: "Add, Delete and List pipes.",
@@ -119,4 +111,4 @@ Submit request using file:
 			log.Fatal(err)
 		}
 	},
-}
+}*/

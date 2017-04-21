@@ -2,15 +2,7 @@
 
 package main
 
-import (
-	"context"
-	"log"
-
-	"github.com/fiorix/protoc-gen-cobra/iocodec"
-	"github.com/spf13/cobra"
-	"github.com/thingful/device-hub/proto"
-)
-
+/*
 var endpointCommand = &cobra.Command{
 	Use:   "endpoint",
 	Short: "Add, Delete and List endpoints.",
@@ -51,4 +43,4 @@ Submit request using file:
 			log.Fatal(err)
 		}
 	},
-}
+}*/

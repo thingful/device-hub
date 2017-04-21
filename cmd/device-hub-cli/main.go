@@ -67,14 +67,16 @@ func (o *config) AddFlags(fs *pflag.FlagSet) {
 func init() {
 	RootCmd.AddCommand(versionCommand)
 
-	pipeCommand.AddCommand(pipeListCommand, pipeAddCommand, pipeDeleteCommand)
-	RootCmd.AddCommand(pipeCommand)
+	RootCmd.AddCommand(createCommand)
+	/*
+		pipeCommand.AddCommand(pipeListCommand, pipeAddCommand, pipeDeleteCommand)
+		RootCmd.AddCommand(pipeCommand)
 
-	endpointCommand.AddCommand(endpointAddCommand)
-	RootCmd.AddCommand(endpointCommand)
-	RootCmd.AddCommand(listenerCommand)
-	RootCmd.AddCommand(statsCommand)
-
+		endpointCommand.AddCommand(endpointAddCommand)
+		RootCmd.AddCommand(endpointCommand)
+		RootCmd.AddCommand(listenerCommand)
+		RootCmd.AddCommand(statsCommand)
+	*/
 	_config.AddFlags(RootCmd.PersistentFlags())
 }
 

@@ -5,10 +5,10 @@ package server
 import (
 	"encoding/binary"
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/boltdb/bolt"
-	"github.com/thingful/device-hub/proto"
 )
 
 type store struct {
@@ -18,17 +18,23 @@ type store struct {
 type bucket []byte
 
 var (
-	endPoints = bucket([]byte("endpoints"))
+	endpoints = bucket([]byte("endpoints"))
+	listeners = bucket([]byte("listeners"))
 )
 
 func NewStore(db *bolt.DB) (*store, error) {
 
 	err := db.Update(func(tx *bolt.Tx) error {
 
-		_, err := tx.CreateBucketIfNotExists(endPoints)
+		_, err := tx.CreateBucketIfNotExists(endpoints)
 		if err != nil {
 			return fmt.Errorf("create bucket: %s", err)
 		}
+		_, err = tx.CreateBucketIfNotExists(listeners)
+		if err != nil {
+			return fmt.Errorf("create bucket: %s", err)
+		}
+
 		return nil
 	})
 
@@ -41,18 +47,16 @@ func NewStore(db *bolt.DB) (*store, error) {
 	}, nil
 }
 
-func (s *store) Insert(bucket bucket, data interface{}) (string, error) {
-
-	var uid string
+func (s *store) Insert(bucket bucket, uid []byte, data interface{}) error {
 
 	err := s.db.Update(func(tx *bolt.Tx) error {
 
 		b := tx.Bucket(bucket)
 
-		id, err := b.NextSequence()
+		existing := b.Get(uid)
 
-		if err != nil {
-			return err
+		if len(existing) > 0 {
+			return errors.New("item already exists")
 		}
 
 		buf, err := json.Marshal(data)
@@ -60,12 +64,11 @@ func (s *store) Insert(bucket bucket, data interface{}) (string, error) {
 			return err
 		}
 
-		uid = fmt.Sprintf("%s-%d", bucket, id)
-
 		return b.Put([]byte(uid), buf)
 
 	})
-	return uid, err
+
+	return err
 
 }
 
@@ -113,13 +116,6 @@ func (s *store) Get(b bucket, uid string, out interface{}) error {
 			if err != nil {
 				return err
 			}
-
-			e, ok := out.(*proto.Endpoint)
-
-			if ok {
-				e.Uid = uid
-			}
-
 		}
 
 		return nil
