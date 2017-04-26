@@ -37,7 +37,7 @@ message CreateRequest {
     string type = 1;
     string kind = 2;
 
-    map<string, string> configuration = 4;
+    map<string, string> configuration = 3;
 
 }
 
@@ -64,18 +64,16 @@ message GetRequest {
 message GetReply {
     bool ok = 1;
     string error = 2;
+    repeated Endpoint endpoints = 3;
+}
 
+message Endpoint {
+    string type = 1;
+    string kind = 2;
+    map<string, string> configuration = 3;
 }
 
 /*
-    rpc EndpointAdd (EndpointAddRequest) returns (EndpointAddReply) {}
-    rpc EndpointDelete (EndpointDeleteRequest) returns (EndpointDeleteReply) {}
-    rpc EndpointList (EndpointListRequest) returns (EndpointListReply) {}
-
-    rpc ListenerAdd (ListenerAddRequest) returns (ListenerAddReply) {}
-    rpc ListenerDelete (ListenerDeleteRequest) returns (ListenerDeleteReply) {}
-    rpc ListenerList (ListenerListRequest) returns (ListenerListReply) {}
-
     // add a pipe to an existing listener and endpoint
     rpc PipeAdd (PipeAddRequest) returns (PipeAddReply) {}
 
@@ -180,18 +178,6 @@ message PipeStatus {
     // TODO : reinstate
     //google.protobuf.Timestamp started = 2;
 
-}
-
-message Endpoint {
-    string uid = 1;
-    string type = 2;
-    map<string, string> configuration = 3;
-}
-
-message Listener {
-    string uid = 1;
-    string type = 2;
-    map<string, string> configuration = 3;
 }
 
 message Profile {
