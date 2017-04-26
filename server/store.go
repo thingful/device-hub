@@ -26,14 +26,8 @@ func NewStore(db *bolt.DB) (*store, error) {
 
 	err := db.Update(func(tx *bolt.Tx) error {
 
-		_, err := tx.CreateBucketIfNotExists(endpointsBucket)
-		if err != nil {
-			return fmt.Errorf("create bucket: %s", err)
-		}
-		_, err = tx.CreateBucketIfNotExists(listenersBucket)
-		if err != nil {
-			return fmt.Errorf("create bucket: %s", err)
-		}
+		mustCreateBucket(tx, endpointsBucket)
+		mustCreateBucket(tx, listenersBucket)
 
 		return nil
 	})
@@ -45,6 +39,13 @@ func NewStore(db *bolt.DB) (*store, error) {
 	return &store{
 		db: db,
 	}, nil
+}
+
+func mustCreateBucket(tx *bolt.Tx, bucket bucket) {
+	_, err := tx.CreateBucketIfNotExists(bucket)
+	if err != nil {
+		panic("create bucket failed : %s", err)
+	}
 }
 
 func (s *store) Insert(bucket bucket, uid []byte, data interface{}) error {
