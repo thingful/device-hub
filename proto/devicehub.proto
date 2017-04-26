@@ -48,17 +48,24 @@ message CreateReply {
 }
 
 message DeleteRequest {
-
+    string type = 1;
+    string uid = 2;
 }
-message DeleteReply {
 
+message DeleteReply {
+    bool ok = 1;
+    string error = 2;
 }
 
 message GetRequest {
-
+    string filter = 1;
 }
 
-message GetReply {}
+message GetReply {
+    bool ok = 1;
+    string error = 2;
+
+}
 
 /*
     rpc EndpointAdd (EndpointAddRequest) returns (EndpointAddReply) {}

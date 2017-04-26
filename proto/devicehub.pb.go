@@ -3,18 +3,18 @@
 // DO NOT EDIT!
 
 /*
-	Package proto is a generated protocol buffer package.
+Package proto is a generated protocol buffer package.
 
-	It is generated from these files:
-		proto/devicehub.proto
+It is generated from these files:
+	proto/devicehub.proto
 
-	It has these top-level messages:
-		CreateRequest
-		CreateReply
-		DeleteRequest
-		DeleteReply
-		GetRequest
-		GetReply
+It has these top-level messages:
+	CreateRequest
+	CreateReply
+	DeleteRequest
+	DeleteReply
+	GetRequest
+	GetReply
 */
 package proto
 
@@ -40,82 +40,25 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto1.ProtoPackageIsVersion2 // please upgrade the proto package
 
-type CreateRequest_Type int32
-
-const (
-	CreateRequest_ENDPOINT CreateRequest_Type = 0
-	CreateRequest_LISTENER CreateRequest_Type = 1
-)
-
-var CreateRequest_Type_name = map[int32]string{
-	0: "ENDPOINT",
-	1: "LISTENER",
-}
-var CreateRequest_Type_value = map[string]int32{
-	"ENDPOINT": 0,
-	"LISTENER": 1,
-}
-
-func (x CreateRequest_Type) String() string {
-	return proto1.EnumName(CreateRequest_Type_name, int32(x))
-}
-func (CreateRequest_Type) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptorDevicehub, []int{0, 0}
-}
-
-type CreateRequest_ListenerKind int32
-
-const (
-	CreateRequest_MQTT  CreateRequest_ListenerKind = 0
-	CreateRequest_HTTP  CreateRequest_ListenerKind = 1
-	CreateRequest_STDIN CreateRequest_ListenerKind = 2
-)
-
-var CreateRequest_ListenerKind_name = map[int32]string{
-	0: "MQTT",
-	1: "HTTP",
-	2: "STDIN",
-}
-var CreateRequest_ListenerKind_value = map[string]int32{
-	"MQTT":  0,
-	"HTTP":  1,
-	"STDIN": 2,
-}
-
-func (x CreateRequest_ListenerKind) String() string {
-	return proto1.EnumName(CreateRequest_ListenerKind_name, int32(x))
-}
-func (CreateRequest_ListenerKind) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptorDevicehub, []int{0, 1}
-}
-
-type CreateRequest_EndpointKind int32
-
-const (
-	CreateRequest_STDOUT CreateRequest_EndpointKind = 0
-)
-
-var CreateRequest_EndpointKind_name = map[int32]string{
-	0: "STDOUT",
-}
-var CreateRequest_EndpointKind_value = map[string]int32{
-	"STDOUT": 0,
-}
-
-func (x CreateRequest_EndpointKind) String() string {
-	return proto1.EnumName(CreateRequest_EndpointKind_name, int32(x))
-}
-func (CreateRequest_EndpointKind) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptorDevicehub, []int{0, 2}
-}
-
 type CreateRequest struct {
-	Type CreateRequest_Type `protobuf:"varint,1,opt,name=type,proto3,enum=proto.CreateRequest_Type" json:"type"`
-	// Types that are valid to be assigned to Kind:
-	//	*CreateRequest_Listener
-	//	*CreateRequest_Endpoint
-	Kind          isCreateRequest_Kind `protobuf_oneof:"kind"`
-	Configuration map[string]string    `protobuf:"bytes,4,rep,name=configuration" json:"configuration" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	//
+	// enum Type {
+	// ENDPOINT = 0;
+	// LISTENER  = 1;
+	// }
+	//
+	// enum ListenerKind {
+	// MQTT = 0;
+	// HTTP = 1;
+	// STDIN = 2;
+	// }
+	//
+	// enum EndpointKind {
+	// STDOUT = 0;
+	// }
+	Type          string            `protobuf:"bytes,1,opt,name=type,proto3" json:"type"`
+	Kind          string            `protobuf:"bytes,2,opt,name=kind,proto3" json:"kind"`
+	Configuration map[string]string `protobuf:"bytes,4,rep,name=configuration" json:"configuration" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 }
 
 func (m *CreateRequest) Reset()                    { *m = CreateRequest{} }
@@ -123,48 +66,18 @@ func (m *CreateRequest) String() string            { return proto1.CompactTextSt
 func (*CreateRequest) ProtoMessage()               {}
 func (*CreateRequest) Descriptor() ([]byte, []int) { return fileDescriptorDevicehub, []int{0} }
 
-type isCreateRequest_Kind interface {
-	isCreateRequest_Kind()
-	MarshalTo([]byte) (int, error)
-	Size() int
-}
-
-type CreateRequest_Listener struct {
-	Listener CreateRequest_ListenerKind `protobuf:"varint,2,opt,name=listener,proto3,enum=proto.CreateRequest_ListenerKind,oneof"`
-}
-type CreateRequest_Endpoint struct {
-	Endpoint CreateRequest_EndpointKind `protobuf:"varint,3,opt,name=endpoint,proto3,enum=proto.CreateRequest_EndpointKind,oneof"`
-}
-
-func (*CreateRequest_Listener) isCreateRequest_Kind() {}
-func (*CreateRequest_Endpoint) isCreateRequest_Kind() {}
-
-func (m *CreateRequest) GetKind() isCreateRequest_Kind {
-	if m != nil {
-		return m.Kind
-	}
-	return nil
-}
-
-func (m *CreateRequest) GetType() CreateRequest_Type {
+func (m *CreateRequest) GetType() string {
 	if m != nil {
 		return m.Type
 	}
-	return CreateRequest_ENDPOINT
+	return ""
 }
 
-func (m *CreateRequest) GetListener() CreateRequest_ListenerKind {
-	if x, ok := m.GetKind().(*CreateRequest_Listener); ok {
-		return x.Listener
+func (m *CreateRequest) GetKind() string {
+	if m != nil {
+		return m.Kind
 	}
-	return CreateRequest_MQTT
-}
-
-func (m *CreateRequest) GetEndpoint() CreateRequest_EndpointKind {
-	if x, ok := m.GetKind().(*CreateRequest_Endpoint); ok {
-		return x.Endpoint
-	}
-	return CreateRequest_STDOUT
+	return ""
 }
 
 func (m *CreateRequest) GetConfiguration() map[string]string {
@@ -172,70 +85,6 @@ func (m *CreateRequest) GetConfiguration() map[string]string {
 		return m.Configuration
 	}
 	return nil
-}
-
-// XXX_OneofFuncs is for the internal use of the proto package.
-func (*CreateRequest) XXX_OneofFuncs() (func(msg proto1.Message, b *proto1.Buffer) error, func(msg proto1.Message, tag, wire int, b *proto1.Buffer) (bool, error), func(msg proto1.Message) (n int), []interface{}) {
-	return _CreateRequest_OneofMarshaler, _CreateRequest_OneofUnmarshaler, _CreateRequest_OneofSizer, []interface{}{
-		(*CreateRequest_Listener)(nil),
-		(*CreateRequest_Endpoint)(nil),
-	}
-}
-
-func _CreateRequest_OneofMarshaler(msg proto1.Message, b *proto1.Buffer) error {
-	m := msg.(*CreateRequest)
-	// kind
-	switch x := m.Kind.(type) {
-	case *CreateRequest_Listener:
-		_ = b.EncodeVarint(2<<3 | proto1.WireVarint)
-		_ = b.EncodeVarint(uint64(x.Listener))
-	case *CreateRequest_Endpoint:
-		_ = b.EncodeVarint(3<<3 | proto1.WireVarint)
-		_ = b.EncodeVarint(uint64(x.Endpoint))
-	case nil:
-	default:
-		return fmt.Errorf("CreateRequest.Kind has unexpected type %T", x)
-	}
-	return nil
-}
-
-func _CreateRequest_OneofUnmarshaler(msg proto1.Message, tag, wire int, b *proto1.Buffer) (bool, error) {
-	m := msg.(*CreateRequest)
-	switch tag {
-	case 2: // kind.listener
-		if wire != proto1.WireVarint {
-			return true, proto1.ErrInternalBadWireType
-		}
-		x, err := b.DecodeVarint()
-		m.Kind = &CreateRequest_Listener{CreateRequest_ListenerKind(x)}
-		return true, err
-	case 3: // kind.endpoint
-		if wire != proto1.WireVarint {
-			return true, proto1.ErrInternalBadWireType
-		}
-		x, err := b.DecodeVarint()
-		m.Kind = &CreateRequest_Endpoint{CreateRequest_EndpointKind(x)}
-		return true, err
-	default:
-		return false, nil
-	}
-}
-
-func _CreateRequest_OneofSizer(msg proto1.Message) (n int) {
-	m := msg.(*CreateRequest)
-	// kind
-	switch x := m.Kind.(type) {
-	case *CreateRequest_Listener:
-		n += proto1.SizeVarint(2<<3 | proto1.WireVarint)
-		n += proto1.SizeVarint(uint64(x.Listener))
-	case *CreateRequest_Endpoint:
-		n += proto1.SizeVarint(3<<3 | proto1.WireVarint)
-		n += proto1.SizeVarint(uint64(x.Endpoint))
-	case nil:
-	default:
-		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
-	}
-	return n
 }
 
 type CreateReply struct {
@@ -309,9 +158,6 @@ func init() {
 	proto1.RegisterType((*DeleteReply)(nil), "proto.DeleteReply")
 	proto1.RegisterType((*GetRequest)(nil), "proto.GetRequest")
 	proto1.RegisterType((*GetReply)(nil), "proto.GetReply")
-	proto1.RegisterEnum("proto.CreateRequest_Type", CreateRequest_Type_name, CreateRequest_Type_value)
-	proto1.RegisterEnum("proto.CreateRequest_ListenerKind", CreateRequest_ListenerKind_name, CreateRequest_ListenerKind_value)
-	proto1.RegisterEnum("proto.CreateRequest_EndpointKind", CreateRequest_EndpointKind_name, CreateRequest_EndpointKind_value)
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -467,17 +313,17 @@ func (m *CreateRequest) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Type != 0 {
-		dAtA[i] = 0x8
+	if len(m.Type) > 0 {
+		dAtA[i] = 0xa
 		i++
-		i = encodeVarintDevicehub(dAtA, i, uint64(m.Type))
+		i = encodeVarintDevicehub(dAtA, i, uint64(len(m.Type)))
+		i += copy(dAtA[i:], m.Type)
 	}
-	if m.Kind != nil {
-		nn1, err := m.Kind.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += nn1
+	if len(m.Kind) > 0 {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintDevicehub(dAtA, i, uint64(len(m.Kind)))
+		i += copy(dAtA[i:], m.Kind)
 	}
 	if len(m.Configuration) > 0 {
 		for k, _ := range m.Configuration {
@@ -499,20 +345,6 @@ func (m *CreateRequest) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func (m *CreateRequest_Listener) MarshalTo(dAtA []byte) (int, error) {
-	i := 0
-	dAtA[i] = 0x10
-	i++
-	i = encodeVarintDevicehub(dAtA, i, uint64(m.Listener))
-	return i, nil
-}
-func (m *CreateRequest_Endpoint) MarshalTo(dAtA []byte) (int, error) {
-	i := 0
-	dAtA[i] = 0x18
-	i++
-	i = encodeVarintDevicehub(dAtA, i, uint64(m.Endpoint))
-	return i, nil
-}
 func (m *CreateReply) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -655,11 +487,13 @@ func encodeVarintDevicehub(dAtA []byte, offset int, v uint64) int {
 func (m *CreateRequest) Size() (n int) {
 	var l int
 	_ = l
-	if m.Type != 0 {
-		n += 1 + sovDevicehub(uint64(m.Type))
+	l = len(m.Type)
+	if l > 0 {
+		n += 1 + l + sovDevicehub(uint64(l))
 	}
-	if m.Kind != nil {
-		n += m.Kind.Size()
+	l = len(m.Kind)
+	if l > 0 {
+		n += 1 + l + sovDevicehub(uint64(l))
 	}
 	if len(m.Configuration) > 0 {
 		for k, v := range m.Configuration {
@@ -672,18 +506,6 @@ func (m *CreateRequest) Size() (n int) {
 	return n
 }
 
-func (m *CreateRequest_Listener) Size() (n int) {
-	var l int
-	_ = l
-	n += 1 + sovDevicehub(uint64(m.Listener))
-	return n
-}
-func (m *CreateRequest_Endpoint) Size() (n int) {
-	var l int
-	_ = l
-	n += 1 + sovDevicehub(uint64(m.Endpoint))
-	return n
-}
 func (m *CreateReply) Size() (n int) {
 	var l int
 	_ = l
@@ -768,10 +590,10 @@ func (m *CreateRequest) Unmarshal(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 0 {
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
 			}
-			m.Type = 0
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowDevicehub
@@ -781,16 +603,26 @@ func (m *CreateRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Type |= (CreateRequest_Type(b) & 0x7F) << shift
+				stringLen |= (uint64(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthDevicehub
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Type = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
 		case 2:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Listener", wireType)
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Kind", wireType)
 			}
-			var v CreateRequest_ListenerKind
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowDevicehub
@@ -800,32 +632,21 @@ func (m *CreateRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				v |= (CreateRequest_ListenerKind(b) & 0x7F) << shift
+				stringLen |= (uint64(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			m.Kind = &CreateRequest_Listener{v}
-		case 3:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Endpoint", wireType)
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthDevicehub
 			}
-			var v CreateRequest_EndpointKind
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowDevicehub
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				v |= (CreateRequest_EndpointKind(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
 			}
-			m.Kind = &CreateRequest_Endpoint{v}
+			m.Kind = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Configuration", wireType)
@@ -1399,36 +1220,27 @@ var (
 func init() { proto1.RegisterFile("proto/devicehub.proto", fileDescriptorDevicehub) }
 
 var fileDescriptorDevicehub = []byte{
-	// 481 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0x7c, 0x53, 0xcd, 0x6e, 0xd3, 0x40,
-	0x18, 0xf4, 0xc6, 0x4e, 0xe4, 0x7c, 0xf9, 0xa9, 0x59, 0xb5, 0x52, 0xc8, 0x21, 0x2a, 0xbe, 0x50,
-	0x09, 0xd5, 0x48, 0x81, 0x03, 0x70, 0x01, 0xa5, 0xb6, 0x9a, 0x88, 0x36, 0x0d, 0x8e, 0x79, 0x80,
-	0xa4, 0xfe, 0xda, 0xae, 0x62, 0x79, 0x8d, 0xbb, 0xae, 0xe4, 0x37, 0xe1, 0xc4, 0xf3, 0xf4, 0xc8,
-	0x23, 0xa0, 0xf0, 0x22, 0x68, 0x37, 0xb1, 0x71, 0x20, 0xea, 0xc9, 0x3b, 0xdf, 0xce, 0x8c, 0xe7,
-	0x1b, 0xcb, 0x70, 0x94, 0xa4, 0x5c, 0xf0, 0xd7, 0x21, 0x3e, 0xb0, 0x6b, 0xbc, 0xcb, 0x96, 0x8e,
-	0xc2, 0xb4, 0xae, 0x1e, 0xf6, 0xa3, 0x0e, 0x9d, 0xb3, 0x14, 0x17, 0x02, 0x7d, 0xfc, 0x96, 0xe1,
-	0xbd, 0xa0, 0xa7, 0x60, 0x88, 0x3c, 0xc1, 0x1e, 0x39, 0x26, 0x27, 0xdd, 0xe1, 0xf3, 0x0d, 0xdd,
-	0xd9, 0xe1, 0x38, 0x41, 0x9e, 0xa0, 0xaf, 0x68, 0xf4, 0x23, 0x98, 0x11, 0xbb, 0x17, 0x18, 0x63,
-	0xda, 0xab, 0x29, 0xc9, 0x8b, 0xbd, 0x92, 0x8b, 0x2d, 0xe9, 0x33, 0x8b, 0xc3, 0xb1, 0xe6, 0x97,
-	0x22, 0x69, 0x80, 0x71, 0x98, 0x70, 0x16, 0x8b, 0x9e, 0xfe, 0x84, 0x81, 0xb7, 0x25, 0x15, 0x06,
-	0x85, 0x88, 0x5e, 0x42, 0xe7, 0x9a, 0xc7, 0x37, 0xec, 0x36, 0x4b, 0x17, 0x82, 0xf1, 0xb8, 0x67,
-	0x1c, 0xeb, 0x27, 0xad, 0xe1, 0xcb, 0xbd, 0x2e, 0x67, 0x55, 0xa6, 0x17, 0x8b, 0x34, 0xf7, 0x77,
-	0xd5, 0xfd, 0x4f, 0x40, 0xff, 0x27, 0x51, 0x0b, 0xf4, 0x15, 0xe6, 0xaa, 0x94, 0xa6, 0x2f, 0x8f,
-	0xf4, 0x10, 0xea, 0x0f, 0x8b, 0x28, 0x43, 0xb5, 0x75, 0xd3, 0xdf, 0x80, 0x0f, 0xb5, 0x77, 0xc4,
-	0xb6, 0xc1, 0x90, 0x05, 0xd1, 0x36, 0x98, 0xde, 0xd4, 0x9d, 0x5d, 0x4d, 0xa6, 0x81, 0xa5, 0x49,
-	0x74, 0x31, 0x99, 0x07, 0xde, 0xd4, 0xf3, 0x2d, 0x62, 0x9f, 0x42, 0xbb, 0xda, 0x08, 0x35, 0xc1,
-	0xb8, 0xfc, 0x12, 0x48, 0x9e, 0x09, 0xc6, 0x38, 0x08, 0x66, 0x16, 0xa1, 0x4d, 0xa8, 0xcf, 0x03,
-	0x77, 0x32, 0xb5, 0x6a, 0x76, 0x1f, 0xda, 0xd5, 0xfd, 0x29, 0x40, 0x63, 0x1e, 0xb8, 0x57, 0x5f,
-	0x03, 0x4b, 0x1b, 0x35, 0xc0, 0x58, 0xb1, 0x38, 0xb4, 0x3d, 0x68, 0x15, 0xbb, 0x26, 0x51, 0x4e,
-	0xbb, 0x50, 0xe3, 0x2b, 0x15, 0xd8, 0xf4, 0x6b, 0x7c, 0x25, 0xf3, 0x62, 0x9a, 0xf2, 0xb4, 0xc8,
-	0xab, 0x80, 0xdc, 0x2b, 0x63, 0xa1, 0x2a, 0xbe, 0xe9, 0xcb, 0xa3, 0x7d, 0x00, 0x1d, 0x17, 0x23,
-	0x2c, 0x2b, 0xb3, 0x3b, 0xd0, 0x2a, 0x06, 0x49, 0x94, 0xdb, 0x6d, 0x80, 0x73, 0x14, 0xc5, 0x25,
-	0x80, 0xa9, 0x50, 0x12, 0xe5, 0xc3, 0x1f, 0x04, 0xf4, 0x71, 0xb6, 0xa4, 0x6f, 0xa1, 0xb1, 0x09,
-	0x42, 0x0f, 0xf7, 0x7d, 0x83, 0x3e, 0xfd, 0x67, 0x2a, 0x5d, 0x35, 0xa9, 0xda, 0xbc, 0xa6, 0x54,
-	0xed, 0xc4, 0x28, 0x55, 0xd5, 0x2c, 0x1a, 0x7d, 0x05, 0xfa, 0x39, 0x0a, 0xfa, 0x6c, 0x7b, 0xf9,
-	0x37, 0x59, 0xff, 0xa0, 0x3a, 0x52, 0xe4, 0xd1, 0xfb, 0xc7, 0xf5, 0x80, 0xfc, 0x5c, 0x0f, 0xc8,
-	0xaf, 0xf5, 0x80, 0x7c, 0xff, 0x3d, 0xd0, 0xe0, 0x88, 0x71, 0x47, 0xdc, 0xb1, 0xf8, 0xf6, 0x26,
-	0x8b, 0x9c, 0xf2, 0x17, 0x19, 0x75, 0x5d, 0x75, 0x1c, 0x67, 0xcb, 0x99, 0xf4, 0x98, 0x91, 0x65,
-	0x43, 0x99, 0xbd, 0xf9, 0x13, 0x00, 0x00, 0xff, 0xff, 0xa9, 0x6d, 0xab, 0x99, 0x4e, 0x03, 0x00,
-	0x00,
+	// 351 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0x6c, 0x52, 0xcd, 0x6a, 0xea, 0x40,
+	0x14, 0x76, 0x12, 0x15, 0xef, 0xf1, 0x46, 0xef, 0x1d, 0x14, 0x82, 0x8b, 0x20, 0xd9, 0x54, 0x28,
+	0xa4, 0x60, 0xbb, 0x68, 0xbb, 0x2a, 0xfe, 0xa0, 0x9b, 0x82, 0xe4, 0x0d, 0x8c, 0x19, 0x75, 0x48,
+	0xc8, 0xa4, 0xd3, 0x19, 0x21, 0x6f, 0xd2, 0x55, 0x9f, 0xc7, 0x65, 0x1f, 0xa1, 0xd8, 0x17, 0x29,
+	0x33, 0x31, 0xa9, 0xb6, 0x5d, 0xe5, 0x7c, 0xdf, 0x39, 0xdf, 0x0f, 0x61, 0xa0, 0x9b, 0x72, 0x26,
+	0xd8, 0x55, 0x48, 0x76, 0x74, 0x45, 0xb6, 0x32, 0xf0, 0x34, 0xc6, 0x35, 0xfd, 0x71, 0xf7, 0x08,
+	0xac, 0x31, 0x27, 0x4b, 0x41, 0x7c, 0xf2, 0x24, 0xc9, 0xb3, 0xc0, 0x18, 0xaa, 0x22, 0x4b, 0x89,
+	0x8d, 0xfa, 0x68, 0xf0, 0xc7, 0xd7, 0xb3, 0xe2, 0x22, 0x9a, 0x84, 0xb6, 0x91, 0x73, 0x6a, 0xc6,
+	0x8f, 0x60, 0xad, 0x58, 0xb2, 0xa6, 0x1b, 0xc9, 0x97, 0x82, 0xb2, 0xc4, 0xae, 0xf6, 0xcd, 0x41,
+	0x73, 0x78, 0x91, 0xfb, 0x7b, 0x67, 0xa6, 0xde, 0xf8, 0xf4, 0x72, 0x9a, 0x08, 0x9e, 0xf9, 0xe7,
+	0xea, 0xde, 0x03, 0xe0, 0x9f, 0x47, 0xf8, 0x1f, 0x98, 0x11, 0xc9, 0x8e, 0x5d, 0xd4, 0x88, 0x3b,
+	0x50, 0xdb, 0x2d, 0x63, 0x49, 0x8e, 0x5d, 0x72, 0x70, 0x6f, 0xdc, 0x22, 0x77, 0x0a, 0xcd, 0x22,
+	0x34, 0x8d, 0x33, 0xdc, 0x02, 0x83, 0x45, 0x5a, 0xd9, 0xf0, 0x0d, 0x16, 0x29, 0x21, 0xe1, 0x9c,
+	0xf1, 0x42, 0xa8, 0x81, 0x0a, 0x90, 0x34, 0xb4, 0xcd, 0x3c, 0x40, 0xd2, 0xd0, 0x6d, 0x83, 0x35,
+	0x21, 0x31, 0x29, 0xbb, 0xbb, 0x16, 0x34, 0x0b, 0x22, 0x8d, 0x33, 0xf7, 0x2f, 0xc0, 0x8c, 0x88,
+	0x62, 0x09, 0xd0, 0xd0, 0x28, 0x8d, 0xb3, 0xe1, 0x2b, 0x02, 0x73, 0x2e, 0x03, 0x7c, 0x03, 0xf5,
+	0xbc, 0x08, 0xee, 0xfc, 0xf6, 0x33, 0x7a, 0xf8, 0x1b, 0xab, 0x5c, 0x2b, 0x4a, 0x95, 0xc7, 0x94,
+	0xaa, 0xb3, 0x1a, 0xa5, 0xea, 0xb4, 0x4b, 0x05, 0x5f, 0x82, 0x39, 0x23, 0x02, 0xff, 0x3f, 0x2e,
+	0xbf, 0x9a, 0xf5, 0xda, 0xa7, 0x94, 0x3e, 0x1e, 0xdd, 0xed, 0x0f, 0x0e, 0x7a, 0x3b, 0x38, 0xe8,
+	0xfd, 0xe0, 0xa0, 0x97, 0x0f, 0xa7, 0x02, 0x5d, 0xca, 0x3c, 0xb1, 0xa5, 0xc9, 0x66, 0x2d, 0x63,
+	0xaf, 0x7c, 0x22, 0xa3, 0xd6, 0x44, 0x8f, 0x73, 0x19, 0x2c, 0x94, 0xc7, 0x02, 0x05, 0x75, 0x6d,
+	0x76, 0xfd, 0x19, 0x00, 0x00, 0xff, 0xff, 0x97, 0xfc, 0x18, 0x6c, 0x4e, 0x02, 0x00, 0x00,
 }
