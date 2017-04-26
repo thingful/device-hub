@@ -18,19 +18,19 @@ type store struct {
 type bucket []byte
 
 var (
-	endpoints = bucket([]byte("endpoints"))
-	listeners = bucket([]byte("listeners"))
+	endpointsBucket = bucket([]byte("endpoints"))
+	listenersBucket = bucket([]byte("listeners"))
 )
 
 func NewStore(db *bolt.DB) (*store, error) {
 
 	err := db.Update(func(tx *bolt.Tx) error {
 
-		_, err := tx.CreateBucketIfNotExists(endpoints)
+		_, err := tx.CreateBucketIfNotExists(endpointsBucket)
 		if err != nil {
 			return fmt.Errorf("create bucket: %s", err)
 		}
-		_, err = tx.CreateBucketIfNotExists(listeners)
+		_, err = tx.CreateBucketIfNotExists(listenersBucket)
 		if err != nil {
 			return fmt.Errorf("create bucket: %s", err)
 		}
@@ -124,7 +124,7 @@ func (s *store) Get(b bucket, uid string, out interface{}) error {
 	return err
 }
 
-func (s *store) List(bucket bucket, out []interface{}) error {
+func (s *store) List(bucket bucket, out interface{}) error {
 
 	err := s.db.View(func(tx *bolt.Tx) error {
 
