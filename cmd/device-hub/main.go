@@ -32,7 +32,7 @@ type config struct {
 	CACertFile string `envconfig:"TLS_CA_CERT_FILE"`
 	CertFile   string `envconfig:"TLS_CERT_FILE"`
 	KeyFile    string `envconfig:"TLS_KEY_FILE"`
-	Data       string `envconfig:"DATA" data:"."`
+	Data       string `envconfig:"DATA" default:"."`
 }
 
 func newConfig() *config {
