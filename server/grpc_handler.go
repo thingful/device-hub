@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	hashids "github.com/speps/go-hashids"
+	hub "github.com/thingful/device-hub"
 	"github.com/thingful/device-hub/proto"
 	context "golang.org/x/net/context"
 )
@@ -33,8 +34,26 @@ func (s *handler) Create(ctx context.Context, request *proto.CreateRequest) (*pr
 	switch strings.ToLower(request.Type) {
 	case "listener":
 		bucket = listeners
+
+		exists := hub.IsListenerRegistered(request.Kind)
+
+		if !exists {
+			return &proto.CreateReply{
+				Error: fmt.Sprintf("kind : %s not registered", request.Kind),
+			}, nil
+
+		}
+
 	case "endpoint":
 		bucket = endpoints
+
+		exists := hub.IsEndpointRegistered(request.Kind)
+
+		if !exists {
+			return &proto.CreateReply{
+				Error: fmt.Sprintf("kind : %s not registered", request.Kind),
+			}, nil
+		}
 
 	default:
 		return &proto.CreateReply{

@@ -10,6 +10,9 @@ import (
 	"github.com/kelseyhightower/envconfig"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+
+	_ "github.com/thingful/device-hub/endpoint"
+	_ "github.com/thingful/device-hub/listener"
 )
 
 var RootCmd = &cobra.Command{
