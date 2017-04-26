@@ -68,15 +68,8 @@ func init() {
 	RootCmd.AddCommand(versionCommand)
 
 	RootCmd.AddCommand(createCommand)
-	/*
-		pipeCommand.AddCommand(pipeListCommand, pipeAddCommand, pipeDeleteCommand)
-		RootCmd.AddCommand(pipeCommand)
+	RootCmd.AddCommand(getCommand)
 
-		endpointCommand.AddCommand(endpointAddCommand)
-		RootCmd.AddCommand(endpointCommand)
-		RootCmd.AddCommand(listenerCommand)
-		RootCmd.AddCommand(statsCommand)
-	*/
 	_config.AddFlags(RootCmd.PersistentFlags())
 }
 
