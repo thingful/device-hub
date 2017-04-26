@@ -10,8 +10,11 @@ import (
 )
 
 var (
-	builders     = map[string]lazy{}
-	buildersLock = sync.RWMutex{}
+	endpoints     = map[string]lazy{}
+	endpointsLock = sync.RWMutex{}
+
+	listeners     = map[string]lazy{}
+	listenersLock = sync.RWMutex{}
 )
 
 type endpointBuilder func(config utils.TypedMap) (Endpoint, error)
@@ -27,10 +30,10 @@ type lazy struct {
 // RegisterEndpoint will store the builder with the correct name
 func RegisterEndpoint(typez string, builder endpointBuilder) {
 
-	buildersLock.Lock()
-	defer buildersLock.Unlock()
+	endpointsLock.Lock()
+	defer endpointsLock.Unlock()
 
-	builders[typez] = lazy{
+	endpoints[typez] = lazy{
 		builder: func(config utils.TypedMap) (interface{}, error) {
 			i, err := builder(config)
 			return i, err
@@ -39,23 +42,47 @@ func RegisterEndpoint(typez string, builder endpointBuilder) {
 
 }
 
+// IsEndpointRegistered confirms if the endpoint has been registered
+func IsEndpointRegistered(typez string) bool {
+
+	endpointsLock.Lock()
+	defer endpointsLock.Unlock()
+
+	_, found := endpoints[typez]
+	return found
+}
+
 // RegisterListener will store the builder with the correct name
 func RegisterListener(typez string, builder listenerBuilder) {
-	buildersLock.Lock()
-	defer buildersLock.Unlock()
 
-	builders[typez] = lazy{
+	listenersLock.Lock()
+	defer listenersLock.Unlock()
+
+	listeners[typez] = lazy{
 		builder: func(config utils.TypedMap) (interface{}, error) {
 			i, err := builder(config)
 			return i, err
 		},
 	}
+}
+
+// IsListenerRegistered confirms if the listener has been registered
+func IsListenerRegistered(typez string) bool {
+
+	listenersLock.Lock()
+	defer listenersLock.Unlock()
+
+	_, found := listeners[typez]
+	return found
 }
 
 // EndpointByName returns or creates an Endpoint of specified type
 func EndpointByName(uid, typez string, conf utils.TypedMap) (Endpoint, error) {
 
-	f, err := genericByName(uid, typez, conf)
+	endpointsLock.Lock()
+	defer endpointsLock.Unlock()
+
+	f, err := genericByName(endpoints, uid, typez, conf)
 
 	if err != nil {
 		return nil, err
@@ -73,7 +100,10 @@ func EndpointByName(uid, typez string, conf utils.TypedMap) (Endpoint, error) {
 // ListenerByName returns or creates a Listener of specified type
 func ListenerByName(uid, typez string, conf utils.TypedMap) (Listener, error) {
 
-	f, err := genericByName(uid, typez, conf)
+	listenersLock.Lock()
+	defer listenersLock.Unlock()
+
+	f, err := genericByName(listeners, uid, typez, conf)
 
 	if err != nil {
 		return nil, err
@@ -89,10 +119,7 @@ func ListenerByName(uid, typez string, conf utils.TypedMap) (Listener, error) {
 }
 
 // genericByName exists instead of language support for generics!
-func genericByName(uid, typez string, conf utils.TypedMap) (interface{}, error) {
-
-	buildersLock.Lock()
-	defer buildersLock.Unlock()
+func genericByName(builders map[string]lazy, uid, typez string, conf utils.TypedMap) (interface{}, error) {
 
 	// try and find by uid
 	e, found := builders[uid]
