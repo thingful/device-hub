@@ -68,9 +68,10 @@ message GetReply {
 }
 
 message Endpoint {
-    string type = 1;
-    string kind = 2;
-    map<string, string> configuration = 3;
+    string uid = 1;
+    string type = 2;
+    string kind = 3;
+    map<string, string> configuration = 4;
 }
 
 /*
