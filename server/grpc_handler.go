@@ -25,6 +25,7 @@ func (s *handler) Create(ctx context.Context, request *proto.CreateRequest) (*pr
 
 	if err != nil {
 		return &proto.CreateReply{
+			Ok:    false,
 			Error: err.Error(),
 		}, nil
 	}
@@ -39,6 +40,7 @@ func (s *handler) Create(ctx context.Context, request *proto.CreateRequest) (*pr
 
 		if !exists {
 			return &proto.CreateReply{
+				Ok:    false,
 				Error: fmt.Sprintf("kind : %s not registered", request.Kind),
 			}, nil
 
@@ -51,12 +53,14 @@ func (s *handler) Create(ctx context.Context, request *proto.CreateRequest) (*pr
 
 		if !exists {
 			return &proto.CreateReply{
+				Ok:    false,
 				Error: fmt.Sprintf("kind : %s not registered", request.Kind),
 			}, nil
 		}
 
 	default:
 		return &proto.CreateReply{
+			Ok:    false,
 			Error: fmt.Sprintf("type : %s not registered", request.Type),
 		}, nil
 	}
@@ -101,7 +105,34 @@ func hash(data interface{}) ([]byte, error) {
 }
 
 func (s *handler) Delete(ctx context.Context, request *proto.DeleteRequest) (*proto.DeleteReply, error) {
-	return nil, nil
+
+	var bucket bucket
+
+	switch strings.ToLower(request.Type) {
+	case "listener":
+		bucket = listenersBucket
+	case "endpoint":
+		bucket = endpointsBucket
+
+	default:
+		return &proto.DeleteReply{
+			Ok:    false,
+			Error: fmt.Sprintf("type : %s not found", request.Type),
+		}, nil
+	}
+
+	err := s.store.Delete(bucket, request.Uid)
+
+	if err != nil {
+		return &proto.DeleteReply{
+			Ok:    false,
+			Error: err.Error(),
+		}, nil
+	}
+
+	//TODO : delete running pipes
+
+	return &proto.DeleteReply{Ok: true}, nil
 }
 
 func (s *handler) Get(ctx context.Context, request *proto.GetRequest) (*proto.GetReply, error) {
@@ -137,6 +168,7 @@ func (s *handler) Get(ctx context.Context, request *proto.GetRequest) (*proto.Ge
 
 		default:
 			return &proto.GetReply{
+				Ok:    false,
 				Error: fmt.Sprintf("filter of type : %s not registered", key),
 			}, nil
 		}

@@ -69,7 +69,7 @@ func init() {
 
 	RootCmd.AddCommand(createCommand)
 	RootCmd.AddCommand(getCommand)
-
+	RootCmd.AddCommand(deleteCommand)
 	_config.AddFlags(RootCmd.PersistentFlags())
 }
 
