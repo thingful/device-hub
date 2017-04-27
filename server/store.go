@@ -3,7 +3,6 @@
 package server
 
 import (
-	"encoding/binary"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -24,6 +23,7 @@ var (
 
 	endpointsBucket = bucket([]byte("endpoints"))
 	listenersBucket = bucket([]byte("listeners"))
+	profilesBucket  = bucket([]byte("profiles"))
 )
 
 func NewStore(db *bolt.DB) (*store, error) {
@@ -32,6 +32,7 @@ func NewStore(db *bolt.DB) (*store, error) {
 
 		mustCreateBucket(tx, endpointsBucket)
 		mustCreateBucket(tx, listenersBucket)
+		mustCreateBucket(tx, profilesBucket)
 
 		return nil
 	})
@@ -72,9 +73,7 @@ func (s *store) Insert(bucket bucket, uid []byte, data interface{}) error {
 		return b.Put([]byte(uid), buf)
 
 	})
-
 	return err
-
 }
 
 func (s *store) Update(bucket bucket, uid string, data interface{}) error {
@@ -171,10 +170,4 @@ func (s *store) List(bucket bucket, to interface{}) error {
 	reflect.Indirect(ref).Set(results)
 
 	return nil
-}
-
-func itob(v uint64) []byte {
-	b := make([]byte, 8)
-	binary.BigEndian.PutUint64(b, v)
-	return b
 }

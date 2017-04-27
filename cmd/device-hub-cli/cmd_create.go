@@ -13,16 +13,12 @@ import (
 
 var createCommand = &cobra.Command{
 	Use:   "create",
-	Short: "Create listener and endpoint resources",
+	Short: "Create listener, endpoint and profile resources",
 	Run: func(cmd *cobra.Command, args []string) {
 
 		/* TODO : add ability to generate examplesi */
 		v := proto.CreateRequest{
-			Type: "listener",
-			Kind: "http",
-			Configuration: map[string]string{
-				"HTTPAddress": "0.0.0.0:8085",
-			},
+			Configuration: map[string]string{},
 		}
 
 		err := roundTrip(v, func(cli proto.HubClient, in iocodec.Decoder, out iocodec.Encoder) error {

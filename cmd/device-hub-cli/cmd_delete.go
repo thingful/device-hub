@@ -10,7 +10,7 @@ import (
 
 var deleteCommand = &cobra.Command{
 	Use:   "delete",
-	Short: "Delete listener and endpoint resources",
+	Short: "Delete listener, profile and endpoint resources",
 	RunE: func(cmd *cobra.Command, args []string) error {
 
 		v := proto.DeleteRequest{}

@@ -57,6 +57,8 @@ func (s *handler) Create(ctx context.Context, request *proto.CreateRequest) (*pr
 				Error: fmt.Sprintf("kind : %s not registered", request.Kind),
 			}, nil
 		}
+	case "profile":
+		bucket = endpointsBucket
 
 	default:
 		return &proto.CreateReply{
@@ -65,7 +67,7 @@ func (s *handler) Create(ctx context.Context, request *proto.CreateRequest) (*pr
 		}, nil
 	}
 
-	err = s.store.Insert(bucket, hash, proto.Endpoint{
+	err = s.store.Insert(bucket, hash, proto.Entity{
 		Uid:           string(hash),
 		Type:          request.Type,
 		Kind:          request.Kind,
@@ -113,7 +115,8 @@ func (s *handler) Delete(ctx context.Context, request *proto.DeleteRequest) (*pr
 		bucket = listenersBucket
 	case "endpoint":
 		bucket = endpointsBucket
-
+	case "profile":
+		bucket = profilesBucket
 	default:
 		return &proto.DeleteReply{
 			Ok:    false,
@@ -121,6 +124,7 @@ func (s *handler) Delete(ctx context.Context, request *proto.DeleteRequest) (*pr
 		}, nil
 	}
 
+	//TODO : error if any running pipes
 	err := s.store.Delete(bucket, request.Uid)
 
 	if err != nil {
@@ -130,8 +134,6 @@ func (s *handler) Delete(ctx context.Context, request *proto.DeleteRequest) (*pr
 		}, nil
 	}
 
-	//TODO : delete running pipes
-
 	return &proto.DeleteReply{Ok: true}, nil
 }
 
@@ -139,14 +141,14 @@ func (s *handler) Get(ctx context.Context, request *proto.GetRequest) (*proto.Ge
 
 	keys := strings.Split(request.Filter, ",")
 
-	all := []*proto.Endpoint{}
+	all := []*proto.Entity{}
 
 	for _, key := range keys {
 
 		switch strings.ToLower(key) {
 		case "listener", "l":
 
-			listeners := []*proto.Endpoint{}
+			listeners := []*proto.Entity{}
 
 			err := s.store.List(listenersBucket, &listeners)
 
@@ -157,7 +159,7 @@ func (s *handler) Get(ctx context.Context, request *proto.GetRequest) (*proto.Ge
 
 		case "endpoint", "e":
 
-			endpoints := []*proto.Endpoint{}
+			endpoints := []*proto.Entity{}
 
 			err := s.store.List(endpointsBucket, &endpoints)
 
@@ -165,6 +167,16 @@ func (s *handler) Get(ctx context.Context, request *proto.GetRequest) (*proto.Ge
 				return nil, err
 			}
 			all = append(all, endpoints...)
+		case "profile", "p":
+
+			profiles := []*proto.Entity{}
+
+			err := s.store.List(profilesBucket, &profiles)
+
+			if err != nil {
+				return nil, err
+			}
+			all = append(all, profiles...)
 
 		default:
 			return &proto.GetReply{
@@ -174,5 +186,5 @@ func (s *handler) Get(ctx context.Context, request *proto.GetRequest) (*proto.Ge
 		}
 	}
 
-	return &proto.GetReply{Ok: true, Endpoints: all}, nil
+	return &proto.GetReply{Ok: true, Entities: all}, nil
 }

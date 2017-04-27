@@ -8,37 +8,21 @@ option java_outer_classname = "DeviceHubProto";
 
 package proto;
 
-//import "github.com/gogo/protobuf/gogoproto/gogo.proto";
-//import "google/protobuf/timestamp.proto";
-
 service Hub {
+
     rpc Create (CreateRequest) returns (CreateReply) {}
     rpc Delete (DeleteRequest) returns (DeleteReply) {}
+
     rpc Get (GetRequest) returns (GetReply) {}
+
+    rpc Start(StartRequest) returns (StartReply) {}
+    rpc Stop(StopRequest) returns (StopReply) {}
 }
 
 message CreateRequest {
-/*
-    enum Type {
-        ENDPOINT = 0;
-        LISTENER  = 1;
-    }
-
-    enum ListenerKind {
-        MQTT = 0;
-        HTTP = 1;
-        STDIN = 2;
-    }
-
-    enum EndpointKind {
-        STDOUT = 0;
-    }
-*/
     string type = 1;
     string kind = 2;
-
     map<string, string> configuration = 3;
-
 }
 
 message CreateReply {
@@ -64,17 +48,46 @@ message GetRequest {
 message GetReply {
     bool ok = 1;
     string error = 2;
-    repeated Endpoint endpoints = 3;
+    repeated Entity entities = 3;
 }
 
-message Endpoint {
+message Entity {
     string uid = 1;
     string type = 2;
     string kind = 3;
     map<string, string> configuration = 4;
 }
 
+message StartRequest {
+    string uri = 1;
+    string profile_uid = 2;
+    string listener_uid = 3;
+    repeated string endpoint_uids = 4;
+}
+
+message StartReply {
+    bool ok = 1;
+    string error = 2;
+}
+
+message StopRequest {
+    string uri = 1;
+}
+
+message StopReply {
+    bool ok = 1;
+    string error = 2;
+}
+
 /*
+message Pipe {
+    string uri = 1;
+    Profile profile = 3;
+    Endpoint listener = 4;
+    repeated Endpoint endpoints = 6;
+}
+
+
     // add a pipe to an existing listener and endpoint
     rpc PipeAdd (PipeAddRequest) returns (PipeAddReply) {}
 
@@ -85,84 +98,6 @@ message Endpoint {
     rpc PipeList (PipeListRequest) returns (PipeListReply) {}
 
     rpc Stats (StatsRequest) returns (StatsReply) {}
-}
-
-message EndpointAddRequest{
-    Endpoint endpoint = 1;
-}
-
-message EndpointAddReply{
-    bool ok = 1;
-    string error = 2;
-    string uid = 3;
-}
-
-message EndpointDeleteRequest{
-    string uid = 1;
-}
-
-message EndpointDeleteReply{
-    bool ok = 1;
-    string error = 2;
-}
-
-message EndpointListRequest{}
-
-message EndpointListReply{
-    bool ok = 1;
-    string error = 2;
-    repeated Endpoint endpoints = 3;
-}
-
-message ListenerAddRequest{}
-message ListenerAddReply{
-    bool ok = 1;
-    string error = 2;
-}
-message ListenerDeleteRequest{}
-message ListenerDeleteReply{
-    bool ok = 1;
-    string error = 2;
-}
-message ListenerListRequest{}
-message ListenerListReply{
-    bool ok = 1;
-    string error = 2;
-}
-
-message PipeAddRequest {
-    string uri = 1;
-    string profile_uid = 2;
-    string listener_uid = 3;
-    repeated string endpoint_uids = 4;
-}
-
-message PipeAddReply {
-    bool ok = 1;
-    string error = 2;
-}
-
-message PipeDeleteRequest {
-    string uri = 1;
-}
-
-message PipeDeleteReply {
-    bool ok = 1;
-    string error = 2;
-}
-
-message PipeListRequest {
-}
-
-message PipeListReply {
-    repeated Pipe pipes = 1;
-}
-
-message Pipe {
-    string uri = 1;
-    Profile profile = 3;
-    Endpoint listener = 4;
-    repeated Endpoint endpoints = 6;
 }
 
 message PipeStatus {

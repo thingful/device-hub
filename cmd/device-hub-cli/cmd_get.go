@@ -4,8 +4,6 @@ package main
 
 import (
 	"context"
-	"fmt"
-	"log"
 	"strings"
 
 	"github.com/fiorix/protoc-gen-cobra/iocodec"
@@ -16,7 +14,7 @@ import (
 var getCommand = &cobra.Command{
 	Use:   "get",
 	Short: "Display one or many resources",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 
 		v := proto.GetRequest{
 			Filter: strings.Join(args, ","),
@@ -33,10 +31,7 @@ var getCommand = &cobra.Command{
 			return out.Encode(resp)
 
 		})
-		if err != nil {
-			log.Fatal(err)
-		}
 
-		fmt.Println(args)
+		return err
 	},
 }

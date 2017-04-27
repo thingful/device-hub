@@ -48,17 +48,13 @@ func (o *config) AddFlags(fs *pflag.FlagSet) {
 	fs.StringVar(&o.CertFile, "tls-cert-file", o.CertFile, "client certificate file")
 	fs.StringVar(&o.KeyFile, "tls-key-file", o.KeyFile, "client key file")
 	fs.StringVar(&o.Data, "data", o.Data, "path to db folder, defaults to current directory")
-
 }
 
 func init() {
 
 	RootCmd.AddCommand(versionCommand)
-
 	RootCmd.AddCommand(serverCommand)
-
 	_config.AddFlags(RootCmd.PersistentFlags())
-
 }
 
 func main() {
