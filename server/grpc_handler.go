@@ -33,7 +33,7 @@ func (s *handler) Create(ctx context.Context, request *proto.CreateRequest) (*pr
 
 	switch strings.ToLower(request.Type) {
 	case "listener":
-		bucket = listeners
+		bucket = listenersBucket
 
 		exists := hub.IsListenerRegistered(request.Kind)
 
@@ -45,7 +45,7 @@ func (s *handler) Create(ctx context.Context, request *proto.CreateRequest) (*pr
 		}
 
 	case "endpoint":
-		bucket = endpoints
+		bucket = endpointsBucket
 
 		exists := hub.IsEndpointRegistered(request.Kind)
 
@@ -61,7 +61,12 @@ func (s *handler) Create(ctx context.Context, request *proto.CreateRequest) (*pr
 		}, nil
 	}
 
-	err = s.store.Insert(bucket, hash, request)
+	err = s.store.Insert(bucket, hash, proto.Endpoint{
+		Uid:           string(hash),
+		Type:          request.Type,
+		Kind:          request.Kind,
+		Configuration: request.Configuration,
+	})
 
 	if err != nil {
 		return &proto.CreateReply{
@@ -100,136 +105,42 @@ func (s *handler) Delete(ctx context.Context, request *proto.DeleteRequest) (*pr
 }
 
 func (s *handler) Get(ctx context.Context, request *proto.GetRequest) (*proto.GetReply, error) {
-	return nil, nil
-}
 
-/*
-func (s *handler) EndpointAdd(ctx context.Context, request *proto.EndpointAddRequest) (*proto.EndpointAddReply, error) {
+	keys := strings.Split(request.Filter, ",")
 
-	uid, err := s.store.Insert(endPoints, request.Endpoint)
-	//TODO : handle update
-	// if update then look at policy to reload existing
+	all := []*proto.Endpoint{}
 
-	if err != nil {
-		return &proto.EndpointAddReply{
-			Ok:    false,
-			Error: err.Error(),
-		}, nil
-	}
+	for _, key := range keys {
 
-	//	s.store.List(endPoints, nil)
-	pp := proto.Endpoint{}
-	s.store.Get(endPoints, uid, &pp)
+		switch strings.ToLower(key) {
+		case "listener", "l":
 
-	fmt.Println(pp, pp.Type)
+			listeners := []*proto.Endpoint{}
 
-	return &proto.EndpointAddReply{
-		Ok:  true,
-		Uid: uid,
-	}, nil
-}
+			err := s.store.List(listenersBucket, &listeners)
 
-func (s *handler) EndpointDelete(ctx context.Context, request *proto.EndpointDeleteRequest) (*proto.EndpointDeleteReply, error) {
-	panic("not implemented")
-}
-
-func (s *handler) EndpointList(ctx context.Context, request *proto.EndpointListRequest) (*proto.EndpointListReply, error) {
-	panic("not implemented")
-}
-
-func (s *handler) ListenerAdd(ctx context.Context, request *proto.ListenerAddRequest) (*proto.ListenerAddReply, error) {
-	panic("not implemented")
-}
-
-func (s *handler) ListenerDelete(ctx context.Context, request *proto.ListenerDeleteRequest) (*proto.ListenerDeleteReply, error) {
-	panic("not implemented")
-}
-
-func (s *handler) ListenerList(ctx context.Context, request *proto.ListenerListRequest) (*proto.ListenerListReply, error) {
-	panic("not implemented")
-}
-
-func (s *handler) PipeList(context.Context, *proto.PipeListRequest) (*proto.PipeListReply, error) {
-
-	/*
-		pipes := s.manager.List()
-		pipes_pb := []*proto.Pipe{}
-
-		for _, p := range pipes {
-
-			pipe_pb := &proto.Pipe{
-				Uri:   p.Uri,
-				State: proto.PipeState(proto.PipeState_value[string(p.State)]),
-				Profile: &proto.Profile{
-					Name:        p.Profile.Name,
-					Description: p.Profile.Description,
-					Version:     p.Profile.Version,
-				},
-				Listener: &proto.Endpoint{
-					Uid:  string(p.Listener.UID),
-					Type: p.Listener.Type,
-				},
-				Endpoints: []*proto.Endpoint{},
-				MessageStats: &proto.Statistics{
-					Total:  p.MessageStatistics.Total,
-					Errors: p.MessageStatistics.Errors,
-					Ok:     p.MessageStatistics.OK,
-				},
+			if err != nil {
+				return nil, err
 			}
+			all = append(all, listeners...)
 
-			for _, e := range p.Endpoints {
+		case "endpoint", "e":
 
-				endpoint_pb := &proto.Endpoint{
-					Uid:  string(e.UID),
-					Type: e.Type,
-				}
+			endpoints := []*proto.Endpoint{}
 
-				pipe_pb.Endpoints = append(pipe_pb.Endpoints, endpoint_pb)
+			err := s.store.List(endpointsBucket, &endpoints)
+
+			if err != nil {
+				return nil, err
 			}
+			all = append(all, endpoints...)
 
-			pipes_pb = append(pipes_pb, pipe_pb)
+		default:
+			return &proto.GetReply{
+				Error: fmt.Sprintf("filter of type : %s not registered", key),
+			}, nil
 		}
-
-		return &proto.PipeListReply{Pipes: pipes_pb}, nil
-*/
-/*	return &proto.PipeListReply{}, nil
-}
-
-func (s *handler) PipeDelete(ctx context.Context, request *proto.PipeDeleteRequest) (*proto.PipeDeleteReply, error) {
-
-	err := s.manager.DeletePipeByUID(request.Uri)
-
-	if err != nil {
-		log.Print("PipeDelete", err.Error())
-		return &proto.PipeDeleteReply{
-			Ok:    false,
-			Error: err.Error(),
-		}, nil
 	}
 
-	return &proto.PipeDeleteReply{
-		Ok: true,
-	}, nil
+	return &proto.GetReply{Ok: true, Endpoints: all}, nil
 }
-
-func (s *handler) PipeAdd(ctx context.Context, request *proto.PipeAddRequest) (*proto.PipeAddReply, error) {
-
-	err := s.manager.AddPipe(request.Uri, request.ProfileUid, request.ListenerUid, request.EndpointUids)
-
-	if err != nil {
-		log.Print("PipeAdd", err.Error())
-		return &proto.PipeAddReply{
-			Ok:    false,
-			Error: err.Error(),
-		}, nil
-	}
-
-	return &proto.PipeAddReply{
-		Ok: true,
-	}, nil
-
-}
-
-func (s *handler) Stats(ctx context.Context, request *proto.StatsRequest) (*proto.StatsReply, error) {
-	panic("not implemented")
-}*/
