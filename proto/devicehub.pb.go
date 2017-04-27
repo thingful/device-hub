@@ -16,6 +16,10 @@
 		GetRequest
 		GetReply
 		Entity
+		StartRequest
+		StartReply
+		StopRequest
+		StopReply
 */
 package proto
 
@@ -241,6 +245,110 @@ func (m *Entity) GetConfiguration() map[string]string {
 	return nil
 }
 
+type StartRequest struct {
+	Uri          string   `protobuf:"bytes,1,opt,name=uri,proto3" json:"uri"`
+	ProfileUid   string   `protobuf:"bytes,2,opt,name=profile_uid,json=profileUid,proto3" json:"profile_uid"`
+	ListenerUid  string   `protobuf:"bytes,3,opt,name=listener_uid,json=listenerUid,proto3" json:"listener_uid"`
+	EndpointUids []string `protobuf:"bytes,4,rep,name=endpoint_uids,json=endpointUids" json:"endpoint_uids"`
+}
+
+func (m *StartRequest) Reset()                    { *m = StartRequest{} }
+func (m *StartRequest) String() string            { return proto1.CompactTextString(m) }
+func (*StartRequest) ProtoMessage()               {}
+func (*StartRequest) Descriptor() ([]byte, []int) { return fileDescriptorDevicehub, []int{7} }
+
+func (m *StartRequest) GetUri() string {
+	if m != nil {
+		return m.Uri
+	}
+	return ""
+}
+
+func (m *StartRequest) GetProfileUid() string {
+	if m != nil {
+		return m.ProfileUid
+	}
+	return ""
+}
+
+func (m *StartRequest) GetListenerUid() string {
+	if m != nil {
+		return m.ListenerUid
+	}
+	return ""
+}
+
+func (m *StartRequest) GetEndpointUids() []string {
+	if m != nil {
+		return m.EndpointUids
+	}
+	return nil
+}
+
+type StartReply struct {
+	Ok    bool   `protobuf:"varint,1,opt,name=ok,proto3" json:"ok"`
+	Error string `protobuf:"bytes,2,opt,name=error,proto3" json:"error"`
+}
+
+func (m *StartReply) Reset()                    { *m = StartReply{} }
+func (m *StartReply) String() string            { return proto1.CompactTextString(m) }
+func (*StartReply) ProtoMessage()               {}
+func (*StartReply) Descriptor() ([]byte, []int) { return fileDescriptorDevicehub, []int{8} }
+
+func (m *StartReply) GetOk() bool {
+	if m != nil {
+		return m.Ok
+	}
+	return false
+}
+
+func (m *StartReply) GetError() string {
+	if m != nil {
+		return m.Error
+	}
+	return ""
+}
+
+type StopRequest struct {
+	Uri string `protobuf:"bytes,1,opt,name=uri,proto3" json:"uri"`
+}
+
+func (m *StopRequest) Reset()                    { *m = StopRequest{} }
+func (m *StopRequest) String() string            { return proto1.CompactTextString(m) }
+func (*StopRequest) ProtoMessage()               {}
+func (*StopRequest) Descriptor() ([]byte, []int) { return fileDescriptorDevicehub, []int{9} }
+
+func (m *StopRequest) GetUri() string {
+	if m != nil {
+		return m.Uri
+	}
+	return ""
+}
+
+type StopReply struct {
+	Ok    bool   `protobuf:"varint,1,opt,name=ok,proto3" json:"ok"`
+	Error string `protobuf:"bytes,2,opt,name=error,proto3" json:"error"`
+}
+
+func (m *StopReply) Reset()                    { *m = StopReply{} }
+func (m *StopReply) String() string            { return proto1.CompactTextString(m) }
+func (*StopReply) ProtoMessage()               {}
+func (*StopReply) Descriptor() ([]byte, []int) { return fileDescriptorDevicehub, []int{10} }
+
+func (m *StopReply) GetOk() bool {
+	if m != nil {
+		return m.Ok
+	}
+	return false
+}
+
+func (m *StopReply) GetError() string {
+	if m != nil {
+		return m.Error
+	}
+	return ""
+}
+
 func init() {
 	proto1.RegisterType((*CreateRequest)(nil), "proto.CreateRequest")
 	proto1.RegisterType((*CreateReply)(nil), "proto.CreateReply")
@@ -249,6 +357,10 @@ func init() {
 	proto1.RegisterType((*GetRequest)(nil), "proto.GetRequest")
 	proto1.RegisterType((*GetReply)(nil), "proto.GetReply")
 	proto1.RegisterType((*Entity)(nil), "proto.Entity")
+	proto1.RegisterType((*StartRequest)(nil), "proto.StartRequest")
+	proto1.RegisterType((*StartReply)(nil), "proto.StartReply")
+	proto1.RegisterType((*StopRequest)(nil), "proto.StopRequest")
+	proto1.RegisterType((*StopReply)(nil), "proto.StopReply")
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -265,6 +377,8 @@ type HubClient interface {
 	Create(ctx context.Context, in *CreateRequest, opts ...grpc.CallOption) (*CreateReply, error)
 	Delete(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*DeleteReply, error)
 	Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetReply, error)
+	Start(ctx context.Context, in *StartRequest, opts ...grpc.CallOption) (*StartReply, error)
+	Stop(ctx context.Context, in *StopRequest, opts ...grpc.CallOption) (*StopReply, error)
 }
 
 type hubClient struct {
@@ -302,12 +416,32 @@ func (c *hubClient) Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOp
 	return out, nil
 }
 
+func (c *hubClient) Start(ctx context.Context, in *StartRequest, opts ...grpc.CallOption) (*StartReply, error) {
+	out := new(StartReply)
+	err := grpc.Invoke(ctx, "/proto.Hub/Start", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *hubClient) Stop(ctx context.Context, in *StopRequest, opts ...grpc.CallOption) (*StopReply, error) {
+	out := new(StopReply)
+	err := grpc.Invoke(ctx, "/proto.Hub/Stop", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for Hub service
 
 type HubServer interface {
 	Create(context.Context, *CreateRequest) (*CreateReply, error)
 	Delete(context.Context, *DeleteRequest) (*DeleteReply, error)
 	Get(context.Context, *GetRequest) (*GetReply, error)
+	Start(context.Context, *StartRequest) (*StartReply, error)
+	Stop(context.Context, *StopRequest) (*StopReply, error)
 }
 
 func RegisterHubServer(s *grpc.Server, srv HubServer) {
@@ -368,6 +502,42 @@ func _Hub_Get_Handler(srv interface{}, ctx context.Context, dec func(interface{}
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Hub_Start_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(StartRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(HubServer).Start(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.Hub/Start",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(HubServer).Start(ctx, req.(*StartRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Hub_Stop_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(StopRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(HubServer).Stop(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.Hub/Stop",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(HubServer).Stop(ctx, req.(*StopRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Hub_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "proto.Hub",
 	HandlerType: (*HubServer)(nil),
@@ -383,6 +553,14 @@ var _Hub_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Get",
 			Handler:    _Hub_Get_Handler,
+		},
+		{
+			MethodName: "Start",
+			Handler:    _Hub_Start_Handler,
+		},
+		{
+			MethodName: "Stop",
+			Handler:    _Hub_Stop_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -663,6 +841,149 @@ func (m *Entity) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
+func (m *StartRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *StartRequest) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Uri) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintDevicehub(dAtA, i, uint64(len(m.Uri)))
+		i += copy(dAtA[i:], m.Uri)
+	}
+	if len(m.ProfileUid) > 0 {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintDevicehub(dAtA, i, uint64(len(m.ProfileUid)))
+		i += copy(dAtA[i:], m.ProfileUid)
+	}
+	if len(m.ListenerUid) > 0 {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintDevicehub(dAtA, i, uint64(len(m.ListenerUid)))
+		i += copy(dAtA[i:], m.ListenerUid)
+	}
+	if len(m.EndpointUids) > 0 {
+		for _, s := range m.EndpointUids {
+			dAtA[i] = 0x22
+			i++
+			l = len(s)
+			for l >= 1<<7 {
+				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
+				l >>= 7
+				i++
+			}
+			dAtA[i] = uint8(l)
+			i++
+			i += copy(dAtA[i:], s)
+		}
+	}
+	return i, nil
+}
+
+func (m *StartReply) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *StartReply) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Ok {
+		dAtA[i] = 0x8
+		i++
+		if m.Ok {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if len(m.Error) > 0 {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintDevicehub(dAtA, i, uint64(len(m.Error)))
+		i += copy(dAtA[i:], m.Error)
+	}
+	return i, nil
+}
+
+func (m *StopRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *StopRequest) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Uri) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintDevicehub(dAtA, i, uint64(len(m.Uri)))
+		i += copy(dAtA[i:], m.Uri)
+	}
+	return i, nil
+}
+
+func (m *StopReply) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *StopReply) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Ok {
+		dAtA[i] = 0x8
+		i++
+		if m.Ok {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if len(m.Error) > 0 {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintDevicehub(dAtA, i, uint64(len(m.Error)))
+		i += copy(dAtA[i:], m.Error)
+	}
+	return i, nil
+}
+
 func encodeFixed64Devicehub(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	dAtA[offset+1] = uint8(v >> 8)
@@ -807,6 +1128,66 @@ func (m *Entity) Size() (n int) {
 			mapEntrySize := 1 + len(k) + sovDevicehub(uint64(len(k))) + 1 + len(v) + sovDevicehub(uint64(len(v)))
 			n += mapEntrySize + 1 + sovDevicehub(uint64(mapEntrySize))
 		}
+	}
+	return n
+}
+
+func (m *StartRequest) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.Uri)
+	if l > 0 {
+		n += 1 + l + sovDevicehub(uint64(l))
+	}
+	l = len(m.ProfileUid)
+	if l > 0 {
+		n += 1 + l + sovDevicehub(uint64(l))
+	}
+	l = len(m.ListenerUid)
+	if l > 0 {
+		n += 1 + l + sovDevicehub(uint64(l))
+	}
+	if len(m.EndpointUids) > 0 {
+		for _, s := range m.EndpointUids {
+			l = len(s)
+			n += 1 + l + sovDevicehub(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *StartReply) Size() (n int) {
+	var l int
+	_ = l
+	if m.Ok {
+		n += 2
+	}
+	l = len(m.Error)
+	if l > 0 {
+		n += 1 + l + sovDevicehub(uint64(l))
+	}
+	return n
+}
+
+func (m *StopRequest) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.Uri)
+	if l > 0 {
+		n += 1 + l + sovDevicehub(uint64(l))
+	}
+	return n
+}
+
+func (m *StopReply) Size() (n int) {
+	var l int
+	_ = l
+	if m.Ok {
+		n += 2
+	}
+	l = len(m.Error)
+	if l > 0 {
+		n += 1 + l + sovDevicehub(uint64(l))
 	}
 	return n
 }
@@ -1845,6 +2226,449 @@ func (m *Entity) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *StartRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowDevicehub
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: StartRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: StartRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Uri", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDevicehub
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthDevicehub
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Uri = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ProfileUid", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDevicehub
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthDevicehub
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ProfileUid = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ListenerUid", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDevicehub
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthDevicehub
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ListenerUid = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field EndpointUids", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDevicehub
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthDevicehub
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.EndpointUids = append(m.EndpointUids, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipDevicehub(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthDevicehub
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *StartReply) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowDevicehub
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: StartReply: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: StartReply: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Ok", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDevicehub
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Ok = bool(v != 0)
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Error", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDevicehub
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthDevicehub
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Error = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipDevicehub(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthDevicehub
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *StopRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowDevicehub
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: StopRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: StopRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Uri", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDevicehub
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthDevicehub
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Uri = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipDevicehub(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthDevicehub
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *StopReply) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowDevicehub
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: StopReply: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: StopReply: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Ok", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDevicehub
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Ok = bool(v != 0)
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Error", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowDevicehub
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthDevicehub
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Error = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipDevicehub(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthDevicehub
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func skipDevicehub(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0
@@ -1953,32 +2777,40 @@ var (
 func init() { proto1.RegisterFile("proto/devicehub.proto", fileDescriptorDevicehub) }
 
 var fileDescriptorDevicehub = []byte{
-	// 432 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0xbc, 0x53, 0xc1, 0x6e, 0xd4, 0x30,
-	0x10, 0x5d, 0x27, 0xed, 0x6a, 0x99, 0x55, 0x0a, 0x58, 0x2d, 0x8a, 0xf6, 0x10, 0xad, 0x2c, 0x24,
-	0x8a, 0x90, 0x82, 0xd4, 0x82, 0x04, 0x9c, 0x50, 0xdb, 0xa5, 0xbd, 0x20, 0x55, 0xb9, 0x72, 0xda,
-	0x34, 0xb3, 0xad, 0x95, 0x28, 0x0e, 0xae, 0x5d, 0x29, 0x7f, 0xc2, 0x89, 0xef, 0xe9, 0x81, 0x03,
-	0x9f, 0x80, 0x96, 0x1f, 0x41, 0x76, 0x9c, 0x34, 0x29, 0x15, 0xda, 0x13, 0xa7, 0xcc, 0x3c, 0xcf,
-	0x9b, 0xe7, 0xc9, 0x3c, 0xc3, 0x5e, 0x25, 0x85, 0x12, 0xaf, 0x33, 0xbc, 0xe1, 0x17, 0x78, 0xa5,
-	0xd3, 0xd8, 0xe6, 0x74, 0xdb, 0x7e, 0xd8, 0x2d, 0x81, 0xe0, 0x58, 0xe2, 0x52, 0x61, 0x82, 0x5f,
-	0x35, 0x5e, 0x2b, 0x4a, 0x61, 0x4b, 0xd5, 0x15, 0x86, 0x64, 0x4e, 0xf6, 0x1f, 0x25, 0x36, 0x36,
-	0x58, 0xce, 0xcb, 0x2c, 0xf4, 0x1a, 0xcc, 0xc4, 0xf4, 0x33, 0x04, 0x17, 0xa2, 0x5c, 0xf1, 0x4b,
-	0x2d, 0x97, 0x8a, 0x8b, 0x32, 0xf4, 0xe7, 0xfe, 0xfe, 0xf4, 0xe0, 0x45, 0xd3, 0x3f, 0x1e, 0x34,
-	0x8d, 0x8f, 0xfb, 0x95, 0x8b, 0x52, 0xc9, 0x3a, 0x19, 0xb2, 0x67, 0x1f, 0x81, 0xfe, 0x5d, 0x44,
-	0x9f, 0x80, 0x9f, 0x63, 0xed, 0xee, 0x62, 0x42, 0xba, 0x0b, 0xdb, 0x37, 0xcb, 0x42, 0xa3, 0xbb,
-	0x4b, 0x93, 0x7c, 0xf0, 0xde, 0x11, 0xb6, 0x80, 0x69, 0x2b, 0x5a, 0x15, 0x35, 0xdd, 0x01, 0x4f,
-	0xe4, 0x96, 0x39, 0x49, 0x3c, 0x91, 0x1b, 0x22, 0x4a, 0x29, 0x64, 0x4b, 0xb4, 0x89, 0x11, 0xd0,
-	0x3c, 0x0b, 0xfd, 0x46, 0x40, 0xf3, 0x8c, 0xbd, 0x85, 0xe0, 0x04, 0x0b, 0xfc, 0xf7, 0x0f, 0x71,
-	0x34, 0xef, 0x8e, 0x76, 0x08, 0xd3, 0x96, 0xb6, 0xb1, 0x3a, 0x7b, 0x0e, 0x70, 0x8a, 0xaa, 0x15,
-	0x7a, 0x06, 0xe3, 0x15, 0x2f, 0x14, 0x4a, 0x27, 0xe5, 0x32, 0xf6, 0x05, 0x26, 0xb6, 0x6a, 0xf3,
-	0xa9, 0x5e, 0xc2, 0x04, 0x4b, 0xc5, 0x15, 0xc7, 0x6b, 0xb7, 0x96, 0xc0, 0xad, 0x65, 0x61, 0xe0,
-	0x3a, 0xe9, 0x8e, 0xd9, 0x0f, 0x02, 0xe3, 0x06, 0x6c, 0x87, 0x22, 0xdd, 0x50, 0xdd, 0xe8, 0xde,
-	0x03, 0x5e, 0xf0, 0x7b, 0x5e, 0xf8, 0x74, 0xdf, 0x0b, 0x5b, 0x56, 0x74, 0x3e, 0x10, 0xfd, 0x1f,
-	0x26, 0x38, 0xf8, 0x4e, 0xc0, 0x3f, 0xd3, 0x29, 0x7d, 0x03, 0xe3, 0xc6, 0x0c, 0x74, 0xf7, 0x21,
-	0x43, 0xce, 0xe8, 0x3d, 0xb4, 0x2a, 0x6a, 0x36, 0x32, 0xac, 0x66, 0x89, 0x1d, 0x6b, 0x60, 0x85,
-	0x8e, 0xd5, 0xdb, 0x34, 0x1b, 0xd1, 0x57, 0xe0, 0x9f, 0xa2, 0xa2, 0x4f, 0xdd, 0xe1, 0xdd, 0x46,
-	0x67, 0x8f, 0xfb, 0x90, 0x2d, 0x3e, 0x7a, 0x7f, 0xbb, 0x8e, 0xc8, 0xcf, 0x75, 0x44, 0x7e, 0xad,
-	0x23, 0xf2, 0xed, 0x77, 0x34, 0x82, 0x3d, 0x2e, 0x62, 0x75, 0xc5, 0xcb, 0xcb, 0x95, 0x2e, 0xe2,
-	0xee, 0x99, 0x1e, 0xed, 0x9c, 0xd8, 0xf0, 0x4c, 0xa7, 0xe7, 0xa6, 0xc7, 0x39, 0x49, 0xc7, 0xb6,
-	0xd9, 0xe1, 0x9f, 0x00, 0x00, 0x00, 0xff, 0xff, 0x3f, 0xa8, 0x86, 0xbb, 0xd2, 0x03, 0x00, 0x00,
+	// 557 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0xbc, 0x54, 0xc1, 0x6e, 0xd3, 0x40,
+	0x10, 0xed, 0xda, 0x49, 0x94, 0x8c, 0x93, 0xd2, 0x2e, 0x2d, 0x8a, 0x72, 0x48, 0x83, 0x41, 0xa2,
+	0x08, 0xc9, 0xa8, 0x29, 0x48, 0xc0, 0x09, 0xb5, 0x0d, 0xed, 0x05, 0xa9, 0x72, 0xd5, 0x13, 0x87,
+	0x2a, 0xa9, 0x27, 0xed, 0x2a, 0x96, 0xd7, 0x6c, 0xd6, 0x95, 0x7c, 0xe4, 0xc8, 0x1f, 0xf0, 0x49,
+	0x3d, 0x70, 0xe0, 0x13, 0x50, 0xf8, 0x11, 0xb4, 0xeb, 0xb5, 0x63, 0x97, 0x82, 0x72, 0xe2, 0xe4,
+	0xdd, 0xb7, 0xf3, 0xe6, 0xed, 0xcc, 0xbc, 0x35, 0x6c, 0xc7, 0x82, 0x4b, 0xfe, 0x32, 0xc0, 0x1b,
+	0x76, 0x89, 0xd7, 0xc9, 0xc4, 0xd3, 0x7b, 0x5a, 0xd7, 0x1f, 0xf7, 0x96, 0x40, 0xe7, 0x50, 0xe0,
+	0x58, 0xa2, 0x8f, 0x9f, 0x13, 0x9c, 0x4b, 0x4a, 0xa1, 0x26, 0xd3, 0x18, 0xbb, 0x64, 0x40, 0x76,
+	0x5b, 0xbe, 0x5e, 0x2b, 0x6c, 0xc6, 0xa2, 0xa0, 0x6b, 0x65, 0x98, 0x5a, 0xd3, 0x8f, 0xd0, 0xb9,
+	0xe4, 0xd1, 0x94, 0x5d, 0x25, 0x62, 0x2c, 0x19, 0x8f, 0xba, 0xf6, 0xc0, 0xde, 0x75, 0x86, 0xcf,
+	0xb2, 0xfc, 0x5e, 0x25, 0xa9, 0x77, 0x58, 0x8e, 0x1c, 0x45, 0x52, 0xa4, 0x7e, 0x95, 0xdd, 0x7b,
+	0x0f, 0xf4, 0xcf, 0x20, 0xba, 0x01, 0xf6, 0x0c, 0x53, 0x73, 0x17, 0xb5, 0xa4, 0x5b, 0x50, 0xbf,
+	0x19, 0x87, 0x09, 0x9a, 0xbb, 0x64, 0x9b, 0x77, 0xd6, 0x1b, 0xe2, 0x8e, 0xc0, 0xc9, 0x45, 0xe3,
+	0x30, 0xa5, 0xeb, 0x60, 0xf1, 0x99, 0x66, 0x36, 0x7d, 0x8b, 0xcf, 0x14, 0x11, 0x85, 0xe0, 0x22,
+	0x27, 0xea, 0x8d, 0x12, 0x48, 0x58, 0xd0, 0xb5, 0x33, 0x81, 0x84, 0x05, 0xee, 0x6b, 0xe8, 0x1c,
+	0x61, 0x88, 0xff, 0x6e, 0x88, 0xa1, 0x59, 0x4b, 0xda, 0x3e, 0x38, 0x39, 0x6d, 0x65, 0x75, 0xf7,
+	0x29, 0xc0, 0x31, 0xca, 0x5c, 0xe8, 0x11, 0x34, 0xa6, 0x2c, 0x94, 0x28, 0x8c, 0x94, 0xd9, 0xb9,
+	0x9f, 0xa0, 0xa9, 0xa3, 0x56, 0xaf, 0xea, 0x39, 0x34, 0x31, 0x92, 0x4c, 0x32, 0x9c, 0x9b, 0xb1,
+	0x74, 0xcc, 0x58, 0x46, 0x0a, 0x4e, 0xfd, 0xe2, 0xd8, 0xfd, 0x4e, 0xa0, 0x91, 0x81, 0x79, 0x51,
+	0xa4, 0x28, 0xaa, 0x28, 0xdd, 0xba, 0xc7, 0x0b, 0x76, 0xc9, 0x0b, 0x1f, 0xee, 0x7a, 0xa1, 0xa6,
+	0x45, 0x07, 0x15, 0xd1, 0xff, 0x62, 0x82, 0xaf, 0x04, 0xda, 0x67, 0x72, 0x2c, 0x8a, 0xa6, 0xaa,
+	0xa2, 0x04, 0x2b, 0x8a, 0x12, 0x8c, 0xee, 0x80, 0x13, 0x0b, 0x3e, 0x65, 0x21, 0x5e, 0x2c, 0x67,
+	0x08, 0x06, 0x3a, 0x67, 0x01, 0x7d, 0x0c, 0xed, 0x90, 0xcd, 0x25, 0x46, 0x28, 0x2e, 0x96, 0xe6,
+	0x70, 0x72, 0x4c, 0x85, 0x3c, 0x81, 0x0e, 0x46, 0x41, 0xcc, 0x59, 0x24, 0x55, 0xc8, 0x5c, 0x17,
+	0xdc, 0xf2, 0xdb, 0x39, 0x78, 0xce, 0x82, 0xb9, 0x3b, 0x04, 0x30, 0x57, 0x59, 0xdd, 0x11, 0x3b,
+	0xe0, 0x9c, 0x49, 0x1e, 0xff, 0xf5, 0xf6, 0xee, 0x1e, 0xb4, 0xb2, 0x80, 0x95, 0x73, 0x0e, 0xbf,
+	0x58, 0x60, 0x9f, 0x24, 0x13, 0xfa, 0x0a, 0x1a, 0xd9, 0x03, 0xa1, 0x5b, 0xf7, 0x3d, 0xd2, 0x1e,
+	0xbd, 0x83, 0xc6, 0x61, 0xea, 0xae, 0x29, 0x56, 0x66, 0xec, 0x82, 0x55, 0x79, 0x1e, 0x05, 0xab,
+	0xe4, 0x7e, 0x77, 0x8d, 0xbe, 0x00, 0xfb, 0x18, 0x25, 0xdd, 0x34, 0x87, 0x4b, 0x97, 0xf7, 0x1e,
+	0x94, 0xa1, 0x2c, 0x78, 0x0f, 0xea, 0xba, 0x51, 0xf4, 0xa1, 0x39, 0x2b, 0x4f, 0xb0, 0xb7, 0x59,
+	0x05, 0x33, 0x8a, 0x07, 0x35, 0xd5, 0x06, 0x4a, 0x8b, 0xc3, 0xa2, 0x69, 0xbd, 0x8d, 0x0a, 0xa6,
+	0xe3, 0x0f, 0xde, 0xde, 0x2e, 0xfa, 0xe4, 0xc7, 0xa2, 0x4f, 0x7e, 0x2e, 0xfa, 0xe4, 0xdb, 0xaf,
+	0xfe, 0x1a, 0x6c, 0x33, 0xee, 0xc9, 0x6b, 0x16, 0x5d, 0x4d, 0x93, 0xd0, 0x2b, 0xfe, 0x8e, 0x07,
+	0xeb, 0x47, 0x7a, 0x79, 0x92, 0x4c, 0x4e, 0x55, 0x92, 0x53, 0x32, 0x69, 0xe8, 0x6c, 0xfb, 0xbf,
+	0x03, 0x00, 0x00, 0xff, 0xff, 0x6d, 0xbe, 0xee, 0xab, 0x49, 0x05, 0x00, 0x00,
 }
