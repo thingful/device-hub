@@ -1,0 +1,6 @@
+---
+type: listener
+kind: http
+configuration:
+  # Address to recieve messages from 
+  HTTPAddress: 0.0.0.0:8085

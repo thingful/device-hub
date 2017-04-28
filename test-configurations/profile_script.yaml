@@ -1,0 +1,25 @@
+---
+type: profile
+kind: script
+configuration:
+  # Profile name - a unique string
+  profile-name : some device profile
+  # Profile description 
+  profile-description : blah blah blah
+  # Semanatic version for the profile
+  profile-version: 1.0.0-beta
+  # Name of the function to call
+  script-main: xxx
+  # Runtime to use - valid values 'javascript'
+  script-runtime: javascript
+  # Format of the message received.
+  # One of json, csv, xml, raw
+  script-input: json 
+  # Function to run - written in Javacript
+  # Can log via console.log
+  # Must return an object
+  script-contents: >
+      function xxx ( input ) 
+      {
+        return input
+      }
