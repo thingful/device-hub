@@ -60,9 +60,9 @@ message Entity {
 
 message StartRequest {
     string uri = 1;
-    string profile_uid = 2;
-    string listener_uid = 3;
-    repeated string endpoint_uids = 4;
+    string profile = 2;
+    string listener = 3;
+    repeated string endpoints = 4;
 }
 
 message StartReply {
@@ -86,13 +86,6 @@ message Pipe {
     Endpoint listener = 4;
     repeated Endpoint endpoints = 6;
 }
-
-
-    // add a pipe to an existing listener and endpoint
-    rpc PipeAdd (PipeAddRequest) returns (PipeAddReply) {}
-
-    // delete pipe by URI
-    rpc PipeDelete (PipeDeleteRequest) returns (PipeDeleteReply) {}
 
     // list all running pipes
     rpc PipeList (PipeListRequest) returns (PipeListReply) {}
