@@ -2,33 +2,69 @@
 
 package main
 
-/*
-var pipeCommand = &cobra.Command{
-	Use:   "pipe",
-	Short: "Add, Delete and List pipes.",
-}
+import (
+	"context"
+	"errors"
+	"strings"
 
-var pipeListCommand = &cobra.Command{
-	Use: "list",
-	Long: `List pipes
+	"github.com/fiorix/protoc-gen-cobra/iocodec"
+	"github.com/spf13/cobra"
+	"github.com/thingful/device-hub/proto"
+)
 
-You can use environment variables with the same name of the command flags.
-All caps and s/-/_, e.g. SERVER_ADDR.`,
-	Example: `
-Save a sample request to a file (or refer to your protobuf descriptor to create one):
-	device-hub-cli pipe list -p > req.json
-Submit request using file:
-	device-hub-cli list -f req.json`,
-	Run: func(cmd *cobra.Command, args []string) {
-		var v proto.PipeListRequest
-		err := roundTrip(v, func(cli proto.HubClient, in iocodec.Decoder, out iocodec.Encoder) error {
+func startCommand() *cobra.Command {
 
-			err := in.Decode(&v)
-			if err != nil {
-				return err
+	request := proto.StartRequest{
+		Endpoints: []string{},
+	}
+
+	startCommand := &cobra.Command{
+		Use:   "start",
+		Short: "Start processing messages on a uri",
+		RunE: func(cmd *cobra.Command, args []string) error {
+
+			if len(args) == 0 {
+				return errors.New("specify a profile")
 			}
 
-			resp, err := cli.PipeList(context.Background(), &v)
+			request.Profile = args[0]
+
+			err := roundTrip(request, func(cli proto.HubClient, in iocodec.Decoder, out iocodec.Encoder) error {
+
+				resp, err := cli.Start(context.Background(), &request)
+
+				if err != nil {
+					return err
+				}
+
+				return out.Encode(resp)
+
+			})
+			return err
+		},
+	}
+	startCommand.Flags().StringVarP(&request.Listener, "listener", "l", request.Listener, "listener to use")
+	startCommand.Flags().StringVarP(&request.Uri, "uri", "u", request.Uri, "uri to listen on")
+	startCommand.Flags().StringSliceVarP(&request.Endpoints, "endpoint", "e", request.Endpoints, "endpoint to use")
+
+	return startCommand
+}
+
+var stopCommand = &cobra.Command{
+	Use:   "stop",
+	Short: "Stop processing messages on a uri",
+	RunE: func(cmd *cobra.Command, args []string) error {
+
+		v := proto.StopRequest{}
+
+		err := roundTrip(v, func(cli proto.HubClient, in iocodec.Decoder, out iocodec.Encoder) error {
+			if len(args) == 0 {
+				return errors.New("specify a uri to stop")
+			}
+
+			v.Uri = strings.TrimSpace(args[0])
+
+			resp, err := cli.Stop(context.Background(), &v)
 
 			if err != nil {
 				return err
@@ -37,33 +73,20 @@ Submit request using file:
 			return out.Encode(resp)
 
 		})
-		if err != nil {
-			log.Fatal(err)
-		}
+		return err
 	},
 }
 
-var pipeAddCommand = &cobra.Command{
-	Use: "add",
-	Long: `Add a new pipe
+var listCommand = &cobra.Command{
+	Use:   "list",
+	Short: "List running pipes",
+	RunE: func(cmd *cobra.Command, args []string) error {
 
-You can use environment variables with the same name of the command flags.
-All caps and s/-/_, e.g. SERVER_ADDR.`,
-	Example: `
-Save a sample request to a file (or refer to your protobuf descriptor to create one):
-	device-hub-cli pipe add -p > req.json
-Submit request using file:
-	device-hub-cli pipe add -f req.json`,
-	Run: func(cmd *cobra.Command, args []string) {
-		var v proto.PipeAddRequest
+		v := proto.ListRequest{}
+
 		err := roundTrip(v, func(cli proto.HubClient, in iocodec.Decoder, out iocodec.Encoder) error {
 
-			err := in.Decode(&v)
-			if err != nil {
-				return err
-			}
-
-			resp, err := cli.PipeAdd(context.Background(), &v)
+			resp, err := cli.List(context.Background(), &v)
 
 			if err != nil {
 				return err
@@ -72,43 +95,6 @@ Submit request using file:
 			return out.Encode(resp)
 
 		})
-		if err != nil {
-			log.Fatal(err)
-		}
+		return err
 	},
 }
-
-var pipeDeleteCommand = &cobra.Command{
-	Use: "delete",
-	Long: `Delete an existing pipe
-
-You can use environment variables with the same name of the command flags.
-All caps and s/-/_, e.g. SERVER_ADDR.`,
-	Example: `
-Save a sample request to a file (or refer to your protobuf descriptor to create one):
-	device-hub-cli pipe delete -p > req.json
-Submit request using file:
-	device-hub-cli delete -f req.json`,
-	Run: func(cmd *cobra.Command, args []string) {
-		var v proto.PipeDeleteRequest
-		err := roundTrip(v, func(cli proto.HubClient, in iocodec.Decoder, out iocodec.Encoder) error {
-
-			err := in.Decode(&v)
-			if err != nil {
-				return err
-			}
-
-			resp, err := cli.PipeDelete(context.Background(), &v)
-
-			if err != nil {
-				return err
-			}
-
-			return out.Encode(resp)
-
-		})
-		if err != nil {
-			log.Fatal(err)
-		}
-	},
-}*/

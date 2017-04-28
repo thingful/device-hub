@@ -4,7 +4,6 @@ package main
 
 import (
 	"context"
-	"log"
 
 	"github.com/fiorix/protoc-gen-cobra/iocodec"
 	"github.com/spf13/cobra"
@@ -14,7 +13,7 @@ import (
 var createCommand = &cobra.Command{
 	Use:   "create",
 	Short: "Create listener, endpoint and profile resources",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 
 		/* TODO : add ability to generate examplesi */
 		v := proto.CreateRequest{
@@ -37,8 +36,6 @@ var createCommand = &cobra.Command{
 			return out.Encode(resp)
 
 		})
-		if err != nil {
-			log.Fatal(err)
-		}
+		return err
 	},
 }
