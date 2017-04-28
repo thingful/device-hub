@@ -120,9 +120,11 @@ func (s *store) One(b bucket, uid string, out interface{}) error {
 			if err != nil {
 				return err
 			}
+
+			return nil
 		}
 
-		return nil
+		return ErrNotFound
 	})
 
 	return err

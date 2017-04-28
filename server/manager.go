@@ -55,7 +55,6 @@ type statistics struct {
 	OK     uint64
 }
 
-// NewEndpointManager turns a config.Configuration into a collection of managed pipes.
 func NewEndpointManager(ctx context.Context) (*manager, error) {
 	/*
 		c := &config.Configuration{}
@@ -74,8 +73,8 @@ func NewEndpointManager(ctx context.Context) (*manager, error) {
 		}
 	*/
 	return &manager{
-		//		pipes: pipes,
-		ctx: ctx,
+		pipes: map[string]*pipe{},
+		ctx:   ctx,
 		//		conf:  c,
 	}, nil
 }
@@ -127,11 +126,9 @@ func (m *manager) Start() error {
 
 	for n, p := range m.pipes {
 
-		fmt.Println(n, p.State)
-
 		if p.State != RUNNING {
 
-			listener, err := hub.ListenerByName(string(p.Listener.UID), p.Listener.Type, p.Listener.Configuration)
+			listener, err := hub.ListenerByName(string(p.Listener.UID), p.Listener.Kind, p.Listener.Configuration)
 
 			if err != nil {
 				return err
@@ -141,7 +138,7 @@ func (m *manager) Start() error {
 
 			for _, e := range p.Endpoints {
 
-				newendpoint, err := hub.EndpointByName(string(e.UID), e.Type, e.Configuration)
+				newendpoint, err := hub.EndpointByName(string(e.UID), e.Kind, e.Configuration)
 
 				if err != nil {
 					return err
