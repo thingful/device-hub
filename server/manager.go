@@ -56,66 +56,10 @@ type statistics struct {
 }
 
 func NewEndpointManager(ctx context.Context) (*manager, error) {
-	/*
-		c := &config.Configuration{}
-		pipes := map[string]*pipe{}
-
-		for _, p := range c.Pipes {
-
-			pipe, err := newRuntimeInstance(p, c)
-
-			if err != nil {
-				return nil, err
-			}
-
-			pipes[p.Uri] = pipe
-
-		}
-	*/
 	return &manager{
 		pipes: map[string]*pipe{},
 		ctx:   ctx,
-		//		conf:  c,
 	}, nil
-}
-
-// newRuntimeInstance turns a config.Pipe into an managed runtime pipe
-func newRuntimeInstance(p config.Pipe, c *config.Configuration) (*pipe, error) {
-
-	found, listenerConf := c.Listeners.FindByUID(p.Listener)
-
-	if !found {
-		return nil, fmt.Errorf("listener with UID %s not found", p.Listener)
-	}
-
-	endpoints := []config.Endpoint{}
-
-	for e := range p.Endpoints {
-
-		found, endpointConf := c.Endpoints.FindByUID(p.Endpoints[e])
-
-		if !found {
-			return nil, fmt.Errorf("endpoint with UID %s not found", p.Endpoints[e])
-		}
-
-		endpoints = append(endpoints, endpointConf)
-
-	}
-
-	found, profile := c.Profiles.FindByUID(p.Profile)
-
-	if !found {
-		return nil, fmt.Errorf("profile with UID %s not found", p.Profile)
-	}
-
-	return &pipe{
-		Uri:       p.Uri,
-		Listener:  listenerConf,
-		Endpoints: endpoints,
-		Profile:   profile,
-		State:     UNKNOWN,
-	}, nil
-
 }
 
 // Start either ensures everything is running or errors
@@ -223,8 +167,8 @@ func (m *manager) startOne(ctx context.Context, p *pipe, listener hub.Listener, 
 
 func (m *manager) List() []pipe {
 
-	m.Lock()
-	defer m.Unlock()
+	m.RLock()
+	defer m.RUnlock()
 
 	r := []pipe{}
 
@@ -235,7 +179,7 @@ func (m *manager) List() []pipe {
 	return r
 }
 
-func (m *manager) DeletePipeByUID(uri string) error {
+func (m *manager) DeletePipeByURI(uri string) error {
 
 	if uri == "" {
 		return errors.New("pipe uri not supplied")
@@ -246,66 +190,30 @@ func (m *manager) DeletePipeByUID(uri string) error {
 
 	p, found := m.pipes[uri]
 	if !found {
-		return fmt.Errorf("pipe with uri : %s not found", uri)
+		return nil
 	}
 
 	p.cancel()
 
 	delete(m.pipes, uri)
-
-	// TODO : delete pipe from configuration
+	fmt.Println(m.pipes)
+	// TODO : keeps buffer of recently deleted pipes
 
 	return nil
 }
 
-func (m *manager) AddPipe(uri, profile, listener string, endpoints []string) error {
-
-	if uri == "" {
-		return errors.New("pipe uri not supplied")
-	}
-	if profile == "" {
-		return errors.New("pipe profile not supplied")
-	}
-	if listener == "" {
-		return errors.New("pipe listener not supplied")
-	}
-	if len(endpoints) == 0 {
-		return errors.New("no endpoints supplied")
-	}
-
-	endpointUIDs := []config.UID{}
-
-	for _, e := range endpoints {
-		endpointUIDs = append(endpointUIDs, config.UID(e))
-	}
-
-	configPipe := config.Pipe{
-		Uri:       uri,
-		Profile:   config.UID(profile),
-		Listener:  config.UID(listener),
-		Endpoints: endpointUIDs,
-	}
-
-	pipe, err := newRuntimeInstance(configPipe, m.conf)
-
-	if err != nil {
-		return err
-	}
-
-	// important to ensure this lock is released on any return
+func (m *manager) AddPipe(pipe *pipe) error {
 	m.Lock()
 
-	_, alreadyExists := m.pipes[uri]
+	_, alreadyExists := m.pipes[pipe.Uri]
 
 	if alreadyExists {
 		m.Unlock()
-		return fmt.Errorf("pipe with uri %s already exists", uri)
+		return fmt.Errorf("pipe with uri %s already exists", pipe.Uri)
 	}
 
-	m.pipes[uri] = pipe
-	m.conf.Pipes = append(m.conf.Pipes, configPipe)
+	m.pipes[pipe.Uri] = pipe
 
 	m.Unlock()
-
 	return m.Start()
 }

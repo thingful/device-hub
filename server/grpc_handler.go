@@ -111,7 +111,7 @@ func (s *handler) Delete(ctx context.Context, request *proto.DeleteRequest) (*pr
 	}
 
 	//TODO : error if any running pipes
-	err := s.store.Delete(bucket, request.Uid)
+	err := s.store.Delete(bucket, []byte(request.Uid))
 
 	if err != nil {
 		return &proto.DeleteReply{
@@ -184,7 +184,7 @@ func (s *handler) Start(ctx context.Context, request *proto.StartRequest) (*prot
 	listener := config.Endpoint{}
 	endpoints := make([]config.Endpoint, len(request.Endpoints), len(request.Endpoints))
 
-	err := s.store.One(listenersBucket, request.Listener, &listener)
+	err := s.store.One(listenersBucket, []byte(request.Listener), &listener)
 
 	if err != nil {
 		if err == ErrNotFound {
@@ -201,7 +201,7 @@ func (s *handler) Start(ctx context.Context, request *proto.StartRequest) (*prot
 	}
 
 	temp := proto.Entity{}
-	err = s.store.One(profilesBucket, request.Profile, &temp)
+	err = s.store.One(profilesBucket, []byte(request.Profile), &temp)
 
 	if err != nil {
 		if err == ErrNotFound {
@@ -220,7 +220,7 @@ func (s *handler) Start(ctx context.Context, request *proto.StartRequest) (*prot
 	profile, _ := profileFromEntity(temp)
 
 	for i, e := range request.Endpoints {
-		err = s.store.One(endpointsBucket, e, &endpoints[i])
+		err = s.store.One(endpointsBucket, []byte(e), &endpoints[i])
 
 		if err != nil {
 			if err == ErrNotFound {
@@ -235,7 +235,6 @@ func (s *handler) Start(ctx context.Context, request *proto.StartRequest) (*prot
 				Error: err.Error(),
 			}, nil
 		}
-
 	}
 
 	pipe := &pipe{
@@ -246,11 +245,27 @@ func (s *handler) Start(ctx context.Context, request *proto.StartRequest) (*prot
 		State:     UNKNOWN,
 	}
 
-	// TODO : replace with method
-	s.manager.pipes[request.Uri] = pipe
-	err = s.manager.Start()
+	err = s.store.Insert(pipesBucket, []byte(pipe.Uri), pipe)
 
 	if err != nil {
+
+		return &proto.StartReply{
+			Ok:    false,
+			Error: err.Error(),
+		}, nil
+	}
+
+	err = s.manager.AddPipe(pipe)
+
+	if err != nil {
+
+		deleteError := s.store.Delete(pipesBucket, []byte(pipe.Uri))
+
+		if deleteError != nil {
+			// TODO : review this!
+			panic(deleteError)
+		}
+
 		return &proto.StartReply{
 			Ok:    false,
 			Error: err.Error(),
@@ -276,7 +291,47 @@ func profileFromEntity(entity proto.Entity) (*config.Profile, error) {
 }
 
 func (s *handler) Stop(ctx context.Context, request *proto.StopRequest) (*proto.StopReply, error) {
+
+	err := s.manager.DeletePipeByURI(request.Uri)
+
+	if err != nil {
+		return &proto.StopReply{
+			Ok:    false,
+			Error: err.Error(),
+		}, nil
+	}
+
+	err = s.store.Delete(pipesBucket, []byte(request.Uri))
+
+	if err != nil {
+		return &proto.StopReply{
+			Ok:    false,
+			Error: err.Error(),
+		}, nil
+	}
+
 	return &proto.StopReply{Ok: true}, nil
+}
+
+func (s *handler) List(ctx context.Context, request *proto.ListRequest) (*proto.ListReply, error) {
+
+	pipes := s.manager.List()
+
+	ppipes := []*proto.Pipe{}
+
+	for _, pipe := range pipes {
+		// TODO : add stats, state etc
+		ppipe := &proto.Pipe{
+			Uri:      pipe.Uri,
+			Profile:  string(pipe.Profile.UID),
+			Listener: string(pipe.Listener.UID),
+		}
+
+		ppipes = append(ppipes, ppipe)
+
+	}
+
+	return &proto.ListReply{Ok: true, Pipes: ppipes}, nil
 }
 
 func hash(data interface{}) ([]byte, error) {

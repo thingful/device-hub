@@ -24,6 +24,7 @@ type Configuration struct {
 
 // Endpoint contains a generic collection of configuration details
 type Endpoint struct {
+	Kind          string         `json:"kind"`
 	Type          string         `json:"type"`
 	UID           UID            `json:"uid"`
 	Configuration utils.TypedMap `json:"configuration,omitempty"`
@@ -64,7 +65,6 @@ type Profile struct {
 	Version string        `json:"version"`
 	Script  engine.Script `json:"script"`
 }
-
 type profiles []Profile
 
 // FindByUID looks for an profile by UID returning true if found, false if missing

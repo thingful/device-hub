@@ -24,6 +24,7 @@ var (
 	endpointsBucket = bucket([]byte("endpoints"))
 	listenersBucket = bucket([]byte("listeners"))
 	profilesBucket  = bucket([]byte("profiles"))
+	pipesBucket     = bucket([]byte("pipes"))
 )
 
 func NewStore(db *bolt.DB) (*store, error) {
@@ -33,7 +34,7 @@ func NewStore(db *bolt.DB) (*store, error) {
 		mustCreateBucket(tx, endpointsBucket)
 		mustCreateBucket(tx, listenersBucket)
 		mustCreateBucket(tx, profilesBucket)
-
+		mustCreateBucket(tx, pipesBucket)
 		return nil
 	})
 
@@ -76,7 +77,7 @@ func (s *store) Insert(bucket bucket, uid []byte, data interface{}) error {
 	return err
 }
 
-func (s *store) Update(bucket bucket, uid string, data interface{}) error {
+func (s *store) Update(bucket bucket, uid []byte, data interface{}) error {
 
 	err := s.db.Update(func(tx *bolt.Tx) error {
 
@@ -87,31 +88,31 @@ func (s *store) Update(bucket bucket, uid string, data interface{}) error {
 			return err
 		}
 
-		return b.Put([]byte(uid), buf)
+		return b.Put(uid, buf)
 
 	})
 	return err
 }
 
-func (s *store) Delete(bucket bucket, uid string) error {
+func (s *store) Delete(bucket bucket, uid []byte) error {
 
 	err := s.db.Update(func(tx *bolt.Tx) error {
 
 		b := tx.Bucket(bucket)
 
-		return b.Delete([]byte(uid))
+		return b.Delete(uid)
 	})
 
 	return err
 }
 
-func (s *store) One(b bucket, uid string, out interface{}) error {
+func (s *store) One(b bucket, uid []byte, out interface{}) error {
 
 	err := s.db.View(func(tx *bolt.Tx) error {
 
 		b := tx.Bucket(b)
 
-		bytes := b.Get([]byte(uid))
+		bytes := b.Get(uid)
 
 		if len(bytes) > 0 {
 
