@@ -2,8 +2,9 @@
 type: profile
 kind: script
 configuration:
-  # Profile name - a unique string
-  profile-name : some device profile
+  # Profile name - a unique name for the profile
+  # Consider namespacing to either an organisation or project
+  profile-name : thingful/profile-device-1
   # Profile description 
   profile-description : blah blah blah
   # Semanatic version for the profile
