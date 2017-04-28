@@ -11,12 +11,16 @@ package proto;
 service Hub {
 
     rpc Create (CreateRequest) returns (CreateReply) {}
+
     rpc Delete (DeleteRequest) returns (DeleteReply) {}
 
     rpc Get (GetRequest) returns (GetReply) {}
 
     rpc Start(StartRequest) returns (StartReply) {}
+
     rpc Stop(StopRequest) returns (StopReply) {}
+
+    rpc List(ListRequest) returns (ListReply) {}
 }
 
 message CreateRequest {
@@ -79,21 +83,21 @@ message StopReply {
     string error = 2;
 }
 
-/*
+message ListRequest {
+}
+
+message ListReply {
+    bool ok = 1;
+    string error = 2;
+    repeated Pipe pipes = 3;
+}
+
 message Pipe {
     string uri = 1;
-    Profile profile = 3;
-    Endpoint listener = 4;
-    repeated Endpoint endpoints = 6;
-}
-
-    // list all running pipes
-    rpc PipeList (PipeListRequest) returns (PipeListReply) {}
-
-    rpc Stats (StatsRequest) returns (StatsReply) {}
-}
-
-message PipeStatus {
+    string profile = 2;
+    string listener = 3;
+    repeated string endpoints = 4;
+    Statistics stats = 5;
 
     enum State {
         UNKNOWN = 0;
@@ -101,58 +105,11 @@ message PipeStatus {
         STOPPED = 2;
         ERRORED = 3;
     }
-
-    State state = 1;
-    Statistics stats = 2;
-    // TODO : reinstate
-    //google.protobuf.Timestamp started = 2;
-
+    State state = 6;
 }
 
-message Profile {
-    string uid = 1;
-    string name = 2;
-
-    enum Type {
-        Script = 0;
-    }
-
-    Type type = 3;
-    string description = 4;
-    string version = 5;
-
-    Script script = 6;
-}
-
-message Script {
-
-    string main = 1;
-
-    enum Type {
-        JAVASCRIPT = 0;
-    }
-
-    Type runtime = 2;
-
-    enum Input{
-        JSON = 0;
-        CSV = 1;
-        XML = 2;
-    }
-
-    Input input = 3;
-    string contents = 4;
-}
-
-message StatsRequest{}
-message StatsReply{
-    bool ok = 1;
-    string error = 2;
-}
 message Statistics {
     uint64 total = 1;
     uint64 errors = 2;
     uint64 ok = 3;
 }
-*/
-
