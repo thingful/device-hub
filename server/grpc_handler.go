@@ -58,7 +58,7 @@ func (s *handler) Create(ctx context.Context, request *proto.CreateRequest) (*pr
 			}, nil
 		}
 	case "profile":
-		bucket = endpointsBucket
+		bucket = profilesBucket
 
 	default:
 		return &proto.CreateReply{
@@ -187,4 +187,12 @@ func (s *handler) Get(ctx context.Context, request *proto.GetRequest) (*proto.Ge
 	}
 
 	return &proto.GetReply{Ok: true, Entities: all}, nil
+}
+
+func (s *handler) Start(ctx context.Context, request *proto.StartRequest) (*proto.StartReply, error) {
+	return &proto.StartReply{Ok: true}, nil
+}
+
+func (s *handler) Stop(ctx context.Context, request *proto.StopRequest) (*proto.StopReply, error) {
+	return &proto.StopReply{Ok: true}, nil
 }
