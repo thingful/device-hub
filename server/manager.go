@@ -11,14 +11,13 @@ import (
 	"time"
 
 	hub "github.com/thingful/device-hub"
-	"github.com/thingful/device-hub/config"
 	"github.com/thingful/device-hub/engine"
+	"github.com/thingful/device-hub/utils"
 )
 
 type manager struct {
 	ctx   context.Context
 	pipes map[string]*pipe
-	conf  *config.Configuration
 	sync.RWMutex
 }
 
@@ -32,11 +31,27 @@ const (
 	ERRORED = state("ERRORED")
 )
 
+type endpoint struct {
+	Kind          string
+	Type          string
+	Uid           string
+	Configuration utils.TypedMap
+}
+
+type profile struct {
+	Uid         string
+	Name        string
+	Description string
+	// TODO : make this a semantic triple
+	Version string
+	Script  engine.Script
+}
+
 // pipe is an instance of a pipe containing runtime state information e.g. stats, state
 type pipe struct {
-	Listener  config.Endpoint
-	Endpoints []config.Endpoint
-	Profile   config.Profile
+	Listener  endpoint
+	Endpoints []endpoint
+	Profile   profile
 	Uri       string
 
 	State   state
@@ -81,7 +96,7 @@ func (m *manager) Start() error {
 
 		if p.State != RUNNING {
 
-			listener, err := hub.ListenerByName(string(p.Listener.UID), p.Listener.Kind, p.Listener.Configuration)
+			listener, err := hub.ListenerByName(p.Listener.Uid, p.Listener.Kind, p.Listener.Configuration)
 
 			if err != nil {
 				return err
@@ -91,7 +106,7 @@ func (m *manager) Start() error {
 
 			for _, e := range p.Endpoints {
 
-				newendpoint, err := hub.EndpointByName(string(e.UID), e.Kind, e.Configuration)
+				newendpoint, err := hub.EndpointByName(e.Uid, e.Kind, e.Configuration)
 
 				if err != nil {
 					return err
@@ -205,7 +220,6 @@ func (m *manager) DeletePipeByURI(uri string) error {
 	p.cancel()
 
 	delete(m.pipes, uri)
-	fmt.Println(m.pipes)
 	// TODO : keeps buffer of recently deleted pipes
 
 	return nil

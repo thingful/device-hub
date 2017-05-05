@@ -10,7 +10,6 @@ import (
 
 	hashids "github.com/speps/go-hashids"
 	hub "github.com/thingful/device-hub"
-	"github.com/thingful/device-hub/config"
 	"github.com/thingful/device-hub/engine"
 	"github.com/thingful/device-hub/proto"
 	"github.com/thingful/device-hub/store"
@@ -64,6 +63,8 @@ func (s *handler) Create(ctx context.Context, request *proto.CreateRequest) (*pr
 		bucket = store.Profiles
 
 		if request.Configuration["profile-name"] != "" {
+			// TODO : consider adding version to the profile-name? Would be useful for
+			// having multiple profiles running at the same time.
 			hash = []byte(request.Configuration["profile-name"])
 		}
 
@@ -182,8 +183,8 @@ func (s *handler) Get(ctx context.Context, request *proto.GetRequest) (*proto.Ge
 
 func (s *handler) Start(ctx context.Context, request *proto.StartRequest) (*proto.StartReply, error) {
 
-	listener := config.Endpoint{}
-	endpoints := make([]config.Endpoint, len(request.Endpoints), len(request.Endpoints))
+	listener := endpoint{}
+	endpoints := make([]endpoint, len(request.Endpoints), len(request.Endpoints))
 
 	err := s.store.One(store.Listeners, []byte(request.Listener), &listener)
 
@@ -276,9 +277,10 @@ func (s *handler) Start(ctx context.Context, request *proto.StartRequest) (*prot
 	return &proto.StartReply{Ok: true}, nil
 }
 
-func profileFromEntity(entity proto.Entity) (*config.Profile, error) {
+func profileFromEntity(entity proto.Entity) (*profile, error) {
 
-	return &config.Profile{
+	return &profile{
+		Uid:         entity.Uid,
 		Name:        entity.Configuration["profile-name"],
 		Description: entity.Configuration["profile-description"],
 		Version:     entity.Configuration["profile-version"],
@@ -324,8 +326,9 @@ func (s *handler) List(ctx context.Context, request *proto.ListRequest) (*proto.
 		// TODO : add stats, state etc
 		ppipe := &proto.Pipe{
 			Uri:      pipe.Uri,
-			Profile:  string(pipe.Profile.UID),
-			Listener: string(pipe.Listener.UID),
+			Profile:  pipe.Profile.Uid,
+			Listener: pipe.Listener.Uid,
+			//Endpoints: pipe.Endpoints.String(),
 		}
 
 		ppipes = append(ppipes, ppipe)
