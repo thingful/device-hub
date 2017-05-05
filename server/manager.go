@@ -17,7 +17,7 @@ import (
 
 type manager struct {
 	ctx   context.Context
-	pipes Pipes
+	pipes map[string]*pipe
 	conf  *config.Configuration
 	sync.RWMutex
 }
@@ -49,7 +49,7 @@ type pipe struct {
 	// TODO : add last error, debug etc
 }
 
-type Pipes map[string]*pipe
+type Pipes []*pipe
 
 type statistics struct {
 	Total  uint64
@@ -57,9 +57,16 @@ type statistics struct {
 	OK     uint64
 }
 
-func NewEndpointManager(ctx context.Context, pipes Pipes) (*manager, error) {
+func NewEndpointManager(ctx context.Context, state Pipes) (*manager, error) {
+
+	pipes := map[string]*pipe{}
+
+	for _, p := range state {
+		pipes[p.Uri] = p
+	}
+
 	return &manager{
-		pipes: map[string]*pipe{},
+		pipes: pipes,
 		ctx:   ctx,
 	}, nil
 }

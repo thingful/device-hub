@@ -13,12 +13,13 @@ import (
 	"github.com/thingful/device-hub/config"
 	"github.com/thingful/device-hub/engine"
 	"github.com/thingful/device-hub/proto"
+	"github.com/thingful/device-hub/store"
 	context "golang.org/x/net/context"
 )
 
 type handler struct {
 	manager *manager
-	store   *store
+	store   *store.Store
 }
 
 func (s *handler) Create(ctx context.Context, request *proto.CreateRequest) (*proto.CreateReply, error) {
@@ -32,11 +33,11 @@ func (s *handler) Create(ctx context.Context, request *proto.CreateRequest) (*pr
 		}, nil
 	}
 
-	var bucket bucket
+	var bucket store.Bucket
 
 	switch strings.ToLower(request.Type) {
 	case "listener":
-		bucket = listenersBucket
+		bucket = store.Listeners
 
 		exists := hub.IsListenerRegistered(request.Kind)
 
@@ -49,7 +50,7 @@ func (s *handler) Create(ctx context.Context, request *proto.CreateRequest) (*pr
 		}
 
 	case "endpoint":
-		bucket = endpointsBucket
+		bucket = store.Endpoints
 
 		exists := hub.IsEndpointRegistered(request.Kind)
 
@@ -60,7 +61,7 @@ func (s *handler) Create(ctx context.Context, request *proto.CreateRequest) (*pr
 			}, nil
 		}
 	case "profile":
-		bucket = profilesBucket
+		bucket = store.Profiles
 
 		if request.Configuration["profile-name"] != "" {
 			hash = []byte(request.Configuration["profile-name"])
@@ -94,15 +95,15 @@ func (s *handler) Create(ctx context.Context, request *proto.CreateRequest) (*pr
 
 func (s *handler) Delete(ctx context.Context, request *proto.DeleteRequest) (*proto.DeleteReply, error) {
 
-	var bucket bucket
+	var bucket store.Bucket
 
 	switch strings.ToLower(request.Type) {
 	case "listener":
-		bucket = listenersBucket
+		bucket = store.Listeners
 	case "endpoint":
-		bucket = endpointsBucket
+		bucket = store.Endpoints
 	case "profile":
-		bucket = profilesBucket
+		bucket = store.Profiles
 	default:
 		return &proto.DeleteReply{
 			Ok:    false,
@@ -140,7 +141,7 @@ func (s *handler) Get(ctx context.Context, request *proto.GetRequest) (*proto.Ge
 
 			listeners := []*proto.Entity{}
 
-			err := s.store.List(listenersBucket, &listeners)
+			err := s.store.List(store.Listeners, &listeners)
 
 			if err != nil {
 				return nil, err
@@ -151,7 +152,7 @@ func (s *handler) Get(ctx context.Context, request *proto.GetRequest) (*proto.Ge
 
 			endpoints := []*proto.Entity{}
 
-			err := s.store.List(endpointsBucket, &endpoints)
+			err := s.store.List(store.Endpoints, &endpoints)
 
 			if err != nil {
 				return nil, err
@@ -161,7 +162,7 @@ func (s *handler) Get(ctx context.Context, request *proto.GetRequest) (*proto.Ge
 
 			profiles := []*proto.Entity{}
 
-			err := s.store.List(profilesBucket, &profiles)
+			err := s.store.List(store.Profiles, &profiles)
 
 			if err != nil {
 				return nil, err
@@ -184,10 +185,10 @@ func (s *handler) Start(ctx context.Context, request *proto.StartRequest) (*prot
 	listener := config.Endpoint{}
 	endpoints := make([]config.Endpoint, len(request.Endpoints), len(request.Endpoints))
 
-	err := s.store.One(listenersBucket, []byte(request.Listener), &listener)
+	err := s.store.One(store.Listeners, []byte(request.Listener), &listener)
 
 	if err != nil {
-		if err == ErrNotFound {
+		if err == store.ErrNotFound {
 			return &proto.StartReply{
 				Ok:    false,
 				Error: fmt.Sprintf("listener with uid : %s not found", request.Listener),
@@ -201,10 +202,10 @@ func (s *handler) Start(ctx context.Context, request *proto.StartRequest) (*prot
 	}
 
 	temp := proto.Entity{}
-	err = s.store.One(profilesBucket, []byte(request.Profile), &temp)
+	err = s.store.One(store.Profiles, []byte(request.Profile), &temp)
 
 	if err != nil {
-		if err == ErrNotFound {
+		if err == store.ErrNotFound {
 			return &proto.StartReply{
 				Ok:    false,
 				Error: fmt.Sprintf("profile with uid : %s not found", request.Profile),
@@ -220,10 +221,10 @@ func (s *handler) Start(ctx context.Context, request *proto.StartRequest) (*prot
 	profile, _ := profileFromEntity(temp)
 
 	for i, e := range request.Endpoints {
-		err = s.store.One(endpointsBucket, []byte(e), &endpoints[i])
+		err = s.store.One(store.Endpoints, []byte(e), &endpoints[i])
 
 		if err != nil {
-			if err == ErrNotFound {
+			if err == store.ErrNotFound {
 				return &proto.StartReply{
 					Ok:    false,
 					Error: fmt.Sprintf("endpoint with uid : %s not found", request.Profile),
@@ -245,7 +246,7 @@ func (s *handler) Start(ctx context.Context, request *proto.StartRequest) (*prot
 		State:     UNKNOWN,
 	}
 
-	err = s.store.Insert(pipesBucket, []byte(pipe.Uri), pipe)
+	err = s.store.Insert(store.Pipes, []byte(pipe.Uri), pipe)
 
 	if err != nil {
 
@@ -259,7 +260,7 @@ func (s *handler) Start(ctx context.Context, request *proto.StartRequest) (*prot
 
 	if err != nil {
 
-		deleteError := s.store.Delete(pipesBucket, []byte(pipe.Uri))
+		deleteError := s.store.Delete(store.Pipes, []byte(pipe.Uri))
 
 		if deleteError != nil {
 			// TODO : review this!
@@ -292,6 +293,8 @@ func profileFromEntity(entity proto.Entity) (*config.Profile, error) {
 
 func (s *handler) Stop(ctx context.Context, request *proto.StopRequest) (*proto.StopReply, error) {
 
+	fmt.Println(request.Uri)
+
 	err := s.manager.DeletePipeByURI(request.Uri)
 
 	if err != nil {
@@ -301,7 +304,7 @@ func (s *handler) Stop(ctx context.Context, request *proto.StopRequest) (*proto.
 		}, nil
 	}
 
-	err = s.store.Delete(pipesBucket, []byte(request.Uri))
+	err = s.store.Delete(store.Pipes, []byte(request.Uri))
 
 	if err != nil {
 		return &proto.StopReply{

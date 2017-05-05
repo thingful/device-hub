@@ -9,6 +9,7 @@ import (
 	"github.com/boltdb/bolt"
 	"github.com/spf13/cobra"
 	"github.com/thingful/device-hub/server"
+	"github.com/thingful/device-hub/store"
 )
 
 var serverCommand = &cobra.Command{
@@ -27,13 +28,20 @@ var serverCommand = &cobra.Command{
 
 		ctx := context.Background()
 
-		store, err := server.NewStore(db)
+		s, err := store.NewStore(db)
 
 		if err != nil {
 			return err
 		}
 
 		state := server.Pipes{}
+
+		err = s.List(store.Pipes, &state)
+
+		if err != nil {
+			return err
+		}
+
 		manager, err := server.NewEndpointManager(ctx, state)
 
 		if err != nil {
@@ -52,7 +60,7 @@ var serverCommand = &cobra.Command{
 			CertFilePath:      _config.CertFile,
 			KeyFilePath:       _config.KeyFile,
 			TrustedCAFilePath: _config.CACertFile,
-		}, manager, store)
+		}, manager, s)
 
 		return err
 	},

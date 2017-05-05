@@ -1,6 +1,6 @@
 // Copyright © 2017 thingful
 
-package server
+package store
 
 import (
 	"encoding/json"
@@ -11,30 +11,30 @@ import (
 	"github.com/boltdb/bolt"
 )
 
-type store struct {
+type Store struct {
 	db *bolt.DB
 }
 
-type bucket []byte
+type Bucket []byte
 
 var (
 	ErrSlicePtrNeeded = errors.New("slice ptr needed")
 	ErrNotFound       = errors.New("not found")
 
-	endpointsBucket = bucket([]byte("endpoints"))
-	listenersBucket = bucket([]byte("listeners"))
-	profilesBucket  = bucket([]byte("profiles"))
-	pipesBucket     = bucket([]byte("pipes"))
+	Endpoints = Bucket([]byte("endpoints"))
+	Listeners = Bucket([]byte("listeners"))
+	Profiles  = Bucket([]byte("profiles"))
+	Pipes     = Bucket([]byte("pipes"))
 )
 
-func NewStore(db *bolt.DB) (*store, error) {
+func NewStore(db *bolt.DB) (*Store, error) {
 
 	err := db.Update(func(tx *bolt.Tx) error {
 
-		mustCreateBucket(tx, endpointsBucket)
-		mustCreateBucket(tx, listenersBucket)
-		mustCreateBucket(tx, profilesBucket)
-		mustCreateBucket(tx, pipesBucket)
+		mustCreateBucket(tx, Endpoints)
+		mustCreateBucket(tx, Listeners)
+		mustCreateBucket(tx, Profiles)
+		mustCreateBucket(tx, Pipes)
 		return nil
 	})
 
@@ -42,19 +42,19 @@ func NewStore(db *bolt.DB) (*store, error) {
 		return nil, err
 	}
 
-	return &store{
+	return &Store{
 		db: db,
 	}, nil
 }
 
-func mustCreateBucket(tx *bolt.Tx, bucket bucket) {
+func mustCreateBucket(tx *bolt.Tx, bucket Bucket) {
 	_, err := tx.CreateBucketIfNotExists(bucket)
 	if err != nil {
 		panic(fmt.Sprintf("create bucket failed : %s", err))
 	}
 }
 
-func (s *store) Insert(bucket bucket, uid []byte, data interface{}) error {
+func (s *Store) Insert(bucket Bucket, uid []byte, data interface{}) error {
 
 	err := s.db.Update(func(tx *bolt.Tx) error {
 
@@ -77,7 +77,7 @@ func (s *store) Insert(bucket bucket, uid []byte, data interface{}) error {
 	return err
 }
 
-func (s *store) Update(bucket bucket, uid []byte, data interface{}) error {
+func (s *Store) Update(bucket Bucket, uid []byte, data interface{}) error {
 
 	err := s.db.Update(func(tx *bolt.Tx) error {
 
@@ -94,7 +94,7 @@ func (s *store) Update(bucket bucket, uid []byte, data interface{}) error {
 	return err
 }
 
-func (s *store) Delete(bucket bucket, uid []byte) error {
+func (s *Store) Delete(bucket Bucket, uid []byte) error {
 
 	err := s.db.Update(func(tx *bolt.Tx) error {
 
@@ -106,11 +106,11 @@ func (s *store) Delete(bucket bucket, uid []byte) error {
 	return err
 }
 
-func (s *store) One(b bucket, uid []byte, out interface{}) error {
+func (s *Store) One(bucket Bucket, uid []byte, out interface{}) error {
 
 	err := s.db.View(func(tx *bolt.Tx) error {
 
-		b := tx.Bucket(b)
+		b := tx.Bucket(bucket)
 
 		bytes := b.Get(uid)
 
@@ -131,7 +131,7 @@ func (s *store) One(b bucket, uid []byte, out interface{}) error {
 	return err
 }
 
-func (s *store) List(bucket bucket, to interface{}) error {
+func (s *Store) List(bucket Bucket, to interface{}) error {
 
 	ref := reflect.ValueOf(to)
 
