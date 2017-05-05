@@ -293,8 +293,6 @@ func profileFromEntity(entity proto.Entity) (*config.Profile, error) {
 
 func (s *handler) Stop(ctx context.Context, request *proto.StopRequest) (*proto.StopReply, error) {
 
-	fmt.Println(request.Uri)
-
 	err := s.manager.DeletePipeByURI(request.Uri)
 
 	if err != nil {
