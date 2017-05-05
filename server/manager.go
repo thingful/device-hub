@@ -17,7 +17,7 @@ import (
 
 type manager struct {
 	ctx   context.Context
-	pipes map[string]*pipe
+	pipes Pipes
 	conf  *config.Configuration
 	sync.RWMutex
 }
@@ -49,13 +49,15 @@ type pipe struct {
 	// TODO : add last error, debug etc
 }
 
+type Pipes map[string]*pipe
+
 type statistics struct {
 	Total  uint64
 	Errors uint64
 	OK     uint64
 }
 
-func NewEndpointManager(ctx context.Context) (*manager, error) {
+func NewEndpointManager(ctx context.Context, pipes Pipes) (*manager, error) {
 	return &manager{
 		pipes: map[string]*pipe{},
 		ctx:   ctx,

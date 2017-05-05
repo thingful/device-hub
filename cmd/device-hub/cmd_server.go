@@ -33,7 +33,8 @@ var serverCommand = &cobra.Command{
 			return err
 		}
 
-		manager, err := server.NewEndpointManager(ctx)
+		state := server.Pipes{}
+		manager, err := server.NewEndpointManager(ctx, state)
 
 		if err != nil {
 			return err

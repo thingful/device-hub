@@ -51,7 +51,6 @@ func (o *config) AddFlags(fs *pflag.FlagSet) {
 }
 
 func init() {
-
 	RootCmd.AddCommand(versionCommand)
 	RootCmd.AddCommand(serverCommand)
 	_config.AddFlags(RootCmd.PersistentFlags())
