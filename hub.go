@@ -12,6 +12,7 @@ type Listener interface {
 type Channel interface {
 	Errors() chan error
 	Out() chan Message
+	Close() error
 }
 
 // Message contains a Payload, a processed Output and any Metadata collected
@@ -25,8 +26,3 @@ type Message struct {
 type Endpoint interface {
 	Write(message Message) error
 }
-
-var (
-	// SourceVersion is set via the makefile
-	SourceVersion = "DEVELOPMENT"
-)

@@ -1,0 +1,6 @@
+---
+type: endpoint
+kind: stdout
+configuration:
+  # Format the output with tabs and line breaks
+  prettyPrint: true

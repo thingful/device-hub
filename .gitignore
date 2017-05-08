@@ -1,2 +1,5 @@
 coverage
 tmp
+cmd/device-hub/device-hub.db
+cmd/device-hub/device-hub
+cmd/device-hub-cli/device-hub-cli

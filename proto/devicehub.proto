@@ -1,0 +1,115 @@
+// Copyright © 2017 thingful
+
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "io.thingful.devicehub";
+option java_outer_classname = "DeviceHubProto";
+
+package proto;
+
+service Hub {
+
+    rpc Create (CreateRequest) returns (CreateReply) {}
+
+    rpc Delete (DeleteRequest) returns (DeleteReply) {}
+
+    rpc Get (GetRequest) returns (GetReply) {}
+
+    rpc Start(StartRequest) returns (StartReply) {}
+
+    rpc Stop(StopRequest) returns (StopReply) {}
+
+    rpc List(ListRequest) returns (ListReply) {}
+}
+
+message CreateRequest {
+    string type = 1;
+    string kind = 2;
+    map<string, string> configuration = 3;
+}
+
+message CreateReply {
+    bool ok = 1;
+    string error = 2;
+    string uid = 3;
+}
+
+message DeleteRequest {
+    string type = 1;
+    string uid = 2;
+}
+
+message DeleteReply {
+    bool ok = 1;
+    string error = 2;
+}
+
+message GetRequest {
+    string filter = 1;
+}
+
+message GetReply {
+    bool ok = 1;
+    string error = 2;
+    repeated Entity entities = 3;
+}
+
+message Entity {
+    string uid = 1;
+    string type = 2;
+    string kind = 3;
+    map<string, string> configuration = 4;
+}
+
+message StartRequest {
+    string uri = 1;
+    string profile = 2;
+    string listener = 3;
+    repeated string endpoints = 4;
+}
+
+message StartReply {
+    bool ok = 1;
+    string error = 2;
+}
+
+message StopRequest {
+    string uri = 1;
+}
+
+message StopReply {
+    bool ok = 1;
+    string error = 2;
+}
+
+message ListRequest {
+}
+
+message ListReply {
+    bool ok = 1;
+    string error = 2;
+    repeated Pipe pipes = 3;
+}
+
+message Pipe {
+    string uri = 1;
+    string profile = 2;
+    string listener = 3;
+    repeated string endpoints = 4;
+    Statistics stats = 5;
+
+    enum State {
+        UNKNOWN = 0;
+        RUNNING = 1;
+        STOPPED = 2;
+        ERRORED = 3;
+    }
+    State state = 6;
+}
+
+message Statistics {
+    uint64 total = 1;
+    uint64 errors = 2;
+    uint64 ok = 3;
+}

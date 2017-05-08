@@ -1,6 +1,8 @@
 package: github.com/thingful/device-hub
 import:
 - package: github.com/robertkrimen/otto
+- package: google.golang.org/grpc
+  version: ^1.2.1
 testImport:
 - package: github.com/stretchr/testify
   version: ^1.1.4

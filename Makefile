@@ -4,6 +4,7 @@ BUILD_FLAGS = -v -ldflags "-X github.com/thingful/device-hub.SourceVersion=$(SOU
 PACKAGES := $(shell go list ./... | grep -v /vendor/ )
 
 EXE_NAME := 'device-hub'
+CLI_EXE_NAME := 'device-hub-cli'
 
 GO_TEST = go test -covermode=atomic
 GO_INTEGRATION = $(GO_TEST) -bench=. -v --tags=integration
@@ -43,18 +44,41 @@ coverage: test_integration ## generate and display coverage report
 
 .PHONY: test_integration 
 
-pi : tmp/build/$(EXE_NAME)-linux-arm
-darwin: tmp/build/$(EXE_NAME)-darwin-amd64
-linux: tmp/build/$(EXE_NAME)-linux-amd64
+proto: ## regenerate protobuf files
+	protoc --gofast_out=plugins=grpc:. ./proto/*.proto
+	# strip `omitempty` from the json tags
+	ls ./proto/*.pb.go | xargs -n1 -IX bash -c 'sed s/,omitempty// X > X.tmp && mv X{.tmp,}'
+
+.PHONY: proto
+
+docker_up: ## run dependencies as docker containers
+	docker-compose up -d
+	docker ps
+
+.PHONY: docker_up
+
+pi : tmp/build/$(EXE_NAME)-linux-arm  tmp/build/$(CLI_EXE_NAME)-linux-arm
+darwin: tmp/build/$(EXE_NAME)-darwin-amd64 tmp/build/$(CLI_EXE_NAME)-darwin-amd64
+linux: tmp/build/$(EXE_NAME)-linux-amd64  tmp/build/$(CLI_EXE_NAME)-linux-amd64
 
 tmp/build/$(EXE_NAME)-linux-amd64:
 	GOOS=linux GOARCH=amd64 go build $(BUILD_FLAGS) -o $(@) ./cmd/device-hub
 
+tmp/build/$(CLI_EXE_NAME)-linux-amd64:
+	GOOS=linux GOARCH=amd64 go build $(BUILD_FLAGS) -o $(@) ./cmd/device-hub-cli
+
 tmp/build/$(EXE_NAME)-linux-arm:
 	GOOS=linux GOARCH=arm go build $(BUILD_FLAGS) -o $(@) ./cmd/device-hub
 
+tmp/build/$(CLI_EXE_NAME)-linux-arm:
+	GOOS=linux GOARCH=arm go build $(BUILD_FLAGS) -o $(@) ./cmd/device-hub-cli
+
 tmp/build/$(EXE_NAME)-darwin-amd64:
 	GOOS=darwin GOARCH=amd64 go build $(BUILD_FLAGS) -o $(@) ./cmd/device-hub
+
+tmp/build/$(CLI_EXE_NAME)-darwin-amd64:
+	GOOS=darwin GOARCH=amd64 go build $(BUILD_FLAGS) -o $(@) ./cmd/device-hub-cli
+
 
 # 'help' parses the Makefile and displays the help text
 help:
