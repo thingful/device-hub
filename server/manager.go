@@ -48,7 +48,7 @@ type pipe struct {
 	State   proto.Pipe_State
 	Started time.Time
 
-	MessageStatistics statistics
+	MessageStatistics proto.Statistics
 
 	cancel context.CancelFunc
 
@@ -56,12 +56,6 @@ type pipe struct {
 }
 
 type Pipes []*pipe
-
-type statistics struct {
-	Total  uint64
-	Errors uint64
-	OK     uint64
-}
 
 func NewEndpointManager(ctx context.Context, state Pipes) (*manager, error) {
 
@@ -160,7 +154,7 @@ func (m *manager) startOne(ctx context.Context, p *pipe, listener hub.Listener, 
 				p.MessageStatistics.Errors++
 				log.Println(err)
 			} else {
-				p.MessageStatistics.OK++
+				p.MessageStatistics.Ok++
 			}
 
 			output.Metadata[hub.PROFILE_NAME_KEY] = p.Profile.Name
@@ -176,6 +170,8 @@ func (m *manager) startOne(ctx context.Context, p *pipe, listener hub.Listener, 
 				}
 
 			}
+
+			fmt.Print(p.MessageStatistics)
 		}
 	}
 }

@@ -330,19 +330,17 @@ func (s *handler) List(ctx context.Context, request *proto.ListRequest) (*proto.
 			endpoints = append(endpoints, e.Uid)
 		}
 
+		ffs := pipe.MessageStatistics
+
 		ppipe := &proto.Pipe{
 			Uri:       pipe.Uri,
 			Profile:   pipe.Profile.Uid,
 			Listener:  pipe.Listener.Uid,
 			Endpoints: endpoints,
-			Stats: &proto.Statistics{
-				Total:  pipe.MessageStatistics.Total,
-				Errors: pipe.MessageStatistics.Errors,
-				Ok:     pipe.MessageStatistics.OK,
-			},
-			State: pipe.State,
+			Stats:     &ffs,
+			State:     pipe.State,
 		}
-
+		fmt.Println(pipe.MessageStatistics, ppipe.Stats)
 		ppipes = append(ppipes, ppipe)
 
 	}

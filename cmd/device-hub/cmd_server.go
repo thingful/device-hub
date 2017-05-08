@@ -34,6 +34,8 @@ var serverCommand = &cobra.Command{
 			return err
 		}
 
+		// load any existing pipes from the database to
+		// serve as the initial running state
 		state := server.Pipes{}
 
 		err = s.List(store.Pipes, &state)
@@ -48,6 +50,8 @@ var serverCommand = &cobra.Command{
 			return err
 		}
 
+		// starting the manager will ensure that the initial
+		// state is recreated
 		err = manager.Start()
 
 		if err != nil {
