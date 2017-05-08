@@ -12,6 +12,7 @@ import (
 
 	hub "github.com/thingful/device-hub"
 	"github.com/thingful/device-hub/engine"
+	"github.com/thingful/device-hub/proto"
 	"github.com/thingful/device-hub/utils"
 )
 
@@ -20,16 +21,6 @@ type manager struct {
 	pipes map[string]*pipe
 	sync.RWMutex
 }
-
-// state tracks the known state of a runtime pipe
-type state string
-
-const (
-	UNKNOWN = state("UNKNOWN")
-	RUNNING = state("RUNNING")
-	STOPPED = state("STOPPED")
-	ERRORED = state("ERRORED")
-)
 
 type endpoint struct {
 	Kind          string
@@ -54,7 +45,7 @@ type pipe struct {
 	Profile   profile
 	Uri       string
 
-	State   state
+	State   proto.Pipe_State
 	Started time.Time
 
 	MessageStatistics statistics
@@ -94,7 +85,7 @@ func (m *manager) Start() error {
 
 	for n, p := range m.pipes {
 
-		if p.State != RUNNING {
+		if p.State != proto.Pipe_RUNNING {
 
 			listener, err := hub.ListenerByName(p.Listener.Uid, p.Listener.Kind, p.Listener.Configuration)
 
@@ -128,7 +119,7 @@ func (m *manager) Start() error {
 
 			go m.startOne(ctx, pp, listener, endpoints, channel)
 			pp.cancel = cancel
-			pp.State = RUNNING
+			pp.State = proto.Pipe_RUNNING
 			pp.Started = time.Now().UTC()
 		}
 	}
@@ -144,7 +135,7 @@ func (m *manager) startOne(ctx context.Context, p *pipe, listener hub.Listener, 
 		select {
 
 		case <-ctx.Done():
-			p.State = STOPPED
+			p.State = proto.Pipe_STOPPED
 			err := channel.Close()
 
 			if err != nil {

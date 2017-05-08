@@ -244,7 +244,7 @@ func (s *handler) Start(ctx context.Context, request *proto.StartRequest) (*prot
 		Listener:  listener,
 		Endpoints: endpoints,
 		Profile:   *profile,
-		State:     UNKNOWN,
+		State:     proto.Pipe_UNKNOWN,
 	}
 
 	err = s.store.Insert(store.Pipes, []byte(pipe.Uri), pipe)
@@ -323,12 +323,24 @@ func (s *handler) List(ctx context.Context, request *proto.ListRequest) (*proto.
 	ppipes := []*proto.Pipe{}
 
 	for _, pipe := range pipes {
-		// TODO : add stats, state etc
+
+		endpoints := []string{}
+
+		for _, e := range pipe.Endpoints {
+			endpoints = append(endpoints, e.Uid)
+		}
+
 		ppipe := &proto.Pipe{
-			Uri:      pipe.Uri,
-			Profile:  pipe.Profile.Uid,
-			Listener: pipe.Listener.Uid,
-			//Endpoints: pipe.Endpoints.String(),
+			Uri:       pipe.Uri,
+			Profile:   pipe.Profile.Uid,
+			Listener:  pipe.Listener.Uid,
+			Endpoints: endpoints,
+			Stats: &proto.Statistics{
+				Total:  pipe.MessageStatistics.Total,
+				Errors: pipe.MessageStatistics.Errors,
+				Ok:     pipe.MessageStatistics.OK,
+			},
+			State: pipe.State,
 		}
 
 		ppipes = append(ppipes, ppipe)
