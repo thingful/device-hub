@@ -148,21 +148,6 @@ func roundTrip(sample interface{}, fn roundTripFunc) error {
 
 		}
 	}
-	/*
-		f, err := os.Open(cfg.RequestFile)
-		if err != nil {
-			return fmt.Errorf("request file: %v", err)
-		}
-		defer f.Close()
-		ext := filepath.Ext(cfg.RequestFile)
-		if len(ext) > 0 && ext[0] == '.' {
-			ext = ext[1:]
-		}
-		dm, ok := iocodec.DefaultDecoders[ext]
-		if !ok {
-			return fmt.Errorf("invalid request file format: %q", ext)
-		}
-		d = dm.NewDecoder(f)*/
 
 	defer func() {
 		for i, _ := range files {
@@ -174,6 +159,7 @@ func roundTrip(sample interface{}, fn roundTripFunc) error {
 	if err != nil {
 		return err
 	}
+
 	defer conn.Close()
 
 	for _, d := range decoders {
