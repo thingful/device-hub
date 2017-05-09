@@ -3,4 +3,4 @@ type: listener
 kind: http
 configuration:
   # Address to receive messages from 
-  HTTPBindingAddress: 0.0.0.0:8085
+  http-binding-address: 0.0.0.0:8085

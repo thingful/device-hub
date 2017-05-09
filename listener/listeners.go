@@ -15,7 +15,7 @@ func init() {
 
 		clientName := fmt.Sprintf("device-hub-%s", hub.SourceVersion)
 
-		brokerAddress := config.MString("MQTTBrokerAddress")
+		brokerAddress := config.MString("mqtt-broker-address")
 
 		options := defaultMQTTOptions(brokerAddress, clientName)
 		client := defaultMQTTClient(options)
@@ -31,7 +31,7 @@ func init() {
 
 	hub.RegisterListener("http", func(config utils.TypedMap) (hub.Listener, error) {
 
-		binding := config.MString("HTTPBindingAddress")
+		binding := config.MString("http-binding-address")
 		return newHTTPListener(binding)
 
 	})
