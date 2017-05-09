@@ -29,15 +29,16 @@ var serverCommand = &cobra.Command{
 		ctx := context.Background()
 
 		s := store.NewStore(db)
+		repository := store.NewRepository(s)
 
-		manager, err := server.NewEndpointManager(ctx, s)
+		manager, err := server.NewEndpointManager(ctx, repository)
 
 		if err != nil {
 			return err
 		}
 
-		// starting the manager will ensure that the initial
-		// state is recreated
+		// starting the manager will ensure that the previous
+		// running state is recreated
 		err = manager.Start()
 
 		if err != nil {

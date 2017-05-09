@@ -38,9 +38,7 @@ type pipe struct {
 
 type pipePredicate func(*pipe) bool
 
-func NewEndpointManager(ctx context.Context, s *store.Store) (*manager, error) {
-
-	repository := store.NewRepository(s)
+func NewEndpointManager(ctx context.Context, repository *store.Repository) (*manager, error) {
 
 	// load any existing pipes from the database to
 	// serve as the initial running state
