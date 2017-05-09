@@ -101,13 +101,54 @@ func roundTrip(sample interface{}, fn roundTripFunc) error {
 			return fmt.Errorf("invalid response format: %q", cfg.ResponseFormat)
 		}
 	}
+
 	if cfg.PrintSampleRequest {
 		return em.NewEncoder(os.Stdout).Encode(sample)
 	}
-	var d iocodec.Decoder
-	if cfg.RequestFile == "" || cfg.RequestFile == "-" {
-		d = iocodec.DefaultDecoders["json"].NewDecoder(os.Stdin)
-	} else {
+
+	decoders := []iocodec.Decoder{}
+	files := []*os.File{}
+
+	// either no request file is not specified or set to std-in
+	if (cfg.RequestFile == "" && cfg.RequestDir == "") || cfg.RequestFile == "-" {
+		decoders = append(decoders, iocodec.DefaultDecoders["json"].NewDecoder(os.Stdin))
+
+		// or request file is specified
+	} else if cfg.RequestFile != "" {
+
+		f, d, err := decoderFromPath(cfg.RequestFile)
+
+		if err != nil {
+			return err
+		}
+
+		decoders = append(decoders, d)
+		files = append(files, f)
+
+		// or request dir is specified
+	} else if cfg.RequestDir != "" {
+		listing, err := ioutil.ReadDir(cfg.RequestDir)
+
+		if err != nil {
+			return err
+		}
+
+		for _, fi := range listing {
+
+			fmt.Println(fi.Name())
+
+			f, d, err := decoderFromPath(cfg.RequestDir + fi.Name())
+
+			if err != nil {
+				return err
+			}
+
+			decoders = append(decoders, d)
+			files = append(files, f)
+
+		}
+	}
+	/*
 		f, err := os.Open(cfg.RequestFile)
 		if err != nil {
 			return fmt.Errorf("request file: %v", err)
@@ -121,12 +162,49 @@ func roundTrip(sample interface{}, fn roundTripFunc) error {
 		if !ok {
 			return fmt.Errorf("invalid request file format: %q", ext)
 		}
-		d = dm.NewDecoder(f)
-	}
+		d = dm.NewDecoder(f)*/
+
+	defer func() {
+		for i, _ := range files {
+			files[i].Close()
+		}
+	}()
+
 	conn, client, err := dial()
 	if err != nil {
 		return err
 	}
 	defer conn.Close()
-	return fn(client, d, em.NewEncoder(os.Stdout))
+
+	for _, d := range decoders {
+		err := fn(client, d, em.NewEncoder(os.Stdout))
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func decoderFromPath(filePath string) (*os.File, iocodec.Decoder, error) {
+
+	f, err := os.Open(filePath)
+	if err != nil {
+		return nil, nil, fmt.Errorf("request file: %v", err)
+	}
+
+	ext := filepath.Ext(filePath)
+
+	if len(ext) > 0 && ext[0] == '.' {
+		ext = ext[1:]
+	}
+
+	dm, ok := iocodec.DefaultDecoders[ext]
+
+	if !ok {
+		return nil, nil, fmt.Errorf("invalid request file format: %q", ext)
+	}
+
+	return f, dm.NewDecoder(f), nil
 }

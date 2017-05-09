@@ -13,9 +13,11 @@ var deleteCommand = &cobra.Command{
 	Short: "Delete listener, profile and endpoint resources",
 	RunE: func(cmd *cobra.Command, args []string) error {
 
-		v := proto.DeleteRequest{}
+		sample := proto.DeleteRequest{}
 
-		err := roundTrip(v, func(cli proto.HubClient, in iocodec.Decoder, out iocodec.Encoder) error {
+		err := roundTrip(sample, func(cli proto.HubClient, in iocodec.Decoder, out iocodec.Encoder) error {
+
+			v := proto.DeleteRequest{}
 
 			err := in.Decode(&v)
 			if err != nil {

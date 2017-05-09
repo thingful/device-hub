@@ -15,12 +15,14 @@ var createCommand = &cobra.Command{
 	Short: "Create listener, endpoint and profile resources",
 	RunE: func(cmd *cobra.Command, args []string) error {
 
-		/* TODO : add ability to generate examplesi */
-		v := proto.CreateRequest{
+		/* TODO : add ability to generate examples */
+		sample := proto.CreateRequest{
 			Configuration: map[string]string{},
 		}
 
-		err := roundTrip(v, func(cli proto.HubClient, in iocodec.Decoder, out iocodec.Encoder) error {
+		err := roundTrip(sample, func(cli proto.HubClient, in iocodec.Decoder, out iocodec.Encoder) error {
+
+			v := proto.CreateRequest{}
 
 			err := in.Decode(&v)
 			if err != nil {
