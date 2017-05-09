@@ -8,8 +8,8 @@ import (
 	"github.com/spf13/cast"
 )
 
-// TypedMap provides strongly typed access to a map[string] interface{}
-type TypedMap map[string]interface{}
+// TypedMap provides strongly typed access to a map[string]string
+type TypedMap map[string]string
 
 // String return true if a string value exists in the collection along with the value
 func (c TypedMap) String(key string) (bool, string) {
