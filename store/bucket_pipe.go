@@ -24,6 +24,7 @@ type Profile struct {
 	Description string
 	// TODO : make this a semantic triple
 	Version string
+	Schema  map[string]interface{}
 	Script  engine.Script
 }
 

@@ -4,6 +4,7 @@ package server
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"sync"
@@ -151,6 +152,8 @@ func (m *manager) startOne(ctx context.Context, p *pipe, listener hub.Listener, 
 			output.Metadata[hub.PROFILE_VERSION_KEY] = p.Profile.Version
 			output.Metadata[hub.RUNTIME_VERSION_KEY] = hub.SourceVersion
 
+			output.Schema = p.Profile.Schema
+
 			for e := range endpoints {
 
 				// TODO : do something more useful with this error
@@ -294,12 +297,22 @@ func (m *manager) StartPipe(uri, listenerUID, profileUID string, endpointUIDs []
 }
 
 func profileFromEntity(entity *proto.Entity) (*store.Profile, error) {
+	// TODO : give a monkeys about validation
+
+	schema := map[string]interface{}{}
+
+	err := json.Unmarshal([]byte(entity.Configuration["schema"]), &schema)
+
+	if err != nil {
+		return nil, err
+	}
 
 	return &store.Profile{
 		Uid:         entity.Uid,
 		Name:        entity.Configuration["profile-name"],
 		Description: entity.Configuration["profile-description"],
 		Version:     entity.Configuration["profile-version"],
+		Schema:      schema,
 		Script: engine.Script{
 			Main:     entity.Configuration["script-main"],
 			Runtime:  engine.Runtime(entity.Configuration["script-runtime"]),
