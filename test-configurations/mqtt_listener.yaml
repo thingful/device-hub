@@ -3,4 +3,4 @@ type: listener
 kind: mqtt
 configuration:
   # Address of the MQTT Broker
-  MQTTBrokerAddress: tcp://0.0.0.0:1883
+  mqtt-broker-address: tcp://0.0.0.0:1883

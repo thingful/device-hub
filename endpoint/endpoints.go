@@ -11,7 +11,7 @@ func init() {
 
 	hub.RegisterEndpoint("stdout", func(config utils.TypedMap) (hub.Endpoint, error) {
 
-		prettyPrint := config.DBool("prettyPrint", false)
+		prettyPrint := config.DBool("pretty-print", false)
 
 		return stdout{
 			prettyPrint: prettyPrint,
