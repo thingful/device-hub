@@ -12,7 +12,6 @@ import (
 	"net"
 
 	"github.com/thingful/device-hub/proto"
-	"github.com/thingful/device-hub/store"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -27,7 +26,7 @@ type Options struct {
 	TrustedCAFilePath string
 }
 
-func Serve(options Options, manager *manager, store *store.Store) error {
+func Serve(options Options, manager *manager) error {
 
 	var grpcServer *grpc.Server
 
@@ -69,7 +68,6 @@ func Serve(options Options, manager *manager, store *store.Store) error {
 
 	proto.RegisterHubServer(grpcServer, &handler{
 		manager: manager,
-		store:   store,
 	})
 
 	// Register reflection service on gRPC server.

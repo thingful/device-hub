@@ -2,5 +2,5 @@
 type: listener
 kind: http
 configuration:
-  # Address to recieve messages from 
+  # Address to receive messages from 
   HTTPBindingAddress: 0.0.0.0:8085

@@ -28,26 +28,16 @@ var serverCommand = &cobra.Command{
 
 		ctx := context.Background()
 
-		s, err := store.NewStore(db)
+		s := store.NewStore(db)
+
+		manager, err := server.NewEndpointManager(ctx, s)
 
 		if err != nil {
 			return err
 		}
 
-		state := server.Pipes{}
-
-		err = s.List(store.Pipes, &state)
-
-		if err != nil {
-			return err
-		}
-
-		manager, err := server.NewEndpointManager(ctx, state)
-
-		if err != nil {
-			return err
-		}
-
+		// starting the manager will ensure that the initial
+		// state is recreated
 		err = manager.Start()
 
 		if err != nil {
@@ -60,7 +50,7 @@ var serverCommand = &cobra.Command{
 			CertFilePath:      _config.CertFile,
 			KeyFilePath:       _config.KeyFile,
 			TrustedCAFilePath: _config.CACertFile,
-		}, manager, s)
+		}, manager)
 
 		return err
 	},
