@@ -19,6 +19,7 @@ type Channel interface {
 type Message struct {
 	Payload  []byte                 `json:"payload"`
 	Output   interface{}            `json:"output"`
+	Schema   map[string]interface{} `json:"schema"`
 	Metadata map[string]interface{} `json:"metadata"`
 }
 
