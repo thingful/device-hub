@@ -25,6 +25,7 @@ var _config = newConfig()
 type config struct {
 	ServerAddr         string        `envconfig:"SERVER_ADDR" default:"127.0.0.1:50051"`
 	RequestFile        string        `envconfig:"REQUEST_FILE"`
+	RequestDir         string        `envconfig:"REQUEST_DIR"`
 	PrintSampleRequest bool          `envconfig:"PRINT_SAMPLE_REQUEST"`
 	ResponseFormat     string        `envconfig:"RESPONSE_FORMAT" default:"json"`
 	Timeout            time.Duration `envconfig:"TIMEOUT" default:"10s"`
@@ -49,6 +50,7 @@ func newConfig() *config {
 func (o *config) AddFlags(fs *pflag.FlagSet) {
 	fs.StringVarP(&o.ServerAddr, "server-addr", "s", o.ServerAddr, "server address in form of host:port")
 	fs.StringVarP(&o.RequestFile, "request-file", "f", o.RequestFile, "client request file (must be json, yaml, or xml); use \"-\" for stdin + json")
+	fs.StringVarP(&o.RequestDir, "request-dir", "d", o.RequestDir, "directory containing client request file(s) (must be json, yaml, or xml)")
 	fs.BoolVarP(&o.PrintSampleRequest, "print-sample-request", "p", o.PrintSampleRequest, "print sample request file and exit")
 	fs.StringVarP(&o.ResponseFormat, "response-format", "o", o.ResponseFormat, "response format (json, prettyjson, yaml, or xml)")
 	fs.DurationVar(&o.Timeout, "timeout", o.Timeout, "client connection timeout")
