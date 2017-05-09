@@ -60,8 +60,15 @@ Start the device-hub
 
 Configure with the cli
 
+To import a folder of configuration files
+
 ```
-./device-hub-cli-linux-amd64 create -f=./test-configurations/http_listener.yaml
+./device-hub-cli-linux-amd64 create -d=./test-configurations/
+```
+
+Files can also be imported on an individual basis
+
+```
 ./device-hub-cli-linux-amd64 create -f=./test-configurations/mqtt_listener.yaml
 ./device-hub-cli-linux-amd64 create -f=./test-configurations/std_out_endpoint.yaml
 ./device-hub-cli-linux-amd64 create -f=./test-configurations/profile_script.yaml
@@ -71,8 +78,8 @@ Configure with the cli
 Create some 'pipes' that listen via http on uri /a and /b and out put to std output
 
 ```
-./device-hub-cli-linux-amd64 start -e=mVZY2J0 -l=L1EYWOW -u=/a thingful/device-1
-./device-hub-cli-linux-amd64 start -e=mVZY2J0 -l=L1EYWOW -u=/b thingful/device-2
+./device-hub-cli-linux-amd64 start -e=7wYDJg1 -l=AkyZrP -u=/a thingful/device-1
+./device-hub-cli-linux-amd64 start -e=m7wYDJg -l=AkyZrP -u=/b thingful/device-2
 ```
 
 Send some messages 
