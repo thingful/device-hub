@@ -4,24 +4,51 @@ device-hub
 Takes output from one or many IOT devices using various protocols (HTTP, MQTT) and expands it either transforming it into JSON format and/or adding in some metadata.
 The logic to transform the data is via a "device profile". Device profiles are written in java-script.
 
-```javascript
-function decode (input) {
-    console.log("decode called")
-    return input
-}
-
-```
-
 License
 -------
 
 Copyright © 2017 thingful
 Released under the terms of "DECODE Accepted Software License"
 
+About
+-----
+
+device-hub is operated by installing a set of configured listeners, endpoint and device profiles.
+device-hub is configured via the device-hub-cli.
+device-hub stores its running configuration in a local boltdb database.
+device-hub can run in insecure mode or using mutual tls authentication.
+
+Supported message formats
+
+Transport               | Notes
+-----------------------------------------------------------------------------------------
+`CSV`                   |
+`JSON`                  |
+`RAW BYTES`             |
+
+Supported listener transports
+
+Transport               | Notes
+-----------------------------------------------------------------------------------------
+`HTTP`                  |
+`MQTT`                  |
+
+Supported endpoints
+
+Transport               | Notes
+-----------------------------------------------------------------------------------------
+`STDOUT`                |
+
+Example configuration files are in ./test-configurations/
+
+The entity connecting a listener to a device profile and then an endpoint is called a 'pipe'.
+
+On startup device-hub will restart all existing pipes.
+
 Build
 -----
 
-Install golang
+Install golang, docker (if you want to run the integration tests or test with a local mqtt server)
 
 Get the code -
 
@@ -36,7 +63,7 @@ Run the tests
 make test
 ```
 
-Build linux, mac and raspberry-pi executables
+Build executables for all platforms
 
 ```
 make all
@@ -44,22 +71,16 @@ make all
 
 Output is built to ./tmp/build/
 
-Configuration
----------------
-
-Example configuration files are in ./test-configurations/
-
 Run
 ---
 
-Start the device-hub 
+Start the device-hub
 
 ```
 ./device-hub-linux-amd64
 ```
 
 Configure with the cli
-
 To import a folder of configuration files
 
 ```
@@ -75,11 +96,17 @@ Files can also be imported on an individual basis
 ./device-hub-cli-linux-amd64 create -f=./test-configurations/profile_script_transform.yaml
 ```
 
-Create some 'pipes' that listen via http on uri /a and /b and out put to std output
+The configuration can be inspected
 
 ```
-./device-hub-cli-linux-amd64 start -e=7wYDJg1 -l=AkyZrP -u=/a thingful/device-1
-./device-hub-cli-linux-amd64 start -e=m7wYDJg -l=AkyZrP -u=/b thingful/device-2
+./device-hub-cli-linux-amd64 get all
+```
+
+Create some 'pipes' that listen via http on uri /a and /b and output to std output
+
+```
+./device-hub-cli-linux-amd64 start -e={stdout endpoint uid} -l={http listenener uid} -u=/a thingful/device-1
+./device-hub-cli-linux-amd64 start -e={stdout endpoint uid} -l={http listenener uid} -u=/b thingful/device-2
 ```
 
 Send some messages 
