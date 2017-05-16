@@ -1,0 +1,6 @@
+---
+type: endpoint
+kind: http
+configuration:
+  http-url: https://example.com/
+  http-client-timeout-ms: 1000

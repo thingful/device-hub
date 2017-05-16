@@ -1,0 +1,35 @@
+---
+type: profile
+kind: script
+configuration:
+  profile-name : thingful/device-3
+  profile-description : blah blah blah
+  profile-version: 1.0.1-beta
+  schema : >
+    {
+        "@context": {
+            "decode"    : "http://decode.eu#",
+            "m3-lite"   : "http://purl.org/iot/vocab/m3-lite#",
+            "schema"    : "http://schema.org/",
+            "domain"    : "decode:hasDomain",
+            "timeStamp" : "schema:Date",
+            "reading"   : "decode:AtmosphericConcentrationAirParticlesPM25"
+        },
+        "@type" : "m3-lite:AirPollutantSensor",
+        "domain": {
+            "@type": "m3-lite:Environment"
+        }
+    }
+  script-main: decode
+  script-runtime: javascript
+  script-input: json
+  script-contents: >
+    function decode (input) {
+        // { deviceId : xx , createdAt : some-date, value : some-number  }
+
+        return {
+            '@id' : input['deviceId'],
+            'timeStamp' : input['createdAt'],
+            'reading' : input['value']
+        }
+    }
