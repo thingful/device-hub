@@ -10,12 +10,15 @@ License
 Copyright © 2017 thingful
 Released under the terms of "DECODE Accepted Software License"
 
-About
------
+Introduction
+------------
 
 device-hub is operated by installing a set of configured listeners, endpoint and device profiles.
+
 device-hub is configured via the device-hub-cli.
+
 device-hub stores its running configuration in a local boltdb database.
+
 device-hub can run in insecure mode or using mutual tls authentication.
 
 Supported message formats
