@@ -1,3 +1,5 @@
+// Copyright © 2017 thingful
+
 package hub
 
 import "fmt"
