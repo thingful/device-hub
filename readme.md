@@ -21,7 +21,7 @@ device-hub can run in insecure mode or using mutual tls authentication.
 Supported message formats
 
 Transport               | Notes
------------------------------------------------------------------------------------------
+------------------------|----------------------------------------------------------------
 `CSV`                   |
 `JSON`                  |
 `RAW BYTES`             |
@@ -29,14 +29,14 @@ Transport               | Notes
 Supported listener transports
 
 Transport               | Notes
------------------------------------------------------------------------------------------
+------------------------|----------------------------------------------------------------
 `HTTP`                  |
 `MQTT`                  |
 
 Supported endpoints
 
 Transport               | Notes
------------------------------------------------------------------------------------------
+------------------------|----------------------------------------------------------------
 `STDOUT`                |
 
 Example configuration files are in ./test-configurations/
