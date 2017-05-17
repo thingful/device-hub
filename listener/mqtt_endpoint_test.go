@@ -10,13 +10,20 @@ import (
 	// TODO : move import to upstream project
 	"github.com/mdevilliers/go-compose/compose"
 	"github.com/stretchr/testify/assert"
+	testing_helper "github.com/thingful/device-hub/utils/testing"
 )
 
 func TestMQTT_MultipleEndpoints(t *testing.T) {
 
 	t.Parallel()
 
-	composeYML := `version: '2'
+	mqttAddress := fmt.Sprintf("tcp://%s:%d", "0.0.0.0", 1883)
+	options := defaultMQTTOptions(mqttAddress, "device-hub")
+	client := defaultMQTTClient(options)
+
+	if !testing_helper.IsRunningInWercker() {
+
+		composeYML := `version: '2'
 services:
   mqtt:
     image: erlio/docker-vernemq:0.15.3
@@ -25,22 +32,27 @@ services:
     environment:
       - DOCKER_VERNEMQ_ALLOW_ANONYMOUS=on`
 
-	c := compose.MustStartParallel(composeYML, false)
-	defer c.Kill()
+		c := compose.MustStartParallel(composeYML, false)
+		defer c.Kill()
 
-	mqttAddress := fmt.Sprintf("tcp://%s:%d", compose.MustInferDockerHost(), c.Containers["mqtt"].MustGetFirstPublicPort(1883, "tcp"))
+		mqttAddress = fmt.Sprintf("tcp://%s:%d", compose.MustInferDockerHost(), c.Containers["mqtt"].MustGetFirstPublicPort(1883, "tcp"))
+		options = defaultMQTTOptions(mqttAddress, "device-hub")
+		client = defaultMQTTClient(options)
 
-	options := defaultMQTTOptions(mqttAddress, "device-hub")
-	client := defaultMQTTClient(options)
+		compose.MustConnectWithDefaults(func() error {
+			if token := client.Connect(); token.Wait() && token.Error() != nil {
+				return token.Error()
+			}
 
-	compose.MustConnectWithDefaults(func() error {
+			return nil
+		})
+
+	} else {
 		if token := client.Connect(); token.Wait() && token.Error() != nil {
-			return token.Error()
+			panic(token.Error())
 		}
 
-		return nil
-	})
-
+	}
 	defer client.Disconnect(1)
 
 	l, err := newMQTTListener(client)
