@@ -1,0 +1,21 @@
+box: golang:1.8
+
+services:
+        - name: mqtt
+          id: erlio/docker-vernemq:0.15.3
+          env:
+             DOCKER_VERNEMQ_ALLOW_ANONYMOUS=on
+
+build:
+    steps:
+        - setup-go-workspace
+        - script:
+            name: run tests
+            code: |
+              make test_integration
+
+        - script:
+            name: build for environments
+            code: |
+              make all
+
