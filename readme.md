@@ -22,7 +22,7 @@ device-hub is configured via the device-hub-cli.
 
 device-hub stores its running configuration in a local boltdb database.
 
-device-hub can run in insecure mode or using mutual tls authentication.
+device-hub can run in insecure mode or using TLS in a mutual authentication model. See [security.md]( docs/security.md ) for details
 
 Supported message formats
 
