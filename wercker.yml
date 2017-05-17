@@ -10,10 +10,6 @@ build:
     steps:
         - setup-go-workspace
         - script:
-            name: env
-            code: |
-                env && docker ps
-        - script:
             name: run tests
             code: |
               make test_integration
