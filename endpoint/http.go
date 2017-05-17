@@ -36,12 +36,16 @@ func (h httpout) Write(message hub.Message) error {
 		return err
 	}
 
-	_, err = h.client.Post(h.url, "application/json", bytes.NewBuffer(j))
-	fmt.Println("posted")
+	resp, err := h.client.Post(h.url, "application/json", bytes.NewBuffer(j))
+
 	if err != nil {
 		return err
 	}
 
-	return nil
+	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
+		return nil
+	}
+
+	return fmt.Errorf("unexpected response %s", resp.StatusCode)
 
 }
