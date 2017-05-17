@@ -188,7 +188,11 @@ func hash(data interface{}) ([]byte, error) {
 	}
 
 	checksum := crc32.ChecksumIEEE(j)
-	h := hashids.New()
+	h, err := hashids.New()
+
+	if err != nil {
+		return []byte{}, err
+	}
 
 	uid, err := h.Encode([]int{int(checksum)})
 
