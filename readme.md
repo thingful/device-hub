@@ -44,6 +44,7 @@ Supported endpoints
 Transport               | Notes
 ------------------------|----------------------------------------------------------------
 `STDOUT`                |
+`HTTP`                  |
 
 Example configuration files are in ./test-configurations/
 
