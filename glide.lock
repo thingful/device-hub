@@ -1,10 +1,12 @@
 hash: 41413bf9dbab29817253dcad6608086361e41d9a982a08c8e06404f838dc8d1e
-updated: 2017-04-13T13:31:54.146738359+01:00
+updated: 2017-05-17T10:56:14.102023385+01:00
 imports:
 - name: cloud.google.com/go
   version: ed63fb27efcf32e25fe7837e4662457d3da4c4f2
   subpackages:
   - compute/metadata
+- name: github.com/boltdb/bolt
+  version: e9cf4fae01b5a8ff89d0ec6b32f0d9c9f79aefdd
 - name: github.com/eclipse/paho.mqtt.golang
   version: 69afaac643519c4a3d3e7877e3b8ad5b48b15568
   subpackages:
@@ -18,6 +20,7 @@ imports:
   subpackages:
   - proto
   - protoc-gen-go/descriptor
+  - ptypes/any
 - name: github.com/inconshreveable/mousetrap
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/kelseyhightower/envconfig
@@ -31,6 +34,8 @@ imports:
   - parser
   - registry
   - token
+- name: github.com/speps/go-hashids
+  version: 2aa1a76a4e7c76dbe7d39f40661ab0261d70153a
 - name: github.com/spf13/cast
   version: acbeb36b902d72a7a4c18e8f3241075e7ab763e4
 - name: github.com/spf13/cobra
@@ -56,6 +61,10 @@ imports:
   - internal
   - jws
   - jwt
+- name: golang.org/x/sys
+  version: 98b5b1e7e80eb60271c8dc4eba6521ec2c3e811e
+  subpackages:
+  - unix
 - name: golang.org/x/text
   version: f4b4367115ec2de254587813edaa901bc1c723a8
   subpackages:
@@ -75,12 +84,17 @@ imports:
   - internal/remote_api
   - internal/urlfetch
   - urlfetch
+- name: google.golang.org/genproto
+  version: 411e09b969b1170a9f0c467558eb4c4c110d9c77
+  subpackages:
+  - googleapis/rpc/status
 - name: google.golang.org/grpc
-  version: 8050b9cbc271307e5a716a9d782803d09b0d6f2d
+  version: d2e1b51f33ff8c5e4a15560ff049d200e83726c5
   subpackages:
   - codes
   - credentials
   - credentials/oauth
+  - grpclb/grpc_lb_v1
   - grpclog
   - internal
   - keepalive
@@ -90,6 +104,7 @@ imports:
   - reflection
   - reflection/grpc_reflection_v1alpha
   - stats
+  - status
   - tap
   - transport
 - name: gopkg.in/sourcemap.v1
