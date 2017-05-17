@@ -1,10 +1,10 @@
 box: golang:1.8
 
 services:
-        - name: mqtt
-          id: erlio/docker-vernemq:0.15.3
-          env:
-             DOCKER_VERNEMQ_ALLOW_ANONYMOUS=on
+    - name: mqtt
+      id: erlio/docker-vernemq:0.15.3
+      env:
+         DOCKER_VERNEMQ_ALLOW_ANONYMOUS=on
 
 build:
     steps:
