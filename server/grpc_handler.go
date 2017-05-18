@@ -14,6 +14,7 @@ type handler struct {
 	manager *manager
 }
 
+// Create inserts or overwrites listener, endpoint and profile entities
 func (s *handler) Create(ctx context.Context, request *proto.CreateRequest) (*proto.CreateReply, error) {
 
 	entity := proto.Entity{
@@ -37,9 +38,10 @@ func (s *handler) Create(ctx context.Context, request *proto.CreateRequest) (*pr
 	}, nil
 }
 
+// Delete removes listener, endpoint and profile entities
 func (s *handler) Delete(ctx context.Context, request *proto.DeleteRequest) (*proto.DeleteReply, error) {
 
-	//first check if the item is being used in
+	// first check if the item is being used in
 	// any running pipes by consulting the manager
 	// TODO : consider moving this into the manager
 	running := true
@@ -94,6 +96,7 @@ func (s *handler) Delete(ctx context.Context, request *proto.DeleteRequest) (*pr
 	return &proto.DeleteReply{Ok: true}, nil
 }
 
+// Get is a generic method to list listener, endpoint and profile entities
 func (s *handler) Get(ctx context.Context, request *proto.GetRequest) (*proto.GetReply, error) {
 
 	if strings.ToLower(request.Filter) == "all" {
@@ -112,9 +115,14 @@ func (s *handler) Get(ctx context.Context, request *proto.GetRequest) (*proto.Ge
 	return &proto.GetReply{Ok: true, Entities: all}, nil
 }
 
+// Start will start a 'pipe'
 func (s *handler) Start(ctx context.Context, request *proto.StartRequest) (*proto.StartReply, error) {
 
-	err := s.manager.StartPipe(request.Uri, request.Listener, request.Profile, request.Endpoints)
+	err := s.manager.StartPipe(request.Uri,
+		request.Listener,
+		request.Profile,
+		request.Endpoints,
+		request.Tags)
 
 	if err != nil {
 		return &proto.StartReply{
@@ -126,6 +134,7 @@ func (s *handler) Start(ctx context.Context, request *proto.StartRequest) (*prot
 	return &proto.StartReply{Ok: true}, nil
 }
 
+// Stop will stop a 'pipe'
 func (s *handler) Stop(ctx context.Context, request *proto.StopRequest) (*proto.StopReply, error) {
 
 	if request.Uri == "" {
@@ -149,6 +158,7 @@ func (s *handler) Stop(ctx context.Context, request *proto.StopRequest) (*proto.
 	return &proto.StopReply{Ok: true}, nil
 }
 
+// List returns all running 'pipes'
 func (s *handler) List(ctx context.Context, request *proto.ListRequest) (*proto.ListReply, error) {
 
 	pipes := s.manager.List()

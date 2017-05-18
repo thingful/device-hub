@@ -11,13 +11,17 @@ type pipeBucket struct {
 	bucket
 }
 
+// Pipe is the persisted representation of a connection
+// between a listener, profile and endpoints
 type Pipe struct {
 	Listener  *proto.Entity
 	Endpoints []*proto.Entity
 	Profile   Profile
 	Uri       string
+	Tags      map[string]string
 }
 
+// Profile is the persisted representation of a device-profile
 type Profile struct {
 	Uid         string
 	Name        string

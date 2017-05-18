@@ -116,6 +116,16 @@ Create some 'pipes' that listen via http on uri /a and /b and output to std outp
 ./device-hub-cli-linux-amd64 start -e={stdout endpoint uid} -l={http listenener uid} -u=/b thingful/device-2
 ```
 
+It is possible to 'tag' messages with some user defined information when starting the 'pipe'
+
+```
+./device-hub-cli-linux-amd64 start -e={stdout endpoint uid} -l={http listenener uid} -u=/c -t=foo:bar thingful/device-3
+
+```
+
+In the above example any messages received on '/c' will be tagged with the key value pair "foo" and "bar"
+
+
 Send some messages 
 
 ```
