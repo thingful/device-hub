@@ -102,7 +102,7 @@ func (m *manager) Start() error {
 
 			pp := m.pipes[n]
 
-			go m.startOne(ctx, pp, listener, endpoints, channel)
+			go m.startOne(ctx, pp, listener, endpoints, channel, p.Tags)
 			pp.cancel = cancel
 			pp.State = proto.Pipe_RUNNING
 			pp.Started = time.Now().UTC()
@@ -111,7 +111,12 @@ func (m *manager) Start() error {
 	return nil
 }
 
-func (m *manager) startOne(ctx context.Context, p *pipe, listener hub.Listener, endpoints []hub.Endpoint, channel hub.Channel) {
+func (m *manager) startOne(ctx context.Context,
+	p *pipe,
+	listener hub.Listener,
+	endpoints []hub.Endpoint,
+	channel hub.Channel,
+	tags map[string]string) {
 
 	scripter := engine.New()
 
@@ -154,6 +159,7 @@ func (m *manager) startOne(ctx context.Context, p *pipe, listener hub.Listener, 
 			output.Metadata[hub.PROFILE_NAME_KEY] = p.Profile.Name
 			output.Metadata[hub.PROFILE_VERSION_KEY] = p.Profile.Version
 			output.Metadata[hub.RUNTIME_VERSION_KEY] = hub.SourceVersion
+			output.Tags = tags
 
 			output.Schema = p.Profile.Schema
 
@@ -229,7 +235,7 @@ func (m *manager) DeletePipe(f pipePredicate) error {
 	return nil
 }
 
-func (m *manager) StartPipe(uri, listenerUID, profileUID string, endpointUIDs []string) error {
+func (m *manager) StartPipe(uri, listenerUID, profileUID string, endpointUIDs []string, tags map[string]string) error {
 
 	listener, err := m.Repository.Listeners.One(listenerUID)
 
@@ -269,6 +275,7 @@ func (m *manager) StartPipe(uri, listenerUID, profileUID string, endpointUIDs []
 		Listener:  listener,
 		Endpoints: endpoints,
 		Profile:   *profile,
+		Tags:      tags,
 	}
 
 	runtimepipe := &pipe{

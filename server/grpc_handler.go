@@ -118,7 +118,11 @@ func (s *handler) Get(ctx context.Context, request *proto.GetRequest) (*proto.Ge
 // Start will start a 'pipe'
 func (s *handler) Start(ctx context.Context, request *proto.StartRequest) (*proto.StartReply, error) {
 
-	err := s.manager.StartPipe(request.Uri, request.Listener, request.Profile, request.Endpoints)
+	err := s.manager.StartPipe(request.Uri,
+		request.Listener,
+		request.Profile,
+		request.Endpoints,
+		request.Tags)
 
 	if err != nil {
 		return &proto.StartReply{

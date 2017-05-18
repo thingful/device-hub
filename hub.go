@@ -21,6 +21,7 @@ type Message struct {
 	Output   interface{}            `json:"output"`
 	Schema   map[string]interface{} `json:"schema"`
 	Metadata map[string]interface{} `json:"metadata"`
+	Tags     map[string]string      `json:"tags,omitempty"`
 }
 
 // Endpoint takes a processed message and forwards to another service e.g. an HTTP endpoint, Kafka etc

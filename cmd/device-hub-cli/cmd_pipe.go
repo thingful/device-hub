@@ -5,6 +5,7 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/fiorix/protoc-gen-cobra/iocodec"
@@ -16,11 +17,13 @@ func startCommand() *cobra.Command {
 
 	request := proto.StartRequest{
 		Endpoints: []string{},
+		Tags:      map[string]string{},
 	}
 
-	startCommand := &cobra.Command{
-		Use: "start",
+	tags := []string{}
 
+	startCommand := &cobra.Command{
+		Use:   "start",
 		Short: "Start processing messages on a uri",
 		RunE: func(cmd *cobra.Command, args []string) error {
 
@@ -29,6 +32,17 @@ func startCommand() *cobra.Command {
 			}
 
 			request.Profile = args[0]
+
+			for _, m := range tags {
+
+				bits := strings.Split(m, ":")
+
+				if len(bits) != 2 {
+					return fmt.Errorf("metadata not colon (:) separated : %s", m)
+				}
+
+				request.Tags[bits[0]] = bits[1]
+			}
 
 			err := roundTrip(request, func(cli proto.HubClient, in iocodec.Decoder, out iocodec.Encoder) error {
 
@@ -48,6 +62,7 @@ func startCommand() *cobra.Command {
 	startCommand.Flags().StringVarP(&request.Listener, "listener", "l", request.Listener, "listener to use")
 	startCommand.Flags().StringVarP(&request.Uri, "uri", "u", request.Uri, "uri to listen on")
 	startCommand.Flags().StringSliceVarP(&request.Endpoints, "endpoint", "e", request.Endpoints, "endpoint to use")
+	startCommand.Flags().StringSliceVarP(&tags, "tags", "t", tags, "colon separated (k:v) runtime tags to attach to requests")
 
 	return startCommand
 }
