@@ -1,0 +1,16 @@
+language: go
+
+go:
+    - 1.8
+
+sudo: required
+services:
+  - docker
+
+env:
+  CI : true
+
+script:
+    make docker_up
+    make test_integration
+    make all
