@@ -110,6 +110,12 @@ message Pipe {
 }
 
 message Statistics {
+    Counters processed = 1;
+    Counters received = 2;
+    map<string, Counters> sent = 3;
+}
+
+message Counters {
     uint64 total = 1;
     uint64 errors = 2;
     uint64 ok = 3;
