@@ -19,7 +19,8 @@ func startCommand() *cobra.Command {
 	}
 
 	startCommand := &cobra.Command{
-		Use:   "start",
+		Use: "start",
+
 		Short: "Start processing messages on a uri",
 		RunE: func(cmd *cobra.Command, args []string) error {
 
