@@ -59,10 +59,10 @@ func startCommand() *cobra.Command {
 		},
 	}
 
-	startCommand.Flags().StringVarP(&request.Listener, "listener", "l", request.Listener, "listener to use")
+	startCommand.Flags().StringVarP(&request.Listener, "listener", "l", request.Listener, "listener uid to accept messages on")
 	startCommand.Flags().StringVarP(&request.Uri, "uri", "u", request.Uri, "uri to listen on")
-	startCommand.Flags().StringSliceVarP(&request.Endpoints, "endpoint", "e", request.Endpoints, "endpoint to use")
-	startCommand.Flags().StringSliceVarP(&tags, "tags", "t", tags, "colon separated (k:v) runtime tags to attach to requests")
+	startCommand.Flags().StringSliceVarP(&request.Endpoints, "endpoint", "e", request.Endpoints, "endpoint uid to push messages to, may be specified multiple times")
+	startCommand.Flags().StringSliceVarP(&tags, "tags", "t", tags, "colon separated (k:v) runtime tags to attach to requests, may be specified multiple times")
 
 	return startCommand
 }
