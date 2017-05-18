@@ -52,6 +52,13 @@ The entity connecting a listener to a device profile and then an endpoint is cal
 
 On startup device-hub will restart all existing pipes.
 
+Platforms
+---------
+
+device-hub supports all the platforms golang supports.
+
+The Makefile contains build targets for linux amd64, raspberrypi arm and darwin (mac).
+
 Build
 -----
 
@@ -62,6 +69,12 @@ Get the code -
 ```
 go get github.com/thingful/device-hub
 
+```
+
+The Makefile is documented
+
+```
+make help
 ```
 
 Run the tests
