@@ -11,6 +11,4 @@ env:
   CI : true
 
 script:
-    make docker_up
-    make test_integration
-    make all
+    make docker_up test_integration all
