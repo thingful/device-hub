@@ -53,6 +53,34 @@ func (c TypedMap) DString(key, defaultValue string) string {
 	return v
 }
 
+func (c TypedMap) Int(key string) (bool, int) {
+
+	v, f := c[key]
+
+	if !f {
+		return false, 0
+	}
+
+	i, err := cast.ToIntE(v)
+
+	if err != nil {
+		return false, 0
+	}
+
+	return true, i
+}
+
+func (c TypedMap) DInt(key string, defaultValue int) int {
+
+	found, v := c.Int(key)
+
+	if !found {
+		return defaultValue
+	}
+
+	return v
+}
+
 func (c TypedMap) Bool(key string) (bool, bool) {
 
 	v, f := c[key]

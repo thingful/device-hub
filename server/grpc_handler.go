@@ -16,7 +16,13 @@ type handler struct {
 
 func (s *handler) Create(ctx context.Context, request *proto.CreateRequest) (*proto.CreateReply, error) {
 
-	uid, err := s.manager.Repository.UpdateOrCreateEntity(proto.Entity{Type: request.Type, Kind: request.Kind, Configuration: request.Configuration})
+	entity := proto.Entity{
+		Type:          request.Type,
+		Kind:          request.Kind,
+		Configuration: request.Configuration,
+	}
+
+	uid, err := s.manager.Repository.UpdateOrCreateEntity(entity)
 
 	if err != nil {
 		return &proto.CreateReply{

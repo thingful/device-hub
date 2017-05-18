@@ -43,6 +43,7 @@ func startCommand() *cobra.Command {
 			return err
 		},
 	}
+
 	startCommand.Flags().StringVarP(&request.Listener, "listener", "l", request.Listener, "listener to use")
 	startCommand.Flags().StringVarP(&request.Uri, "uri", "u", request.Uri, "uri to listen on")
 	startCommand.Flags().StringSliceVarP(&request.Endpoints, "endpoint", "e", request.Endpoints, "endpoint to use")

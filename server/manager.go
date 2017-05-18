@@ -141,6 +141,9 @@ func (m *manager) startOne(ctx context.Context, p *pipe, listener hub.Listener, 
 
 			p.MessageStatistics.Total++
 
+			// TODO : fix error statisitics capturing
+			// maybe separate in to processed, sending, receiving
+
 			if err != nil {
 				p.MessageStatistics.Errors++
 				log.Println(err)
@@ -162,7 +165,6 @@ func (m *manager) startOne(ctx context.Context, p *pipe, listener hub.Listener, 
 				if err != nil {
 					log.Println(err)
 				}
-
 			}
 		}
 	}
