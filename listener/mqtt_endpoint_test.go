@@ -6,8 +6,6 @@ package listener
 import (
 	"testing"
 
-	// TODO : move import to upstream project
-
 	"github.com/stretchr/testify/assert"
 	testing_helper "github.com/thingful/device-hub/utils/testing"
 )

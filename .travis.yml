@@ -7,8 +7,5 @@ sudo: required
 services:
   - docker
 
-env:
-  CI : true
-
 script:
     make docker_up test_integration all

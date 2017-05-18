@@ -3,7 +3,6 @@ package testing
 
 import (
 	"fmt"
-	"os"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 
@@ -12,15 +11,6 @@ import (
 	// TODO : move import to upstream project
 	"github.com/mdevilliers/go-compose/compose"
 )
-
-var (
-	ciEnvVar = "CI"
-)
-
-// IsRunningInCI tests for a well know environmental variable and returns true if found, false if absent
-func IsRunningInCI() bool {
-	return os.Getenv(ciEnvVar) != ""
-}
 
 type testingEnvironment struct {
 	MQTTClient mqtt.Client
@@ -40,17 +30,7 @@ func Up() (*testingEnvironment, error) {
 
 	var c *compose.Compose
 
-	mqttAddress := fmt.Sprintf("tcp://%s:%d", "0.0.0.0", 1883)
-	client := mqtt_helper.DefaultMQTTClient(mqttAddress, "device-hub")
-
-	if IsRunningInCI() {
-
-		if token := client.Connect(); token.Wait() && token.Error() != nil {
-			return nil, token.Error()
-		}
-
-	} else {
-		composeYML := `version: '2'
+	composeYML := `version: '2'
 services:
   mqtt:
     image: erlio/docker-vernemq:0.15.3
@@ -59,19 +39,18 @@ services:
     environment:
       - DOCKER_VERNEMQ_ALLOW_ANONYMOUS=on`
 
-		c = compose.MustStartParallel(composeYML, false)
+	c = compose.MustStartParallel(composeYML, false)
 
-		mqttAddress = fmt.Sprintf("tcp://%s:%d", compose.MustInferDockerHost(), c.Containers["mqtt"].MustGetFirstPublicPort(1883, "tcp"))
-		client = mqtt_helper.DefaultMQTTClient(mqttAddress, "device-hub")
+	mqttAddress := fmt.Sprintf("tcp://%s:%d", compose.MustInferDockerHost(), c.Containers["mqtt"].MustGetFirstPublicPort(1883, "tcp"))
+	client := mqtt_helper.DefaultMQTTClient(mqttAddress, "device-hub")
 
-		compose.MustConnectWithDefaults(func() error {
-			if token := client.Connect(); token.Wait() && token.Error() != nil {
-				return token.Error()
-			}
+	compose.MustConnectWithDefaults(func() error {
+		if token := client.Connect(); token.Wait() && token.Error() != nil {
+			return token.Error()
+		}
 
-			return nil
-		})
-	}
+		return nil
+	})
 
 	return &testingEnvironment{
 		compose:    c,
