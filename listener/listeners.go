@@ -7,6 +7,7 @@ import (
 
 	hub "github.com/thingful/device-hub"
 	"github.com/thingful/device-hub/utils"
+	"github.com/thingful/device-hub/utils/mqtt"
 )
 
 func init() {
@@ -17,8 +18,7 @@ func init() {
 
 		brokerAddress := config.MString("mqtt-broker-address")
 
-		options := defaultMQTTOptions(brokerAddress, clientName)
-		client := defaultMQTTClient(options)
+		client := mqtt.DefaultMQTTClient(brokerAddress, clientName)
 
 		// TODO : set sensible wait time
 		if token := client.Connect(); token.Wait() && token.Error() != nil {

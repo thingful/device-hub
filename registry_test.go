@@ -28,19 +28,20 @@ func TestBuildersAreCached(t *testing.T) {
 
 	})
 
-	one, err := EndpointByName("foo", "simple", map[string]interface{}{})
-
+	one, err := EndpointByName("foo", "simple", utils.TypedMap{})
 	assert.Nil(t, err)
 
-	two, err := EndpointByName("foo", "simple", map[string]interface{}{})
-
+	two, err := EndpointByName("foo", "simple", utils.TypedMap{})
 	assert.Nil(t, err)
+
 	assert.Equal(t, one, two)
+	assert.Equal(t, one.(mockEndpoint).count, two.(mockEndpoint).count)
 
-	three, err := EndpointByName("bar", "simple", map[string]interface{}{})
+	three, err := EndpointByName("bar", "simple", utils.TypedMap{})
 
 	assert.Nil(t, err)
 	assert.NotEqual(t, one, three)
+	assert.NotEqual(t, one.(mockEndpoint).count, three.(mockEndpoint).count)
 
 }
 
@@ -52,7 +53,7 @@ func TestErrorThrownForIncorrectType(t *testing.T) {
 
 	})
 
-	_, err := ListenerByName("foo", "endpoint", map[string]interface{}{})
+	_, err := ListenerByName("foo", "endpoint", utils.TypedMap{})
 
 	assert.NotNil(t, err)
 }

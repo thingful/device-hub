@@ -5,28 +5,10 @@ package listener
 import (
 	"errors"
 	"strings"
-	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	hub "github.com/thingful/device-hub"
 )
-
-func defaultMQTTOptions(brokerAddress, clientID string) *mqtt.ClientOptions {
-
-	opts := mqtt.NewClientOptions()
-	opts.AddBroker(brokerAddress)
-	opts.SetClientID(clientID)
-
-	opts.SetKeepAlive(2 * time.Second)
-	opts.SetPingTimeout(10 * time.Second)
-	opts.SetAutoReconnect(true)
-
-	return opts
-}
-
-func defaultMQTTClient(options *mqtt.ClientOptions) mqtt.Client {
-	return mqtt.NewClient(options)
-}
 
 func newMQTTListener(client mqtt.Client) (*mqttlistener, error) {
 
