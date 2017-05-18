@@ -1,6 +1,8 @@
 device-hub
 -----------
 
+[![Build Status](https://travis-ci.org/thingful/device-hub.svg?branch=master)](https://travis-ci.org/thingful/device-hub)
+
 Transforms output from one or many IOT devices via one or many protocols into a common semantically understood format.
 The logic to transform the data is via a "device profile". Device profiles are written in java-script.
 
