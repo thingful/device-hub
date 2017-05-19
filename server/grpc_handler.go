@@ -7,11 +7,12 @@ import (
 	"strings"
 
 	"github.com/thingful/device-hub/proto"
+	"github.com/thingful/device-hub/runtime"
 	context "golang.org/x/net/context"
 )
 
 type handler struct {
-	manager *manager
+	manager *runtime.Manager
 }
 
 // Create inserts or overwrites listener, endpoint and profile entities
@@ -49,12 +50,12 @@ func (s *handler) Delete(ctx context.Context, request *proto.DeleteRequest) (*pr
 	switch strings.ToLower(request.Type) {
 	case "listener":
 
-		running = s.manager.Any(func(p *pipe) bool {
+		running = s.manager.Any(func(p *runtime.Pipe) bool {
 			return p.Listener.Uid == request.Uid
 		})
 
 	case "endpoint":
-		running = s.manager.Any(func(p *pipe) bool {
+		running = s.manager.Any(func(p *runtime.Pipe) bool {
 			for _, e := range p.Endpoints {
 				if e.Uid == request.Uid {
 					return true
@@ -64,7 +65,7 @@ func (s *handler) Delete(ctx context.Context, request *proto.DeleteRequest) (*pr
 		})
 	case "profile":
 
-		running = s.manager.Any(func(p *pipe) bool {
+		running = s.manager.Any(func(p *runtime.Pipe) bool {
 			return p.Profile.Uid == request.Uid
 		})
 
@@ -144,7 +145,7 @@ func (s *handler) Stop(ctx context.Context, request *proto.StopRequest) (*proto.
 		}, nil
 	}
 
-	err := s.manager.DeletePipe(func(p *pipe) bool {
+	err := s.manager.DeletePipe(func(p *runtime.Pipe) bool {
 		return p.Uri == request.Uri
 	})
 
@@ -173,14 +174,14 @@ func (s *handler) List(ctx context.Context, request *proto.ListRequest) (*proto.
 			endpoints = append(endpoints, e.Uid)
 		}
 
-		ffs := pipe.MessageStatistics
+		ffs := pipe.Statistics
 
 		ppipe := &proto.Pipe{
 			Uri:       pipe.Uri,
 			Profile:   pipe.Profile.Uid,
 			Listener:  pipe.Listener.Uid,
 			Endpoints: endpoints,
-			Stats:     &ffs,
+			Stats:     ffs,
 			State:     pipe.State,
 		}
 
