@@ -37,7 +37,7 @@ type Pipe struct {
 	Started time.Time
 
 	// keep runtime statistics
-	// NOTE : statistics are not persisted or accumlative
+	// NOTE : statistics are not persisted or cumulative across shutdowns
 	Statistics *proto.Statistics
 
 	// allow the pipe to cancelled and give it an opportunity

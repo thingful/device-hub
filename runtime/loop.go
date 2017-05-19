@@ -11,7 +11,7 @@ import (
 	"github.com/thingful/device-hub/proto"
 )
 
-// loop orchestrates the channel loop
+// loop orchestrates the managed runtime loop
 func loop(ctx context.Context,
 	p *Pipe,
 	listener hub.Listener,
