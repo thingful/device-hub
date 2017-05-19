@@ -1,12 +1,11 @@
 // Copyright © 2017 thingful
 
-package server
+package runtime
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"sync"
 	"time"
 
@@ -16,30 +15,54 @@ import (
 	"github.com/thingful/device-hub/store"
 )
 
-type manager struct {
+// Manager holds the running instances of all the pipes
+type Manager struct {
 	Repository *store.Repository
 	ctx        context.Context
-	pipes      map[string]*pipe
+	pipes      map[string]*Pipe
 	sync.RWMutex
 }
 
-// pipe is an instance of a pipe containing runtime state information e.g. stats, state
-type pipe struct {
+// pipe holds runtime state information including various counters
+// including messages received, message processed and messages sent
+// Each counter contains the total, errors and ok
+type Pipe struct {
+	// wraps a store.Pipe
 	store.Pipe
 
-	State   proto.Pipe_State
+	// current state - see proto/devicehub.proto for details
+	State proto.Pipe_State
+
+	// capture the time started
 	Started time.Time
 
-	MessageStatistics proto.Statistics
+	// keep runtime statistics
+	// NOTE : statistics are not persisted or cumulative across shutdowns
+	Statistics *proto.Statistics
 
+	// allow the pipe to cancelled and give it an opportunity
+	// to shut down nicely
 	cancel context.CancelFunc
-
-	// TODO : add last error, debug etc
 }
 
-type pipePredicate func(*pipe) bool
+// newRuntimePipe returns an initialised runtime.Pipe
+func newRuntimePipe(p store.Pipe) *Pipe {
+	return &Pipe{
+		Pipe:  p,
+		State: proto.Pipe_UNKNOWN,
+		Statistics: &proto.Statistics{
+			Processed: &proto.Counters{},
+			Received:  &proto.Counters{},
+			Sent:      map[string]*proto.Counters{},
+		},
+	}
+}
 
-func NewEndpointManager(ctx context.Context, repository *store.Repository) (*manager, error) {
+// PipePredicate is an internal function to facilitate predicating the internal collection
+type PipePredicate func(*Pipe) bool
+
+// NewEndpointManager returns a manager instance or an error
+func NewEndpointManager(ctx context.Context, repository *store.Repository) (*Manager, error) {
 
 	// load any existing pipes from the database to
 	// serve as the initial running state
@@ -49,13 +72,12 @@ func NewEndpointManager(ctx context.Context, repository *store.Repository) (*man
 		return nil, err
 	}
 
-	pipes := map[string]*pipe{}
+	pipes := map[string]*Pipe{}
 
 	for _, p := range state {
-		pipes[p.Uri] = &pipe{Pipe: p}
+		pipes[p.Uri] = newRuntimePipe(p)
 	}
-
-	return &manager{
+	return &Manager{
 		Repository: repository,
 		pipes:      pipes,
 		ctx:        ctx,
@@ -63,7 +85,8 @@ func NewEndpointManager(ctx context.Context, repository *store.Repository) (*man
 }
 
 // Start either ensures everything is running or errors
-func (m *manager) Start() error {
+// TODO: allow an allowance for pipe start up failure and mark as unstartable
+func (m *Manager) Start() error {
 
 	m.Lock()
 	defer m.Unlock()
@@ -78,7 +101,7 @@ func (m *manager) Start() error {
 				return err
 			}
 
-			endpoints := []hub.Endpoint{}
+			endpoints := map[string]hub.Endpoint{}
 
 			for _, e := range p.Endpoints {
 
@@ -88,7 +111,7 @@ func (m *manager) Start() error {
 					return err
 				}
 
-				endpoints = append(endpoints, newendpoint)
+				endpoints[e.Uid] = newendpoint
 
 			}
 
@@ -102,7 +125,7 @@ func (m *manager) Start() error {
 
 			pp := m.pipes[n]
 
-			go m.startOne(ctx, pp, listener, endpoints, channel, p.Tags)
+			go loop(ctx, pp, listener, endpoints, channel, p.Tags)
 			pp.cancel = cancel
 			pp.State = proto.Pipe_RUNNING
 			pp.Started = time.Now().UTC()
@@ -111,77 +134,13 @@ func (m *manager) Start() error {
 	return nil
 }
 
-func (m *manager) startOne(ctx context.Context,
-	p *pipe,
-	listener hub.Listener,
-	endpoints []hub.Endpoint,
-	channel hub.Channel,
-	tags map[string]string) {
-
-	scripter := engine.New()
-
-	for {
-
-		select {
-
-		case <-ctx.Done():
-			p.State = proto.Pipe_STOPPED
-			err := channel.Close()
-
-			if err != nil {
-				log.Println(err)
-			}
-
-			return
-
-		case err := <-channel.Errors():
-
-			p.MessageStatistics.Total++
-			p.MessageStatistics.Errors++
-			log.Println(err)
-
-		case input := <-channel.Out():
-
-			output, err := scripter.Execute(p.Profile.Script, input)
-
-			p.MessageStatistics.Total++
-
-			// TODO : fix error statisitics capturing
-			// maybe separate in to processed, sending, receiving
-
-			if err != nil {
-				p.MessageStatistics.Errors++
-				log.Println(err)
-			} else {
-				p.MessageStatistics.Ok++
-			}
-
-			output.Metadata[hub.PROFILE_NAME_KEY] = p.Profile.Name
-			output.Metadata[hub.PROFILE_VERSION_KEY] = p.Profile.Version
-			output.Metadata[hub.RUNTIME_VERSION_KEY] = hub.SourceVersion
-			output.Tags = tags
-
-			output.Schema = p.Profile.Schema
-
-			for e := range endpoints {
-
-				// TODO : do something more useful with this error
-				err = endpoints[e].Write(output)
-
-				if err != nil {
-					log.Println(err)
-				}
-			}
-		}
-	}
-}
-
-func (m *manager) List() []pipe {
+// List returns the set of known pipes
+func (m *Manager) List() []Pipe {
 
 	m.RLock()
 	defer m.RUnlock()
 
-	r := []pipe{}
+	r := []Pipe{}
 
 	for _, p := range m.pipes {
 		r = append(r, *p)
@@ -190,7 +149,9 @@ func (m *manager) List() []pipe {
 	return r
 }
 
-func (m *manager) Any(f pipePredicate) bool {
+// Any facilitates matching on a predicate
+// returns on first match or iterates to completion
+func (m *Manager) Any(f PipePredicate) bool {
 
 	m.RLock()
 	defer m.RUnlock()
@@ -203,7 +164,8 @@ func (m *manager) Any(f pipePredicate) bool {
 	return false
 }
 
-func (m *manager) DeletePipe(f pipePredicate) error {
+// DeletePipe cancels and removes the first match
+func (m *Manager) DeletePipe(f PipePredicate) error {
 
 	m.Lock()
 	defer m.Unlock()
@@ -235,7 +197,8 @@ func (m *manager) DeletePipe(f pipePredicate) error {
 	return nil
 }
 
-func (m *manager) StartPipe(uri, listenerUID, profileUID string, endpointUIDs []string, tags map[string]string) error {
+// StartPipe ensures all components can be found and the runtime information persisted before starting an instance
+func (m *Manager) StartPipe(uri, listenerUID, profileUID string, endpointUIDs []string, tags map[string]string) error {
 
 	listener, err := m.Repository.Listeners.One(listenerUID)
 
@@ -278,10 +241,7 @@ func (m *manager) StartPipe(uri, listenerUID, profileUID string, endpointUIDs []
 		Tags:      tags,
 	}
 
-	runtimepipe := &pipe{
-		Pipe:  pipeconf,
-		State: proto.Pipe_UNKNOWN,
-	}
+	runtimepipe := newRuntimePipe(pipeconf)
 
 	err = m.Repository.Pipes.CreateOrUpdate(pipeconf)
 
@@ -306,8 +266,8 @@ func (m *manager) StartPipe(uri, listenerUID, profileUID string, endpointUIDs []
 }
 
 func profileFromEntity(entity *proto.Entity) (*store.Profile, error) {
-	// TODO : give a monkeys about validation
 
+	// TODO : give a monkeys about validation
 	schema := map[string]interface{}{}
 
 	err := json.Unmarshal([]byte(entity.Configuration["schema"]), &schema)
@@ -331,7 +291,7 @@ func profileFromEntity(entity *proto.Entity) (*store.Profile, error) {
 	}, nil
 }
 
-func (m *manager) addPipe(pipe *pipe) error {
+func (m *Manager) addPipe(pipe *Pipe) error {
 	m.Lock()
 
 	_, alreadyExists := m.pipes[pipe.Uri]

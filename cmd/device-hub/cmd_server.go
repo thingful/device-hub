@@ -8,6 +8,7 @@ import (
 
 	"github.com/boltdb/bolt"
 	"github.com/spf13/cobra"
+	"github.com/thingful/device-hub/runtime"
 	"github.com/thingful/device-hub/server"
 	"github.com/thingful/device-hub/store"
 )
@@ -31,7 +32,7 @@ var serverCommand = &cobra.Command{
 		s := store.NewStore(db)
 		repository := store.NewRepository(s)
 
-		manager, err := server.NewEndpointManager(ctx, repository)
+		manager, err := runtime.NewEndpointManager(ctx, repository)
 
 		if err != nil {
 			return err

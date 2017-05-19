@@ -12,6 +12,7 @@ import (
 	"net"
 
 	"github.com/thingful/device-hub/proto"
+	"github.com/thingful/device-hub/runtime"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -26,7 +27,7 @@ type Options struct {
 	TrustedCAFilePath string
 }
 
-func Serve(options Options, manager *manager) error {
+func Serve(options Options, manager *runtime.Manager) error {
 
 	var grpcServer *grpc.Server
 
