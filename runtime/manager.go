@@ -6,7 +6,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"sync"
 	"time"
 
@@ -46,6 +45,19 @@ type Pipe struct {
 	cancel context.CancelFunc
 }
 
+// newRuntimePipe returns an initialised runtime.Pipe
+func newRuntimePipe(p store.Pipe) *Pipe {
+	return &Pipe{
+		Pipe:  p,
+		State: proto.Pipe_UNKNOWN,
+		Statistics: &proto.Statistics{
+			Processed: &proto.Counters{},
+			Received:  &proto.Counters{},
+			Sent:      map[string]*proto.Counters{},
+		},
+	}
+}
+
 // PipePredicate is an internal function to facilitate predicating the internal collection
 type PipePredicate func(*Pipe) bool
 
@@ -63,9 +75,8 @@ func NewEndpointManager(ctx context.Context, repository *store.Repository) (*Man
 	pipes := map[string]*Pipe{}
 
 	for _, p := range state {
-		pipes[p.Uri] = &Pipe{Pipe: p}
+		pipes[p.Uri] = newRuntimePipe(p)
 	}
-
 	return &Manager{
 		Repository: repository,
 		pipes:      pipes,
@@ -114,89 +125,13 @@ func (m *Manager) Start() error {
 
 			pp := m.pipes[n]
 
-			go m.startOne(ctx, pp, listener, endpoints, channel, p.Tags)
+			go loop(ctx, pp, listener, endpoints, channel, p.Tags)
 			pp.cancel = cancel
 			pp.State = proto.Pipe_RUNNING
 			pp.Started = time.Now().UTC()
 		}
 	}
 	return nil
-}
-
-// startOne orchestrates the channel loop
-func (m *Manager) startOne(ctx context.Context,
-	p *Pipe,
-	listener hub.Listener,
-	endpoints map[string]hub.Endpoint,
-	channel hub.Channel,
-	tags map[string]string) {
-
-	scripter := engine.New()
-
-	// ensure the map for the Statistics.Sent is set up correctly
-	for k, _ := range endpoints {
-		p.Statistics.Sent[k] = &proto.Counters{}
-	}
-	for {
-
-		select {
-
-		case <-ctx.Done():
-			p.State = proto.Pipe_STOPPED
-			err := channel.Close()
-
-			if err != nil {
-				log.Println(err)
-			}
-
-			return
-
-		case err := <-channel.Errors():
-
-			p.Statistics.Received.Total++
-			p.Statistics.Received.Errors++
-			log.Println(err)
-
-		case input := <-channel.Out():
-
-			p.Statistics.Received.Total++
-			p.Statistics.Received.Ok++
-
-			output, err := scripter.Execute(p.Profile.Script, input)
-
-			p.Statistics.Processed.Total++
-
-			if err != nil {
-				p.Statistics.Processed.Errors++
-				log.Println(err)
-			} else {
-				p.Statistics.Processed.Ok++
-			}
-
-			output.Metadata[hub.PROFILE_NAME_KEY] = p.Profile.Name
-			output.Metadata[hub.PROFILE_VERSION_KEY] = p.Profile.Version
-			output.Metadata[hub.RUNTIME_VERSION_KEY] = hub.SourceVersion
-			output.Tags = tags
-
-			output.Schema = p.Profile.Schema
-
-			for k, _ := range endpoints {
-
-				p.Statistics.Sent[k].Total++
-
-				// TODO : do something more useful with this error
-				err = endpoints[k].Write(output)
-
-				if err != nil {
-					p.Statistics.Sent[k].Errors++
-
-					log.Println(err)
-				} else {
-					p.Statistics.Sent[k].Ok++
-				}
-			}
-		}
-	}
 }
 
 // List returns the set of known pipes
@@ -306,15 +241,7 @@ func (m *Manager) StartPipe(uri, listenerUID, profileUID string, endpointUIDs []
 		Tags:      tags,
 	}
 
-	runtimepipe := &Pipe{
-		Pipe:  pipeconf,
-		State: proto.Pipe_UNKNOWN,
-		Statistics: &proto.Statistics{
-			Processed: &proto.Counters{},
-			Received:  &proto.Counters{},
-			Sent:      map[string]*proto.Counters{},
-		},
-	}
+	runtimepipe := newRuntimePipe(pipeconf)
 
 	err = m.Repository.Pipes.CreateOrUpdate(pipeconf)
 
