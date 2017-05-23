@@ -4,12 +4,12 @@ package runtime
 
 import (
 	"context"
-	"log"
 	"time"
 
 	hub "github.com/thingful/device-hub"
 	"github.com/thingful/device-hub/engine"
 	"github.com/thingful/device-hub/proto"
+	"github.com/thingful/device-hub/utils"
 )
 
 // loop orchestrates the managed runtime loop
@@ -18,9 +18,10 @@ func loop(ctx context.Context,
 	listener hub.Listener,
 	endpoints map[string]hub.Endpoint,
 	channel hub.Channel,
+	logger utils.Logger,
 	tags map[string]string) {
 
-	scripter := engine.New()
+	scripter := engine.New(logger)
 
 	// ensure the map for the Statistics.Sent is set up correctly
 	for k, _ := range endpoints {
@@ -34,7 +35,7 @@ func loop(ctx context.Context,
 			err := channel.Close()
 
 			if err != nil {
-				log.Println(err)
+				logger.Error(err)
 			}
 
 			return
@@ -43,7 +44,7 @@ func loop(ctx context.Context,
 
 			p.Statistics.Received.Total++
 			p.Statistics.Received.Errors++
-			log.Println(err)
+			logger.Error(err)
 
 		case input := <-channel.Out():
 
@@ -64,7 +65,7 @@ func loop(ctx context.Context,
 				output.Metadata[hub.ENGINE_OK_KEY] = false
 				output.Metadata[hub.ENGINE_ERROR_KEY] = err.Error()
 
-				log.Println(err)
+				logger.Error(err)
 			} else {
 
 				output.Metadata[hub.ENGINE_OK_KEY] = true
@@ -83,12 +84,11 @@ func loop(ctx context.Context,
 
 				p.Statistics.Sent[k].Total++
 
-				// TODO : do something more useful with this error
 				err = endpoints[k].Write(output)
 
 				if err != nil {
 					p.Statistics.Sent[k].Errors++
-					log.Println(err)
+					logger.Error(err)
 				} else {
 					p.Statistics.Sent[k].Ok++
 				}

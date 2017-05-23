@@ -1,5 +1,5 @@
 hash: 41413bf9dbab29817253dcad6608086361e41d9a982a08c8e06404f838dc8d1e
-updated: 2017-05-17T10:56:14.102023385+01:00
+updated: 2017-05-23T12:11:47.553930616+01:00
 imports:
 - name: cloud.google.com/go
   version: ed63fb27efcf32e25fe7837e4662457d3da4c4f2
@@ -25,6 +25,10 @@ imports:
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/kelseyhightower/envconfig
   version: 8bf4bbfc795e2c7c8a5ea47b707453ed019e2ad4
+- name: github.com/mdevilliers/go-compose
+  version: 24e783b9eebdcded8ac31bdab1de2d79d8788350
+  subpackages:
+  - compose
 - name: github.com/robertkrimen/otto
   version: 1861f2408b93febb6dca3e39483fa6fe63d6e70f
   subpackages:
@@ -34,6 +38,8 @@ imports:
   - parser
   - registry
   - token
+- name: github.com/sirupsen/logrus
+  version: 5e5dc898656f695e2a086b8e12559febbfc01562
 - name: github.com/speps/go-hashids
   version: 2aa1a76a4e7c76dbe7d39f40661ab0261d70153a
 - name: github.com/spf13/cast
@@ -62,7 +68,7 @@ imports:
   - jws
   - jwt
 - name: golang.org/x/sys
-  version: 98b5b1e7e80eb60271c8dc4eba6521ec2c3e811e
+  version: dbc2be9168a660ef302e04b6ff6406de6f967473
   subpackages:
   - unix
 - name: golang.org/x/text
@@ -85,7 +91,7 @@ imports:
   - internal/urlfetch
   - urlfetch
 - name: google.golang.org/genproto
-  version: 411e09b969b1170a9f0c467558eb4c4c110d9c77
+  version: d80a6e20e776b0b17a324d0ba1ab50a39c8e8944
   subpackages:
   - googleapis/rpc/status
 - name: google.golang.org/grpc
@@ -118,10 +124,6 @@ testImports:
   version: 6d212800a42e8ab5c146b8ace3490ee17e5225f9
   subpackages:
   - spew
-- name: github.com/mdevilliers/go-compose
-  version: 24e783b9eebdcded8ac31bdab1de2d79d8788350
-  subpackages:
-  - compose
 - name: github.com/pmezard/go-difflib
   version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
   subpackages:

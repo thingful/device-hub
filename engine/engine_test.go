@@ -9,6 +9,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	hub "github.com/thingful/device-hub"
+	"github.com/thingful/device-hub/utils"
 )
 
 func TestRawDecodeValid(t *testing.T) {
@@ -35,7 +36,7 @@ func TestRawDecodeValid(t *testing.T) {
 
 	input := hub.Message{Payload: buf.Bytes(), Metadata: map[string]interface{}{}}
 
-	e := New()
+	e := New(utils.NewNoOpLogger())
 	result, err := e.Execute(script, input)
 
 	assert.Nil(t, err)
@@ -65,7 +66,7 @@ func TestCSVDecodeValid(t *testing.T) {
 	csv := "column1, column2\none, two\nthree, four\n five,six"
 	input := hub.Message{Payload: []byte(csv), Metadata: map[string]interface{}{}}
 
-	e := New()
+	e := New(utils.NewNoOpLogger())
 	result, err := e.Execute(script, input)
 	assert.Nil(t, err)
 	resultAsMap := result.Output.(map[string]interface{})
@@ -91,7 +92,7 @@ func TestJSONDecodeValid(t *testing.T) {
 	json := "{ \"a\" : 1}"
 	input := hub.Message{Payload: []byte(json), Metadata: map[string]interface{}{}}
 
-	e := New()
+	e := New(utils.NewNoOpLogger())
 	result, err := e.Execute(script, input)
 
 	assert.Nil(t, err)

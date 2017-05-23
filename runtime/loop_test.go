@@ -12,6 +12,7 @@ import (
 	"github.com/thingful/device-hub/mocks"
 	"github.com/thingful/device-hub/proto"
 	"github.com/thingful/device-hub/store"
+	"github.com/thingful/device-hub/utils"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -40,7 +41,7 @@ func TestLoopCancelledAndPipeStoppedOnContextDone(t *testing.T) {
 
 	wg.Add(1)
 
-	go loop(ctx, pipe, nil, map[string]hub.Endpoint{}, mock, map[string]string{})
+	go loop(ctx, pipe, nil, map[string]hub.Endpoint{}, mock, utils.NewNoOpLogger(), map[string]string{})
 	closer()
 
 	wg.Wait()
@@ -65,7 +66,7 @@ func TestStatisticsOnChannelError(t *testing.T) {
 
 	pipe := newRuntimePipe(store.Pipe{})
 
-	go loop(ctx, pipe, nil, map[string]hub.Endpoint{}, mock, map[string]string{})
+	go loop(ctx, pipe, nil, map[string]hub.Endpoint{}, mock, utils.NewNoOpLogger(), map[string]string{})
 
 	errorChannel <- errors.New("boo!")
 
@@ -97,7 +98,7 @@ func TestStatisticsOnChannelOut(t *testing.T) {
 		},
 	}
 
-	go loop(ctx, pipe, nil, endpoints, mock, map[string]string{})
+	go loop(ctx, pipe, nil, endpoints, mock, utils.NewNoOpLogger(), map[string]string{})
 
 	message := hub.Message{
 		Payload:  []byte("hello"),

@@ -6,25 +6,35 @@ import (
 	"encoding/csv"
 	"errors"
 	"fmt"
-	"log"
 	"strings"
 	"time"
 
 	"github.com/robertkrimen/otto"
 
 	hub "github.com/thingful/device-hub"
+	"github.com/thingful/device-hub/utils"
 )
 
 var (
+	// ScriptTimedOutErr returned when the script takes longer then the MaxScriptDuration
 	ScriptTimedOutErr = errors.New("script timed out")
+
+	// MaxScriptDuration defines the longest a script can run for
+	MaxScriptDuration = time.Second * 1
 )
 
-func New() engine {
-	return engine{}
+// New returns a script runner
+func New(logger utils.Logger) engine {
+	return engine{
+		logger: logger,
+	}
 }
 
-type engine struct{}
+type engine struct {
+	logger utils.Logger
+}
 
+// Execute takes a script and a message - like a method and function arguments
 func (e engine) Execute(script Script, input hub.Message) (out hub.Message, err error) {
 
 	var output otto.Value
@@ -34,7 +44,7 @@ func (e engine) Execute(script Script, input hub.Message) (out hub.Message, err 
 			"__input": input.Payload,
 		}
 		main := fmt.Sprintf("%s (__input);", script.Main)
-		output, err = e.run(script.Contents, main, env, time.Second*1)
+		output, err = e.run(script.Contents, main, env, MaxScriptDuration)
 
 	}
 	if script.Input == CSV {
@@ -46,7 +56,7 @@ func (e engine) Execute(script Script, input hub.Message) (out hub.Message, err 
 		}
 
 		main := fmt.Sprintf("%s (__header, __lines);", script.Main)
-		output, err = e.run(script.Contents, main, env, time.Second*1)
+		output, err = e.run(script.Contents, main, env, MaxScriptDuration)
 
 	}
 
@@ -57,7 +67,7 @@ func (e engine) Execute(script Script, input hub.Message) (out hub.Message, err 
 		}
 
 		main := fmt.Sprintf("%s ( JSON.parse( __input ));", script.Main)
-		output, err = e.run(script.Contents, main, env, time.Second*1)
+		output, err = e.run(script.Contents, main, env, MaxScriptDuration)
 
 	}
 
@@ -78,7 +88,7 @@ func (e engine) Execute(script Script, input hub.Message) (out hub.Message, err 
 
 // run javascript engine in-process
 // TODO : think about tolerance to malicious input, fault tolerance
-func (engine) run(code, main string, env map[string]interface{}, timeout time.Duration) (val otto.Value, err error) {
+func (e engine) run(code, main string, env map[string]interface{}, timeout time.Duration) (val otto.Value, err error) {
 
 	vm := otto.New()
 
@@ -88,8 +98,7 @@ func (engine) run(code, main string, env map[string]interface{}, timeout time.Du
 	}
 
 	vm.Set("__log", func(call otto.FunctionCall) otto.Value {
-		// TODO : allow logger to be defined
-		log.Println(call.ArgumentList)
+		e.logger.Info(call.ArgumentList)
 		return otto.UndefinedValue()
 	})
 	vm.Run("console.log = __log")

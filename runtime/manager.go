@@ -13,6 +13,7 @@ import (
 	"github.com/thingful/device-hub/engine"
 	"github.com/thingful/device-hub/proto"
 	"github.com/thingful/device-hub/store"
+	"github.com/thingful/device-hub/utils"
 )
 
 // Manager holds the running instances of all the pipes
@@ -21,6 +22,7 @@ type Manager struct {
 	ctx        context.Context
 	pipes      map[string]*Pipe
 	sync.RWMutex
+	logger utils.Logger
 }
 
 // pipe holds runtime state information including various counters
@@ -62,7 +64,7 @@ func newRuntimePipe(p store.Pipe) *Pipe {
 type PipePredicate func(*Pipe) bool
 
 // NewEndpointManager returns a manager instance or an error
-func NewEndpointManager(ctx context.Context, repository *store.Repository) (*Manager, error) {
+func NewEndpointManager(ctx context.Context, repository *store.Repository, logger utils.Logger) (*Manager, error) {
 
 	// load any existing pipes from the database to
 	// serve as the initial running state
@@ -81,6 +83,7 @@ func NewEndpointManager(ctx context.Context, repository *store.Repository) (*Man
 		Repository: repository,
 		pipes:      pipes,
 		ctx:        ctx,
+		logger:     logger,
 	}, nil
 }
 
@@ -125,7 +128,7 @@ func (m *Manager) Start() error {
 
 			pp := m.pipes[n]
 
-			go loop(ctx, pp, listener, endpoints, channel, p.Tags)
+			go loop(ctx, pp, listener, endpoints, channel, m.logger, p.Tags)
 			pp.cancel = cancel
 			pp.State = proto.Pipe_RUNNING
 			pp.Started = time.Now().UTC()
