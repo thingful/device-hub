@@ -12,7 +12,7 @@ import (
 	"github.com/thingful/device-hub/runtime"
 	"github.com/thingful/device-hub/server"
 	"github.com/thingful/device-hub/store"
-	"github.com/thingful/pomelo/utils"
+	"github.com/thingful/device-hub/utils"
 )
 
 var serverCommand = &cobra.Command{
