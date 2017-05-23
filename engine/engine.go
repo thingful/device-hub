@@ -29,20 +29,6 @@ func (e engine) Execute(script Script, input hub.Message) (out hub.Message, err 
 
 	var output otto.Value
 
-	input.Metadata[hub.ENGINE_TIMESTAMP_START_KEY] = time.Now().UTC()
-
-	defer func() {
-
-		if err != nil {
-			out.Metadata[hub.ENGINE_OK_KEY] = false
-			out.Metadata[hub.ENGINE_ERROR_KEY] = err.Error()
-		} else {
-			out.Metadata[hub.ENGINE_OK_KEY] = true
-		}
-
-		out.Metadata[hub.ENGINE_TIMESTAMP_END_KEY] = time.Now().UTC()
-	}()
-
 	if script.Input == Raw {
 		env := map[string]interface{}{
 			"__input": input.Payload,
