@@ -5,6 +5,7 @@ package runtime
 import (
 	"context"
 	"log"
+	"time"
 
 	hub "github.com/thingful/device-hub"
 	"github.com/thingful/device-hub/engine"
@@ -49,14 +50,25 @@ func loop(ctx context.Context,
 			p.Statistics.Received.Total++
 			p.Statistics.Received.Ok++
 
+			input.Metadata[hub.ENGINE_TIMESTAMP_START_KEY] = time.Now().UTC()
+
 			output, err := scripter.Execute(p.Profile.Script, input)
+
+			output.Metadata[hub.ENGINE_TIMESTAMP_END_KEY] = time.Now().UTC()
 
 			p.Statistics.Processed.Total++
 
 			if err != nil {
 				p.Statistics.Processed.Errors++
+
+				output.Metadata[hub.ENGINE_OK_KEY] = false
+				output.Metadata[hub.ENGINE_ERROR_KEY] = err.Error()
+
 				log.Println(err)
 			} else {
+
+				output.Metadata[hub.ENGINE_OK_KEY] = true
+
 				p.Statistics.Processed.Ok++
 			}
 
