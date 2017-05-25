@@ -1,7 +1,7 @@
 Security & Authentication
 =========================
 
-device-hub uses `Transport Layer Security <https://en.wikipedia.org/wiki/Transport_Layer_Security>`_ (TLS) to authenticate components, in a `mutual authentication <https://en.wikipedia.org/wiki/Mutual_authentication>`_ model.
+device-hub uses [Transport Layer Security](https://en.wikipedia.org/wiki/Transport_Layer_Security>) (TLS) to authenticate components, in a [mutual authentication](https://en.wikipedia.org/wiki/Mutual_authentication) model.
 
 This ensures that all communicating parties are communicating with a verified component, helping to prevent unauthorized access, and mitigating some potential attack vectors.
 
