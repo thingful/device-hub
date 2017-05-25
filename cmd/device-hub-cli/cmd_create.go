@@ -7,6 +7,8 @@ import (
 
 	"github.com/fiorix/protoc-gen-cobra/iocodec"
 	"github.com/spf13/cobra"
+	hub "github.com/thingful/device-hub"
+	"github.com/thingful/device-hub/describe"
 	"github.com/thingful/device-hub/proto"
 )
 
@@ -25,6 +27,18 @@ var createCommand = &cobra.Command{
 			v := proto.CreateRequest{}
 
 			err := in.Decode(&v)
+			if err != nil {
+				return err
+			}
+
+			params, err := hub.DescribeListener(v.Type)
+
+			if err != nil {
+				return err
+			}
+
+			err = describe.Validate(v.Configuration, params)
+
 			if err != nil {
 				return err
 			}

@@ -10,6 +10,9 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"google.golang.org/grpc"
+
+	_ "github.com/thingful/device-hub/endpoint"
+	_ "github.com/thingful/device-hub/listener"
 )
 
 var RootCmd = &cobra.Command{
@@ -75,6 +78,7 @@ func init() {
 	RootCmd.AddCommand(startCommand())
 	RootCmd.AddCommand(stopCommand)
 	RootCmd.AddCommand(listCommand)
+	RootCmd.AddCommand(describeCommand)
 
 	_config.AddFlags(RootCmd.PersistentFlags())
 }

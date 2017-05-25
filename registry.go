@@ -6,15 +6,18 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/thingful/device-hub/describe"
 	"github.com/thingful/device-hub/utils"
 )
 
 var (
-	endpoints     = map[string]lazy{}
-	endpointsLock = sync.RWMutex{}
+	endpoints          = map[string]lazy{}
+	endpointParameters = map[string][]describe.Parameter{}
+	endpointsLock      = sync.RWMutex{}
 
-	listeners     = map[string]lazy{}
-	listenersLock = sync.RWMutex{}
+	listeners          = map[string]lazy{}
+	listenerParameters = map[string][]describe.Parameter{}
+	listenersLock      = sync.RWMutex{}
 )
 
 type endpointBuilder func(config utils.TypedMap) (Endpoint, error)
@@ -53,7 +56,7 @@ func IsEndpointRegistered(typez string) bool {
 }
 
 // RegisterListener will store the builder with the correct name
-func RegisterListener(typez string, builder listenerBuilder) {
+func RegisterListener(typez string, builder listenerBuilder, params []describe.Parameter) {
 
 	listenersLock.Lock()
 	defer listenersLock.Unlock()
@@ -64,6 +67,8 @@ func RegisterListener(typez string, builder listenerBuilder) {
 			return i, err
 		},
 	}
+
+	listenerParameters[typez] = params
 }
 
 // IsListenerRegistered confirms if the listener has been registered
@@ -74,6 +79,12 @@ func IsListenerRegistered(typez string) bool {
 
 	_, found := listeners[typez]
 	return found
+}
+
+func DescribeListener(typez string) ([]describe.Parameter, error) {
+
+	// TODO: deal with not being found
+	return listenerParameters[typez], nil
 }
 
 // EndpointByName returns or creates an Endpoint of specified type
