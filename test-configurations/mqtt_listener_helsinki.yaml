@@ -1,4 +1,5 @@
 ---
+uid: helsinki-transport-service-listener
 type: listener
 kind: mqtt
 configuration:
