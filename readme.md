@@ -113,9 +113,6 @@ Files can also be imported on an individual basis
 
 ```
 ./device-hub-cli-linux-amd64 create -f=./test-configurations/mqtt_listener.yaml
-./device-hub-cli-linux-amd64 create -f=./test-configurations/std_out_endpoint.yaml
-./device-hub-cli-linux-amd64 create -f=./test-configurations/profile_script.yaml
-./device-hub-cli-linux-amd64 create -f=./test-configurations/profile_script_transform.yaml
 ```
 
 The configuration can be inspected
@@ -127,14 +124,14 @@ The configuration can be inspected
 Create some 'pipes' that listen via http on uri /a and /b and output to std output
 
 ```
-./device-hub-cli-linux-amd64 start -e={stdout endpoint uid} -l={http listenener uid} -u=/a thingful/device-1
-./device-hub-cli-linux-amd64 start -e={stdout endpoint uid} -l={http listenener uid} -u=/b thingful/device-2
+./device-hub-cli-linux-amd64 start -e=stdout-endpoint -l=http-listener-local-port-8085 -u=/a thingful/device-1
+./device-hub-cli-linux-amd64 start -e=stdout-endpoint -l=http-listener-local-port-8085 -u=/b thingful/device-2
 ```
 
 It is possible to 'tag' messages with some user defined information when starting the 'pipe'
 
 ```
-./device-hub-cli-linux-amd64 start -e={stdout endpoint uid} -l={http listenener uid} -u=/c -t=foo:bar thingful/device-3
+./device-hub-cli-linux-amd64 start -e=stdout-endpoint -l=http-listener-local-port-8085 -u=/c -t=foo:bar thingful/device-3
 
 ```
 
@@ -157,7 +154,7 @@ docker-compose up
 ```
 
 ```
-./device-hub-cli-linux-amd64 start -e=mVZY2J0 -l=pjV4jN2 -u=/some-mqtt-uri thingful/device-2
+./device-hub-cli-linux-amd64 start -e=stdout-endpoint -l=mqtt-listener-local-port-1883 -u=/some-mqtt-uri thingful/device-2
 ```
 
 Send a message via mqtt to 0.0.0.0:1883 e.g. using MQTTLens (https://chrome.google.com/webstore/detail/mqttlens/hemojaaeigabkbcookmlgmdigohjobjm?hl=en)
