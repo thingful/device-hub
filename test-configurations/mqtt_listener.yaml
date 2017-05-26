@@ -1,4 +1,5 @@
 ---
+uid: mqtt-listener-local-port-1883
 type: listener
 kind: mqtt
 configuration:
