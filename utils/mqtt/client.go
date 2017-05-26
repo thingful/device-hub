@@ -3,6 +3,7 @@
 package mqtt
 
 import (
+	"log"
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
@@ -18,6 +19,14 @@ func DefaultMQTTClient(brokerAddress, clientID string) mqtt.Client {
 	opts.SetKeepAlive(2 * time.Second)
 	opts.SetPingTimeout(10 * time.Second)
 	opts.SetAutoReconnect(true)
+
+	opts.OnConnectionLost = func(client mqtt.Client, err error) {
+		log.Panic("mqtt broker disconnected", err)
+	}
+
+	opts.OnConnect = func(mqtt.Client) {
+		log.Print("mqtt broker connected")
+	}
 
 	return mqtt.NewClient(opts)
 }
