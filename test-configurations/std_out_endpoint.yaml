@@ -1,4 +1,5 @@
 ---
+uid: stdout-endpoint
 type: endpoint
 kind: stdout
 configuration:

@@ -1,4 +1,5 @@
 ---
+uid:  http-endpoint-example.com
 type: endpoint
 kind: http
 configuration:
