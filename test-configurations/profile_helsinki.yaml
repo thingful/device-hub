@@ -1,0 +1,73 @@
+---
+type: profile
+kind: script
+configuration:
+  profile-name : thingful/helsinki-bus
+  profile-description : device profile for the helsinki journey api /hfp/journey/bus 
+  profile-version: 1.0.0-beta
+  schema : >
+    {
+        "@context": {
+            "decode"    : "http://decode.eu#",
+            "m3-lite"   : "http://purl.org/iot/vocab/m3-lite#",
+            "schema"    : "http://schema.org/",
+            "domain"    : "decode:hasDomain",
+            "timeStamp" : "schema:Date",
+            "geo" : "schema:GeoCoordinates"
+        },
+        "@type" : "decode:Bus",
+        "domain": {
+            "@type": "decode:Transport"
+        }
+    }
+  script-main: x
+  script-runtime: javascript
+  script-input: json
+  script-contents: >
+    function x (input) {
+    /*
+    https://api.digitransit.fi/realtime/vehicle-positions/v1/hfp/journey/#
+    https://digipalvelutehdas.hackpad.com/HSL-MQTT-API-draft#HSL-MQTT-API-draft
+    Example
+    VP: {
+        desi: "615",
+        dir: "1",
+        oper: "XXX",
+        veh: "1219",
+        tst: "2017-05-26T13:03:14.000Z",
+        tsi: 1495803794,
+        spd: 0,
+        lat: 60.17129,
+        long: 24.94316,
+        jrn: "XXX",
+        line: "XXX",
+        start: "1609",
+        source: "hsl helmi"
+    }
+    From the docs -
+
+    desi	designation (route/line number as shown to passengers)
+    oday	operating day (day of departure)
+    tsi and tst	timestamp
+    dl	delay (difference to timetable)
+    lat, long	coordinates
+    hdg	heading
+    odo	odometer
+    spd	speed
+
+    */
+        root = input['VP']
+
+        return {
+            '@id' : root['veh'],
+            'timeStamp' : root['tst'],
+            'geo': {
+                'latitude': root['lat'],
+                'longitude': root['long']
+            },
+            'route': {
+                'from' : root['start'] ,
+                'to' : root['desi']
+            }
+        }
+    }
