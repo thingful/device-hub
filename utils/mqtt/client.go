@@ -20,6 +20,9 @@ func DefaultMQTTClient(brokerAddress, clientID string) mqtt.Client {
 	opts.SetPingTimeout(10 * time.Second)
 	opts.SetAutoReconnect(true)
 
+	// Panic on connection lost until
+	// https://github.com/thingful/device-hub/issues/27
+	// is resolved
 	opts.OnConnectionLost = func(client mqtt.Client, err error) {
 		log.Panic("mqtt broker disconnected", err)
 	}
