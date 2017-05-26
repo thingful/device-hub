@@ -1,0 +1,7 @@
+---
+uid: helsinki-transport-service-listener
+type: listener
+kind: mqtt
+configuration:
+  # Address of the MQTT Broker
+  mqtt-broker-address: tcp://mqtt.hsl.fi:1883

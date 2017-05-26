@@ -215,6 +215,8 @@ func (m *Manager) StartPipe(uri, listenerUID, profileUID string, endpointUIDs []
 	temp, err := m.Repository.Profiles.One(profileUID)
 
 	if err != nil {
+
+		fmt.Println("err", err)
 		if err == store.ErrNotFound {
 			return fmt.Errorf("profile with uid : %s not found", profileUID)
 		}
@@ -245,10 +247,10 @@ func (m *Manager) StartPipe(uri, listenerUID, profileUID string, endpointUIDs []
 	}
 
 	runtimepipe := newRuntimePipe(pipeconf)
-
 	err = m.Repository.Pipes.CreateOrUpdate(pipeconf)
 
 	if err != nil {
+
 		return err
 	}
 
@@ -273,12 +275,14 @@ func profileFromEntity(entity *proto.Entity) (*store.Profile, error) {
 	// TODO : give a monkeys about validation
 	schema := map[string]interface{}{}
 
-	err := json.Unmarshal([]byte(entity.Configuration["schema"]), &schema)
+	if entity.Configuration["schema"] != "" {
 
-	if err != nil {
-		return nil, err
+		err := json.Unmarshal([]byte(entity.Configuration["schema"]), &schema)
+
+		if err != nil {
+			return nil, err
+		}
 	}
-
 	return &store.Profile{
 		Uid:         entity.Uid,
 		Name:        entity.Configuration["profile-name"],

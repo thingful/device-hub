@@ -4,7 +4,6 @@ package listener
 
 import (
 	"errors"
-	"strings"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	hub "github.com/thingful/device-hub"
@@ -29,10 +28,6 @@ func (m *mqttlistener) NewChannel(topic string) (hub.Channel, error) {
 
 	if topic == "" {
 		return nil, errors.New("mqtt topic is empty string")
-	}
-
-	if strings.Contains(topic, "#") {
-		return nil, errors.New("mqtt wildcard (#) is not allowed")
 	}
 
 	errors := make(chan error)

@@ -19,6 +19,7 @@ type handler struct {
 func (s *handler) Create(ctx context.Context, request *proto.CreateRequest) (*proto.CreateReply, error) {
 
 	entity := proto.Entity{
+		Uid:           request.Uid,
 		Type:          request.Type,
 		Kind:          request.Kind,
 		Configuration: request.Configuration,
