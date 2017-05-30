@@ -103,6 +103,7 @@ Start the device-hub
 ```
 
 Configure with the cli
+
 To import a folder of configuration files
 
 ```
@@ -115,7 +116,7 @@ Files can also be imported on an individual basis
 ./device-hub-cli-linux-amd64 create -f=./test-configurations/mqtt_listener.yaml
 ```
 
-The configuration can be inspected
+The running configuration can be inspected
 
 ```
 ./device-hub-cli-linux-amd64 get all
