@@ -3,34 +3,53 @@
 package endpoint
 
 import (
-	"errors"
+	"fmt"
 
 	hub "github.com/thingful/device-hub"
-	"github.com/thingful/device-hub/utils"
+	"github.com/thingful/device-hub/describe"
 )
 
 func init() {
 
-	hub.RegisterEndpoint("stdout", func(config utils.TypedMap) (hub.Endpoint, error) {
+	hub.RegisterEndpoint("stdout", func(config describe.Values) (hub.Endpoint, error) {
 
-		prettyPrint := config.DBool("pretty-print", false)
+		prettyPrint := config.BoolWithDefault("pretty-print", false)
 
 		return stdout{
 			prettyPrint: prettyPrint,
 		}, nil
-	})
+	},
+		describe.Parameters{
+			describe.Parameter{
+				Name:        "pretty-print",
+				Type:        describe.Bool,
+				Required:    false,
+				Description: "pretty print the output",
+			},
+		})
 
-	hub.RegisterEndpoint("http", func(config utils.TypedMap) (hub.Endpoint, error) {
+	httpClientTimeoutMS := 1000
 
-		clientTimeOut := config.DInt("http-client-timeout-ms", 1000)
+	hub.RegisterEndpoint("http", func(config describe.Values) (hub.Endpoint, error) {
 
-		found, url := config.String("http-url")
-
-		if !found {
-			return nil, errors.New("http endpoint needs 'http-url' set")
-		}
+		clientTimeOut := config.IntWithDefault("http-client-timeout-ms", httpClientTimeoutMS)
+		url := config.MustString("http-url")
 
 		return NewHTTPEndpoint(url, clientTimeOut), nil
-	})
+	},
+		describe.Parameters{
+			describe.Parameter{
+				Name:        "http-url",
+				Type:        describe.Url,
+				Required:    true,
+				Description: "url to post data to",
+			},
+			describe.Parameter{
+				Name:        "http-client-timeout-ms",
+				Type:        describe.Int32,
+				Required:    false,
+				Description: fmt.Sprintf("http client time out in ms, defaults to %s", httpClientTimeoutMS),
+			},
+		})
 
 }

@@ -7,7 +7,6 @@ import (
 
 	hub "github.com/thingful/device-hub"
 	d "github.com/thingful/device-hub/describe"
-	"github.com/thingful/device-hub/utils"
 	"github.com/thingful/device-hub/utils/mqtt"
 )
 
@@ -15,11 +14,11 @@ func init() {
 
 	hub.RegisterListener("mqtt",
 
-		func(config utils.TypedMap) (hub.Listener, error) {
+		func(config d.Values) (hub.Listener, error) {
+
+			brokerAddress := config.MustString("mqtt-broker-address")
 
 			clientName := fmt.Sprintf("device-hub-%s", hub.SourceVersion)
-
-			brokerAddress := config.MString("mqtt-broker-address")
 
 			client := mqtt.DefaultMQTTClient(brokerAddress, clientName)
 
@@ -31,8 +30,9 @@ func init() {
 			return newMQTTListener(client)
 
 		},
-		[]d.Parameter{
-			d.Parameter{Name: "mqtt-broker-address",
+		d.Parameters{
+			d.Parameter{
+				Name:        "mqtt-broker-address",
 				Type:        d.Url,
 				Required:    true,
 				Description: "address to bind to",
@@ -41,14 +41,15 @@ func init() {
 	)
 
 	hub.RegisterListener("http",
-		func(config utils.TypedMap) (hub.Listener, error) {
+		func(config d.Values) (hub.Listener, error) {
 
-			binding := config.MString("http-binding-address")
+			binding := config.MustString("http-binding-address")
 			return newHTTPListener(binding)
 
 		},
-		[]d.Parameter{
-			d.Parameter{Name: "http-binding-address",
+		d.Parameters{
+			d.Parameter{
+				Name:        "http-binding-address",
 				Type:        d.Url,
 				Required:    true,
 				Description: "address to bind to",
