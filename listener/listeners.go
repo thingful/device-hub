@@ -14,7 +14,7 @@ func init() {
 
 	hub.RegisterListener("mqtt",
 
-		func(config describe.DefaultValues) (hub.Listener, error) {
+		func(config describe.Values) (hub.Listener, error) {
 
 			brokerAddress := config.MustString("mqtt-broker-address")
 
