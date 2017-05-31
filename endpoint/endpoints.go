@@ -3,8 +3,6 @@
 package endpoint
 
 import (
-	"fmt"
-
 	hub "github.com/thingful/device-hub"
 	"github.com/thingful/device-hub/describe"
 )
@@ -48,7 +46,8 @@ func init() {
 				Name:        "http-client-timeout-ms",
 				Type:        describe.Int32,
 				Required:    false,
-				Description: fmt.Sprintf("http client time out in ms, defaults to %s", httpClientTimeoutMS),
+				Default:     httpClientTimeoutMS,
+				Description: "http client time-out in ms",
 			},
 		})
 
