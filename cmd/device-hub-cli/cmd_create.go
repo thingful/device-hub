@@ -4,6 +4,7 @@ package main
 
 import (
 	"context"
+	"strings"
 
 	"github.com/fiorix/protoc-gen-cobra/iocodec"
 	"github.com/spf13/cobra"
@@ -27,20 +28,36 @@ var createCommand = &cobra.Command{
 			v := proto.CreateRequest{}
 
 			err := in.Decode(&v)
-			if err != nil {
-				return err
-			}
-
-			params, err := hub.DescribeListener(v.Type)
 
 			if err != nil {
 				return err
 			}
+			switch strings.ToLower(v.Type) {
 
-			_, err = describe.NewValues(v.Configuration, params)
+			case "listener":
+				params, err := hub.DescribeListener(v.Kind)
 
-			if err != nil {
-				return err
+				if err != nil {
+					return err
+				}
+				_, err = describe.NewValues(v.Configuration, params)
+
+				if err != nil {
+					return err
+				}
+
+			case "endpoint":
+
+				params, err := hub.DescribeEndpoint(v.Kind)
+
+				if err != nil {
+					return err
+				}
+				_, err = describe.NewValues(v.Configuration, params)
+
+				if err != nil {
+					return err
+				}
 			}
 
 			resp, err := cli.Create(context.Background(), &v)
