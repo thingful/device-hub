@@ -5,17 +5,28 @@ package describe
 import (
 	"fmt"
 
+	"github.com/asaskevich/govalidator"
 	"github.com/spf13/cast"
 )
 
 type typez string
 
 const (
-	Int32  = typez("int32")
-	Int64  = typez("int64")
+
+	// Int32 type is an signed int32
+	Int32 = typez("int32")
+
+	// Int64 type is an signed int64
+	Int64 = typez("int64")
+
+	// String type is a string
 	String = typez("string")
-	Url    = typez("url")
-	Bool   = typez("bool")
+
+	// Url type is a value that is a valid URL
+	Url = typez("url")
+
+	// Bool type is a true/false value
+	Bool = typez("bool")
 )
 
 // Parameter describes a configuration parameter
@@ -41,27 +52,79 @@ func (p Parameter) Describe() string {
 	return fmt.Sprintf("%s : %s (Required : %v, Default : %s) %s, Examples %v ", p.Name, p.Type, p.Required, p.Default, p.Description, p.Examples)
 }
 
-func Validate(config map[string]string, params Parameters) error {
-	/*
-		for k, v := range config {
+func NewValues(config map[string]string, params Parameters) (Values, error) {
 
-			// is in list of params? no - fail
+	values := Values{}
 
-			// bit of type checking e.g. urls, ints etc.
+	// validate params
+	for _, p := range params {
 
+		if p.Required {
+
+			v, found := config[p.Name]
+
+			if !found {
+				return values, fmt.Errorf("%s is Required but not supplied", p.Name)
+			}
+			values[p.Name] = Value{Parameter: p, Value: v}
+		} else {
+
+			v, found := config[p.Name]
+
+			if found {
+				values[p.Name] = Value{Parameter: p, Value: v}
+			}
 		}
+	}
+	// validate types
+	for k, v := range values {
 
-		for _, param := range params {
+		switch v.Type {
 
-			// p.Required and not in config - fail
+		case String:
+
+			_, ok := values.String(k)
+
+			if !ok {
+				return values, fmt.Errorf("%s is not of type String", k)
+			}
+
+		case Int32:
+
+			_, ok := values.Int32(k)
+
+			if !ok {
+				return values, fmt.Errorf("%s is not of type Int32", k)
+			}
+
+		case Int64:
+
+			_, ok := values.Int64(k)
+
+			if !ok {
+				return values, fmt.Errorf("%s is not of type Int64", k)
+			}
+
+		case Bool:
+			_, ok := values.Bool(k)
+
+			if !ok {
+				return values, fmt.Errorf("%s is not of type Bool", k)
+			}
+
+		case Url:
+			_, ok := values.Url(k)
+
+			if !ok {
+				return values, fmt.Errorf("%s is not of type Url", k)
+			}
+
+		default:
+			return values, fmt.Errorf("unknown type : %s", string(v.Type))
 		}
-	*/
-	return nil
-}
+	}
 
-func CreateValues(config map[string]string, params Parameters) (Values, error) {
-
-	return Values{}, nil
+	return values, nil
 }
 
 // Value contains the Parameter type description alongside its value
@@ -73,6 +136,7 @@ type Value struct {
 // Values are a collection of Value structs
 type Values map[string]Value
 
+// String returns a string and true if a value exists and can be cast to a string
 func (v Values) String(key string) (string, bool) {
 
 	value, found := v[key]
@@ -90,6 +154,7 @@ func (v Values) String(key string) (string, bool) {
 	return str, true
 }
 
+// MustString returns the value as a string or panics
 func (v Values) MustString(key string) string {
 
 	value, found := v.String(key)
@@ -101,6 +166,7 @@ func (v Values) MustString(key string) string {
 	return value
 }
 
+// Bool returns a boolean and true if a value exists and can be cast to a boolean
 func (v Values) Bool(key string) (bool, bool) {
 
 	value, found := v[key]
@@ -118,6 +184,7 @@ func (v Values) Bool(key string) (bool, bool) {
 	return b, true
 }
 
+// BoolWithDefault returns a boolean or a default value if not found
 func (v Values) BoolWithDefault(key string, defaultValue bool) bool {
 
 	value, found := v.Bool(key)
@@ -130,7 +197,8 @@ func (v Values) BoolWithDefault(key string, defaultValue bool) bool {
 	return value
 }
 
-func (v Values) Int(key string) (int, bool) {
+// Int32 returns a int32 and true if a value exists and can be cast to an int32
+func (v Values) Int32(key string) (int32, bool) {
 
 	value, found := v[key]
 
@@ -138,7 +206,7 @@ func (v Values) Int(key string) (int, bool) {
 		return 0, false
 	}
 
-	i, err := cast.ToIntE(value.Value)
+	i, err := cast.ToInt32E(value.Value)
 
 	if err != nil {
 		return 0, false
@@ -148,9 +216,10 @@ func (v Values) Int(key string) (int, bool) {
 
 }
 
-func (v Values) IntWithDefault(key string, defaultValue int) int {
+// Int32WithDefault returns an integer or a default value if not found
+func (v Values) Int32WithDefault(key string, defaultValue int32) int32 {
 
-	value, found := v.Int(key)
+	value, found := v.Int32(key)
 
 	if !found {
 
@@ -158,4 +227,41 @@ func (v Values) IntWithDefault(key string, defaultValue int) int {
 	}
 
 	return value
+}
+
+// Int64 returns a int64 and true if a value exists and can be cast to an int64
+func (v Values) Int64(key string) (int64, bool) {
+
+	value, found := v[key]
+
+	if !found {
+		return 0, false
+	}
+
+	i, err := cast.ToInt64E(value.Value)
+
+	if err != nil {
+		return 0, false
+	}
+
+	return i, true
+
+}
+
+// Url returns a Url and true if a value exists and can be cast to an url
+func (v Values) Url(key string) (string, bool) {
+
+	value, found := v.String(key)
+
+	if !found {
+		return "", false
+	}
+
+	valid := govalidator.IsRequestURL(value)
+	if !valid {
+		return "", false
+	}
+
+	return value, true
+
 }

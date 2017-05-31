@@ -100,7 +100,7 @@ func EndpointByName(uid, typez string, conf map[string]string) (Endpoint, error)
 		return nil, fmt.Errorf("parameters for type %s not found", typez)
 	}
 
-	values, err := describe.CreateValues(conf, parameters)
+	values, err := describe.NewValues(conf, parameters)
 
 	if err != nil {
 		return nil, err
@@ -133,7 +133,7 @@ func ListenerByName(uid, typez string, conf map[string]string) (Listener, error)
 		return nil, fmt.Errorf("parameters for type %s not found", typez)
 	}
 
-	values, err := describe.CreateValues(conf, parameters)
+	values, err := describe.NewValues(conf, parameters)
 
 	if err != nil {
 		return nil, err

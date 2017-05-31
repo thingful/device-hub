@@ -28,11 +28,11 @@ func init() {
 			},
 		})
 
-	httpClientTimeoutMS := 1000
+	httpClientTimeoutMS := int32(1000)
 
 	hub.RegisterEndpoint("http", func(config describe.Values) (hub.Endpoint, error) {
 
-		clientTimeOut := config.IntWithDefault("http-client-timeout-ms", httpClientTimeoutMS)
+		clientTimeOut := config.Int32WithDefault("http-client-timeout-ms", httpClientTimeoutMS)
 		url := config.MustString("http-url")
 
 		return NewHTTPEndpoint(url, clientTimeOut), nil

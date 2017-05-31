@@ -37,7 +37,7 @@ var createCommand = &cobra.Command{
 				return err
 			}
 
-			err = describe.Validate(v.Configuration, params)
+			_, err = describe.NewValues(v.Configuration, params)
 
 			if err != nil {
 				return err
