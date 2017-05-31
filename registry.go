@@ -30,7 +30,11 @@ type lazy struct {
 }
 
 // RegisterEndpoint will store the builder with the correct name
-func RegisterEndpoint(typez string, builder endpointBuilder, params []describe.Parameter) {
+func RegisterEndpoint(typez string, builder endpointBuilder, params describe.Parameters) {
+
+	if len(params) == 0 {
+		panic("endpoint registered without any parameters")
+	}
 
 	endpointsLock.Lock()
 	defer endpointsLock.Unlock()
@@ -56,8 +60,24 @@ func IsEndpointRegistered(typez string) bool {
 	return found
 }
 
+// DescribeEndpoint returns a collection of Parameter describing its configuration
+func DescribeEndpoint(typez string) (describe.Parameters, error) {
+
+	params, found := endpointParameters[typez]
+
+	if !found {
+		return nil, fmt.Errorf("no parameters found for endpoint : %s", typez)
+	}
+
+	return params, nil
+}
+
 // RegisterListener will store the builder with the correct name
-func RegisterListener(typez string, builder listenerBuilder, params []describe.Parameter) {
+func RegisterListener(typez string, builder listenerBuilder, params describe.Parameters) {
+
+	if len(params) == 0 {
+		panic("listener registered without any parameters")
+	}
 
 	listenersLock.Lock()
 	defer listenersLock.Unlock()
@@ -82,10 +102,16 @@ func IsListenerRegistered(typez string) bool {
 	return found
 }
 
-func DescribeListener(typez string) ([]describe.Parameter, error) {
+// DescribeListener returns a collection of Parameter describing its configuration
+func DescribeListener(typez string) (describe.Parameters, error) {
 
-	// TODO: deal with not being found
-	return listenerParameters[typez], nil
+	params, found := listenerParameters[typez]
+
+	if !found {
+		return nil, fmt.Errorf("no parameters found for listener : %s", typez)
+	}
+
+	return params, nil
 }
 
 // EndpointByName returns or creates an Endpoint of specified type
