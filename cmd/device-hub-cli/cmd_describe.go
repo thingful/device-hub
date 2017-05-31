@@ -14,7 +14,7 @@ import (
 
 var describeCommand = &cobra.Command{
 	Use:   "describe",
-	Short: "Describe parameters for endpoint, listeners and profiles",
+	Short: "Describe parameters for endpoint and listeners",
 	RunE: func(cmd *cobra.Command, args []string) error {
 
 		if len(args) != 2 {

@@ -32,34 +32,27 @@ var createCommand = &cobra.Command{
 			if err != nil {
 				return err
 			}
+
+			// validate the policy file before sending it over the wire
+			var params describe.Parameters
+
 			switch strings.ToLower(v.Type) {
 
 			case "listener":
-				params, err := hub.DescribeListener(v.Kind)
-
-				if err != nil {
-					return err
-				}
-				_, err = describe.NewValues(v.Configuration, params)
-
-				if err != nil {
-					return err
-				}
-
+				params, err = hub.DescribeListener(v.Kind)
 			case "endpoint":
-
-				params, err := hub.DescribeEndpoint(v.Kind)
-
-				if err != nil {
-					return err
-				}
-				_, err = describe.NewValues(v.Configuration, params)
-
-				if err != nil {
-					return err
-				}
+				params, err = hub.DescribeEndpoint(v.Kind)
 			}
 
+			if err != nil {
+				return err
+			}
+
+			_, err = describe.NewValues(v.Configuration, params)
+
+			if err != nil {
+				return err
+			}
 			resp, err := cli.Create(context.Background(), &v)
 
 			if err != nil {
