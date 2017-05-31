@@ -7,7 +7,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/thingful/device-hub/describe"
-	"github.com/thingful/device-hub/utils"
 )
 
 type mockEndpoint struct {
@@ -29,16 +28,16 @@ func TestBuildersAreCached(t *testing.T) {
 
 	}, describe.Parameters{})
 
-	one, err := EndpointByName("foo", "simple", utils.TypedMap{})
+	one, err := EndpointByName("foo", "simple", map[string]string{})
 	assert.Nil(t, err)
 
-	two, err := EndpointByName("foo", "simple", utils.TypedMap{})
+	two, err := EndpointByName("foo", "simple", map[string]string{})
 	assert.Nil(t, err)
 
 	assert.Equal(t, one, two)
 	assert.Equal(t, one.(mockEndpoint).count, two.(mockEndpoint).count)
 
-	three, err := EndpointByName("bar", "simple", utils.TypedMap{})
+	three, err := EndpointByName("bar", "simple", map[string]string{})
 
 	assert.Nil(t, err)
 	assert.NotEqual(t, one, three)
@@ -54,7 +53,7 @@ func TestErrorThrownForIncorrectType(t *testing.T) {
 
 	}, describe.Parameters{})
 
-	_, err := ListenerByName("foo", "endpoint", utils.TypedMap{})
+	_, err := ListenerByName("foo", "endpoint", map[string]string{})
 
 	assert.NotNil(t, err)
 }

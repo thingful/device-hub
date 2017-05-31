@@ -2,7 +2,11 @@
 
 package describe
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/spf13/cast"
+)
 
 type typez string
 
@@ -14,6 +18,7 @@ const (
 	Bool   = typez("bool")
 )
 
+// Parameter describes a configuration parameter
 type Parameter struct {
 	Name        string
 	Type        typez
@@ -23,8 +28,10 @@ type Parameter struct {
 	Examples    []string
 }
 
+// Parameters are a collection of Paramater structs
 type Parameters []Parameter
 
+// Describe returns a string description of the Parameter
 func (p Parameter) Describe() string {
 
 	if p.Default == "" {
@@ -57,24 +64,98 @@ func CreateValues(config map[string]string, params Parameters) (Values, error) {
 	return Values{}, nil
 }
 
+// Value contains the Parameter type description alongside its value
 type Value struct {
 	Parameter
 	Value interface{}
 }
 
-type Values []Values
+// Values are a collection of Value structs
+type Values map[string]Value
 
-func (v Values) String(key string) (bool, string) {
-	return true, "booya"
+func (v Values) String(key string) (string, bool) {
+
+	value, found := v[key]
+
+	if !found {
+		return "", false
+	}
+
+	str, err := cast.ToStringE(value.Value)
+
+	if err != nil {
+		return "", false
+	}
+
+	return str, true
 }
+
 func (v Values) MustString(key string) string {
-	return "booya"
+
+	value, found := v.String(key)
+
+	if !found {
+		panic(fmt.Errorf("string value with key %s not found", key))
+	}
+
+	return value
 }
 
-func (v Values) BoolWithDefault(key string, defaultv bool) bool {
-	return false
+func (v Values) Bool(key string) (bool, bool) {
+
+	value, found := v[key]
+
+	if !found {
+		return false, false
+	}
+
+	b, err := cast.ToBoolE(value.Value)
+
+	if err != nil {
+		return false, false
+	}
+
+	return b, true
 }
 
-func (v Values) IntWithDefault(key string, defaultv int) int {
-	return 1
+func (v Values) BoolWithDefault(key string, defaultValue bool) bool {
+
+	value, found := v.Bool(key)
+
+	if !found {
+
+		return defaultValue
+	}
+
+	return value
+}
+
+func (v Values) Int(key string) (int, bool) {
+
+	value, found := v[key]
+
+	if !found {
+		return 0, false
+	}
+
+	i, err := cast.ToIntE(value.Value)
+
+	if err != nil {
+		return 0, false
+	}
+
+	return i, true
+
+}
+
+func (v Values) IntWithDefault(key string, defaultValue int) int {
+
+	value, found := v.Int(key)
+
+	if !found {
+
+		return defaultValue
+	}
+
+	return value
 }
