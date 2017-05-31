@@ -4,12 +4,10 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	"github.com/fiorix/protoc-gen-cobra/iocodec"
 	"github.com/spf13/cobra"
-	hub "github.com/thingful/device-hub"
 	"github.com/thingful/device-hub/proto"
 )
 
@@ -35,25 +33,5 @@ var getCommand = &cobra.Command{
 		})
 
 		return err
-	},
-}
-
-var describeCommand = &cobra.Command{
-	Use:   "describe",
-	Short: "Describe parameters for endpoint, listeners and profiles",
-	RunE: func(cmd *cobra.Command, args []string) error {
-
-		params, err := hub.DescribeListener("http")
-
-		if err != nil {
-			return err
-		}
-
-		for _, param := range params {
-			fmt.Println(param.Describe())
-		}
-
-		return nil
-
 	},
 }
