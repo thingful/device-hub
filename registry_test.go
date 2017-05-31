@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/thingful/device-hub/describe"
 	"github.com/thingful/device-hub/utils"
 )
 
@@ -21,12 +22,12 @@ func TestBuildersAreCached(t *testing.T) {
 
 	count := 0
 
-	RegisterEndpoint("simple", func(config utils.TypedMap) (Endpoint, error) {
+	RegisterEndpoint("simple", func(config describe.Values) (Endpoint, error) {
 
 		count++
 		return mockEndpoint{count: count}, nil
 
-	})
+	}, describe.Parameters{})
 
 	one, err := EndpointByName("foo", "simple", utils.TypedMap{})
 	assert.Nil(t, err)
@@ -47,11 +48,11 @@ func TestBuildersAreCached(t *testing.T) {
 
 func TestErrorThrownForIncorrectType(t *testing.T) {
 
-	RegisterEndpoint("endpoint", func(config utils.TypedMap) (Endpoint, error) {
+	RegisterEndpoint("endpoint", func(config describe.Values) (Endpoint, error) {
 
 		return mockEndpoint{}, nil
 
-	})
+	}, describe.Parameters{})
 
 	_, err := ListenerByName("foo", "endpoint", utils.TypedMap{})
 
