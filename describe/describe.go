@@ -35,7 +35,7 @@ type Parameter struct {
 	Type        typez
 	Required    bool
 	Description string
-	Default     string
+	Default     interface{}
 	Examples    []string
 }
 
@@ -45,11 +45,11 @@ type Parameters []Parameter
 // Describe returns a string description of the Parameter
 func (p Parameter) Describe() string {
 
-	if p.Default == "" {
-		return fmt.Sprintf("%s : %s (Required : %v) %s, Examples %v ", p.Name, p.Type, p.Required, p.Description, p.Examples)
+	if p.Default == nil {
+		return fmt.Sprintf("%s : %s (Type : %s, Required : %v, Examples %v )", p.Name, p.Description, p.Type, p.Required, p.Examples)
 	}
 
-	return fmt.Sprintf("%s : %s (Required : %v, Default : %s) %s, Examples %v ", p.Name, p.Type, p.Required, p.Default, p.Description, p.Examples)
+	return fmt.Sprintf("%s : %s (Type : %s, Required : %v, Default : %v, Examples %v )", p.Name, p.Description, p.Type, p.Required, p.Default, p.Examples)
 }
 
 func NewValues(config map[string]string, params Parameters) (Values, error) {
