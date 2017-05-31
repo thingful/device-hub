@@ -23,6 +23,7 @@ func init() {
 				Type:        describe.Bool,
 				Required:    false,
 				Description: "pretty print the output",
+				Default:     false,
 			},
 		})
 
