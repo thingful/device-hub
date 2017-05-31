@@ -26,7 +26,9 @@ func TestBuildersAreCached(t *testing.T) {
 		count++
 		return mockEndpoint{count: count}, nil
 
-	}, describe.Parameters{})
+	}, describe.Parameters{
+		describe.Parameter{},
+	})
 
 	one, err := EndpointByName("foo", "simple", map[string]string{})
 	assert.Nil(t, err)
@@ -51,7 +53,9 @@ func TestErrorThrownForIncorrectType(t *testing.T) {
 
 		return mockEndpoint{}, nil
 
-	}, describe.Parameters{})
+	}, describe.Parameters{
+		describe.Parameter{},
+	})
 
 	_, err := ListenerByName("foo", "endpoint", map[string]string{})
 
