@@ -4,10 +4,12 @@ package listener
 
 import (
 	"fmt"
+	"log"
+	"time"
 
+	mqtt "github.com/eclipse/paho.mqtt.golang"
 	hub "github.com/thingful/device-hub"
 	"github.com/thingful/device-hub/describe"
-	"github.com/thingful/device-hub/utils/mqtt"
 )
 
 func init() {
@@ -39,10 +41,39 @@ func init() {
 		func(config describe.Values) (hub.Listener, error) {
 
 			brokerAddress := config.MustString(mqtt_bindingAddress.Name)
+			clientID := fmt.Sprintf("device-hub-%s", hub.SourceVersion)
+			username, ufound := config.String(mqtt_username.Name)
+			password, pfound := config.String(mqtt_password.Name)
 
-			clientName := fmt.Sprintf("device-hub-%s", hub.SourceVersion)
+			opts := mqtt.NewClientOptions()
 
-			client := mqtt.DefaultMQTTClient(brokerAddress, clientName)
+			if ufound {
+				opts.SetUsername(username)
+			}
+
+			if pfound {
+				opts.SetPassword(password)
+			}
+
+			opts.AddBroker(brokerAddress)
+			opts.SetClientID(clientID)
+
+			opts.SetKeepAlive(2 * time.Second)
+			opts.SetPingTimeout(10 * time.Second)
+			opts.SetAutoReconnect(true)
+
+			// Panic on connection lost until
+			// https://github.com/thingful/device-hub/issues/27
+			// is resolved
+			opts.OnConnectionLost = func(client mqtt.Client, err error) {
+				log.Panic("mqtt broker disconnected", err)
+			}
+
+			opts.OnConnect = func(mqtt.Client) {
+				log.Print("mqtt broker connected")
+			}
+
+			client := mqtt.NewClient(opts)
 
 			// TODO : set sensible wait time
 			if token := client.Connect(); token.Wait() && token.Error() != nil {
