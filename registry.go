@@ -54,9 +54,9 @@ func RegisterEndpoint(typez string, builder endpointBuilder, params describe.Par
 func IsEndpointRegistered(typez string) bool {
 
 	endpointsLock.Lock()
-	defer endpointsLock.Unlock()
-
 	_, found := endpoints[typez]
+	endpointsLock.Unlock()
+
 	return found
 }
 
@@ -64,9 +64,8 @@ func IsEndpointRegistered(typez string) bool {
 func DescribeEndpoint(typez string) (describe.Parameters, error) {
 
 	endpointsLock.Lock()
-	defer endpointsLock.Unlock()
-
 	params, found := endpointParameters[typez]
+	endpointsLock.Unlock()
 
 	if !found {
 		return nil, fmt.Errorf("no parameters found for endpoint : %s", typez)
@@ -99,9 +98,9 @@ func RegisterListener(typez string, builder listenerBuilder, params describe.Par
 func IsListenerRegistered(typez string) bool {
 
 	listenersLock.Lock()
-	defer listenersLock.Unlock()
-
 	_, found := listeners[typez]
+	listenersLock.Unlock()
+
 	return found
 }
 
@@ -109,9 +108,8 @@ func IsListenerRegistered(typez string) bool {
 func DescribeListener(typez string) (describe.Parameters, error) {
 
 	listenersLock.Lock()
-	defer listenersLock.Unlock()
-
 	params, found := listenerParameters[typez]
+	listenersLock.Unlock()
 
 	if !found {
 		return nil, fmt.Errorf("no parameters found for listener : %s", typez)
@@ -124,9 +122,8 @@ func DescribeListener(typez string) (describe.Parameters, error) {
 func EndpointByName(uid, typez string, conf map[string]string) (Endpoint, error) {
 
 	endpointsLock.Lock()
-	defer endpointsLock.Unlock()
-
 	parameters, found := endpointParameters[typez]
+	endpointsLock.Unlock()
 
 	if !found {
 		return nil, fmt.Errorf("parameters for type %s not found", typez)
@@ -157,9 +154,8 @@ func EndpointByName(uid, typez string, conf map[string]string) (Endpoint, error)
 func ListenerByName(uid, typez string, conf map[string]string) (Listener, error) {
 
 	listenersLock.Lock()
-	defer listenersLock.Unlock()
-
 	parameters, found := listenerParameters[typez]
+	listenersLock.Unlock()
 
 	if !found {
 		return nil, fmt.Errorf("parameters for type %s not found", typez)

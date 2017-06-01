@@ -4,6 +4,7 @@ package describe
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/asaskevich/govalidator"
 	"github.com/spf13/cast"
@@ -138,12 +139,15 @@ type Value struct {
 // Values are a collection of Value struct
 type Values struct {
 	collection map[string]Value
+	sync.Mutex
 }
 
 // String returns a string and true if a value exists and can be cast to a string
 func (v Values) String(key string) (string, bool) {
 
+	v.Lock()
 	value, found := v.collection[key]
+	v.Unlock()
 
 	if !found {
 		return "", false
@@ -173,7 +177,9 @@ func (v Values) MustString(key string) string {
 // Bool returns a boolean and true if a value exists and can be cast to a boolean
 func (v Values) Bool(key string) (bool, bool) {
 
+	v.Lock()
 	value, found := v.collection[key]
+	v.Unlock()
 
 	if !found {
 		return false, false
@@ -204,7 +210,9 @@ func (v Values) BoolWithDefault(key string, defaultValue bool) bool {
 // Int32 returns a int32 and true if a value exists and can be cast to an int32
 func (v Values) Int32(key string) (int32, bool) {
 
+	v.Lock()
 	value, found := v.collection[key]
+	v.Unlock()
 
 	if !found {
 		return 0, false
@@ -236,7 +244,9 @@ func (v Values) Int32WithDefault(key string, defaultValue int32) int32 {
 // Int64 returns a int64 and true if a value exists and can be cast to an int64
 func (v Values) Int64(key string) (int64, bool) {
 
+	v.Lock()
 	value, found := v.collection[key]
+	v.Unlock()
 
 	if !found {
 		return 0, false
