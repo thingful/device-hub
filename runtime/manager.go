@@ -60,7 +60,7 @@ func newRuntimePipe(p store.Pipe) *Pipe {
 	}
 }
 
-// PipePredicate is an internal function to facilitate predicating the internal collection
+// PipePredicate is a function to facilitate predicating the collection
 type PipePredicate func(*Pipe) bool
 
 // NewEndpointManager returns a manager instance or an error

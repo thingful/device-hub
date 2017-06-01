@@ -17,7 +17,7 @@ type httpout struct {
 	client *http.Client
 }
 
-func NewHTTPEndpoint(url string, timeOutInMS int) httpout {
+func NewHTTPEndpoint(url string, timeOutInMS int32) httpout {
 
 	return httpout{
 		url: url,

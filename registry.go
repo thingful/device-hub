@@ -6,21 +6,23 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/thingful/device-hub/utils"
+	"github.com/thingful/device-hub/describe"
 )
 
 var (
-	endpoints     = map[string]lazy{}
-	endpointsLock = sync.RWMutex{}
+	endpoints          = map[string]lazy{}
+	endpointParameters = map[string][]describe.Parameter{}
+	endpointsLock      = sync.RWMutex{}
 
-	listeners     = map[string]lazy{}
-	listenersLock = sync.RWMutex{}
+	listeners          = map[string]lazy{}
+	listenerParameters = map[string][]describe.Parameter{}
+	listenersLock      = sync.RWMutex{}
 )
 
-type endpointBuilder func(config utils.TypedMap) (Endpoint, error)
-type listenerBuilder func(config utils.TypedMap) (Listener, error)
+type endpointBuilder func(config describe.Values) (Endpoint, error)
+type listenerBuilder func(config describe.Values) (Listener, error)
 
-type builderFunc func(config utils.TypedMap) (interface{}, error)
+type builderFunc func(config describe.Values) (interface{}, error)
 
 type lazy struct {
 	builder builderFunc
@@ -28,17 +30,23 @@ type lazy struct {
 }
 
 // RegisterEndpoint will store the builder with the correct name
-func RegisterEndpoint(typez string, builder endpointBuilder) {
+func RegisterEndpoint(typez string, builder endpointBuilder, params describe.Parameters) {
+
+	if len(params) == 0 {
+		panic("endpoint registered without any parameters")
+	}
 
 	endpointsLock.Lock()
 	defer endpointsLock.Unlock()
 
 	endpoints[typez] = lazy{
-		builder: func(config utils.TypedMap) (interface{}, error) {
+		builder: func(config describe.Values) (interface{}, error) {
 			i, err := builder(config)
 			return i, err
 		},
 	}
+
+	endpointParameters[typez] = params
 
 }
 
@@ -46,43 +54,88 @@ func RegisterEndpoint(typez string, builder endpointBuilder) {
 func IsEndpointRegistered(typez string) bool {
 
 	endpointsLock.Lock()
-	defer endpointsLock.Unlock()
-
 	_, found := endpoints[typez]
+	endpointsLock.Unlock()
+
 	return found
 }
 
+// DescribeEndpoint returns a collection of Parameter describing its configuration
+func DescribeEndpoint(typez string) (describe.Parameters, error) {
+
+	endpointsLock.Lock()
+	params, found := endpointParameters[typez]
+	endpointsLock.Unlock()
+
+	if !found {
+		return nil, fmt.Errorf("no parameters found for endpoint : %s", typez)
+	}
+
+	return params, nil
+}
+
 // RegisterListener will store the builder with the correct name
-func RegisterListener(typez string, builder listenerBuilder) {
+func RegisterListener(typez string, builder listenerBuilder, params describe.Parameters) {
+
+	if len(params) == 0 {
+		panic("listener registered without any parameters")
+	}
 
 	listenersLock.Lock()
 	defer listenersLock.Unlock()
 
 	listeners[typez] = lazy{
-		builder: func(config utils.TypedMap) (interface{}, error) {
+		builder: func(config describe.Values) (interface{}, error) {
 			i, err := builder(config)
 			return i, err
 		},
 	}
+
+	listenerParameters[typez] = params
 }
 
 // IsListenerRegistered confirms if the listener has been registered
 func IsListenerRegistered(typez string) bool {
 
 	listenersLock.Lock()
-	defer listenersLock.Unlock()
-
 	_, found := listeners[typez]
+	listenersLock.Unlock()
+
 	return found
 }
 
+// DescribeListener returns a collection of Parameter describing its configuration
+func DescribeListener(typez string) (describe.Parameters, error) {
+
+	listenersLock.Lock()
+	params, found := listenerParameters[typez]
+	listenersLock.Unlock()
+
+	if !found {
+		return nil, fmt.Errorf("no parameters found for listener : %s", typez)
+	}
+
+	return params, nil
+}
+
 // EndpointByName returns or creates an Endpoint of specified type
-func EndpointByName(uid, typez string, conf utils.TypedMap) (Endpoint, error) {
+func EndpointByName(uid, typez string, conf map[string]string) (Endpoint, error) {
 
 	endpointsLock.Lock()
-	defer endpointsLock.Unlock()
+	parameters, found := endpointParameters[typez]
+	endpointsLock.Unlock()
 
-	f, err := genericByName(endpoints, uid, typez, conf)
+	if !found {
+		return nil, fmt.Errorf("parameters for type %s not found", typez)
+	}
+
+	values, err := describe.NewValues(conf, parameters)
+
+	if err != nil {
+		return nil, err
+	}
+
+	f, err := genericByName(endpoints, uid, typez, values)
 
 	if err != nil {
 		return nil, err
@@ -98,12 +151,23 @@ func EndpointByName(uid, typez string, conf utils.TypedMap) (Endpoint, error) {
 }
 
 // ListenerByName returns or creates a Listener of specified type
-func ListenerByName(uid, typez string, conf utils.TypedMap) (Listener, error) {
+func ListenerByName(uid, typez string, conf map[string]string) (Listener, error) {
 
 	listenersLock.Lock()
-	defer listenersLock.Unlock()
+	parameters, found := listenerParameters[typez]
+	listenersLock.Unlock()
 
-	f, err := genericByName(listeners, uid, typez, conf)
+	if !found {
+		return nil, fmt.Errorf("parameters for type %s not found", typez)
+	}
+
+	values, err := describe.NewValues(conf, parameters)
+
+	if err != nil {
+		return nil, err
+	}
+
+	f, err := genericByName(listeners, uid, typez, values)
 
 	if err != nil {
 		return nil, err
@@ -119,7 +183,7 @@ func ListenerByName(uid, typez string, conf utils.TypedMap) (Listener, error) {
 }
 
 // genericByName exists instead of language support for generics!
-func genericByName(builders map[string]lazy, uid, typez string, conf utils.TypedMap) (interface{}, error) {
+func genericByName(builders map[string]lazy, uid, typez string, conf describe.Values) (interface{}, error) {
 
 	// try and find by uid
 	e, found := builders[uid]
