@@ -12,11 +12,33 @@ import (
 
 func init() {
 
+	mqtt_bindingAddress := describe.Parameter{
+		Name:        "mqtt-broker-address",
+		Type:        describe.Url,
+		Required:    true,
+		Description: "address to bind to",
+		Examples:    []string{"tcp://0.0.0.0:1883"},
+	}
+
+	mqtt_username := describe.Parameter{
+		Name:        "mqtt-username",
+		Type:        describe.String,
+		Required:    false,
+		Description: "user name for mqtt server",
+	}
+
+	mqtt_password := describe.Parameter{
+		Name:        "mqtt-password",
+		Type:        describe.String,
+		Required:    false,
+		Description: "user password for mqtt server",
+	}
+
 	hub.RegisterListener("mqtt",
 
 		func(config describe.Values) (hub.Listener, error) {
 
-			brokerAddress := config.MustString("mqtt-broker-address")
+			brokerAddress := config.MustString(mqtt_bindingAddress.Name)
 
 			clientName := fmt.Sprintf("device-hub-%s", hub.SourceVersion)
 
@@ -31,29 +53,29 @@ func init() {
 
 		},
 		describe.Parameters{
-			describe.Parameter{
-				Name:        "mqtt-broker-address",
-				Type:        describe.Url,
-				Required:    true,
-				Description: "address to bind to",
-				Examples:    []string{"tcp://0.0.0.0:1883"}},
+			mqtt_bindingAddress,
+			mqtt_username,
+			mqtt_password,
 		},
 	)
+
+	http_bindingAddress := describe.Parameter{
+		Name:        "http-binding-address",
+		Type:        describe.Url,
+		Required:    true,
+		Description: "address to bind to",
+		Examples:    []string{"tcp://0.0.0.0:9090", "tcp://*:9090"},
+	}
 
 	hub.RegisterListener("http",
 		func(config describe.Values) (hub.Listener, error) {
 
-			binding := config.MustString("http-binding-address")
+			binding := config.MustString(http_bindingAddress.Name)
 			return newHTTPListener(binding)
 
 		},
 		describe.Parameters{
-			describe.Parameter{
-				Name:        "http-binding-address",
-				Type:        describe.Url,
-				Required:    true,
-				Description: "address to bind to",
-				Examples:    []string{"tcp://0.0.0.0:9090", "tcp://*:9090"}},
+			http_bindingAddress,
 		},
 	)
 }
