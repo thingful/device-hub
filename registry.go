@@ -63,6 +63,9 @@ func IsEndpointRegistered(typez string) bool {
 // DescribeEndpoint returns a collection of Parameter describing its configuration
 func DescribeEndpoint(typez string) (describe.Parameters, error) {
 
+	endpointsLock.Lock()
+	defer endpointsLock.Unlock()
+
 	params, found := endpointParameters[typez]
 
 	if !found {
@@ -104,6 +107,9 @@ func IsListenerRegistered(typez string) bool {
 
 // DescribeListener returns a collection of Parameter describing its configuration
 func DescribeListener(typez string) (describe.Parameters, error) {
+
+	listenersLock.Lock()
+	defer listenersLock.Unlock()
 
 	params, found := listenerParameters[typez]
 
