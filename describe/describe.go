@@ -54,7 +54,9 @@ func (p Parameter) Describe() string {
 
 func NewValues(config map[string]string, params Parameters) (Values, error) {
 
-	values := Values{}
+	values := Values{
+		collection: map[string]Value{},
+	}
 
 	// validate params
 	for _, p := range params {
@@ -66,18 +68,18 @@ func NewValues(config map[string]string, params Parameters) (Values, error) {
 			if !found {
 				return values, fmt.Errorf("%s is Required but not supplied", p.Name)
 			}
-			values[p.Name] = Value{Parameter: p, Value: v}
+			values.collection[p.Name] = Value{Parameter: p, Value: v}
 		} else {
 
 			v, found := config[p.Name]
 
 			if found {
-				values[p.Name] = Value{Parameter: p, Value: v}
+				values.collection[p.Name] = Value{Parameter: p, Value: v}
 			}
 		}
 	}
 	// validate types
-	for k, v := range values {
+	for k, v := range values.collection {
 
 		switch v.Type {
 
@@ -133,13 +135,15 @@ type Value struct {
 	Value interface{}
 }
 
-// Values are a collection of Value structs
-type Values map[string]Value
+// Values are a collection of Value struct
+type Values struct {
+	collection map[string]Value
+}
 
 // String returns a string and true if a value exists and can be cast to a string
 func (v Values) String(key string) (string, bool) {
 
-	value, found := v[key]
+	value, found := v.collection[key]
 
 	if !found {
 		return "", false
@@ -169,7 +173,7 @@ func (v Values) MustString(key string) string {
 // Bool returns a boolean and true if a value exists and can be cast to a boolean
 func (v Values) Bool(key string) (bool, bool) {
 
-	value, found := v[key]
+	value, found := v.collection[key]
 
 	if !found {
 		return false, false
@@ -200,7 +204,7 @@ func (v Values) BoolWithDefault(key string, defaultValue bool) bool {
 // Int32 returns a int32 and true if a value exists and can be cast to an int32
 func (v Values) Int32(key string) (int32, bool) {
 
-	value, found := v[key]
+	value, found := v.collection[key]
 
 	if !found {
 		return 0, false
@@ -232,7 +236,7 @@ func (v Values) Int32WithDefault(key string, defaultValue int32) int32 {
 // Int64 returns a int64 and true if a value exists and can be cast to an int64
 func (v Values) Int64(key string) (int64, bool) {
 
-	value, found := v[key]
+	value, found := v.collection[key]
 
 	if !found {
 		return 0, false
