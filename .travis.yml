@@ -8,4 +8,4 @@ services:
   - docker
 
 script:
-    make docker_up test_integration
+    make docker_up coverage
