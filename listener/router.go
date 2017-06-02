@@ -1,7 +1,11 @@
 // Copyright © 2017 thingful
 package listener
 
-import hub "github.com/thingful/device-hub"
+import (
+	"sync"
+
+	hub "github.com/thingful/device-hub"
+)
 
 func DefaultRouter() *router {
 	return &router{routes: map[string]hub.Channel{}}
@@ -11,12 +15,14 @@ func DefaultRouter() *router {
 // TODO : add header routing
 type router struct {
 	routes map[string]hub.Channel
+	sync.Mutex
 }
 
 func (r *router) register(uri string, channel hub.Channel) {
 	// TODO : is overwriting good enough
-	// TODO : should this be locked?
+	r.Lock()
 	r.routes[uri] = channel
+	r.Unlock()
 }
 
 func (r *router) delete(uri string) error {
@@ -25,6 +31,9 @@ func (r *router) delete(uri string) error {
 }
 
 func (r *router) Match(uri string) (bool, hub.Channel) {
+	r.Lock()
 	c, ok := r.routes[uri]
+	r.Unlock()
+
 	return ok, c
 }
