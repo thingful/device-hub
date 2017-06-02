@@ -6,8 +6,6 @@ import (
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 
-	mqtt_helper "github.com/thingful/device-hub/utils/mqtt"
-
 	// TODO : move import to upstream project
 	"github.com/mdevilliers/go-compose/compose"
 )
@@ -41,8 +39,13 @@ services:
 
 	c = compose.MustStartParallel(composeYML, false)
 
-	mqttAddress := fmt.Sprintf("tcp://%s:%d", compose.MustInferDockerHost(), c.Containers["mqtt"].MustGetFirstPublicPort(1883, "tcp"))
-	client := mqtt_helper.DefaultMQTTClient(mqttAddress, "device-hub")
+	brokerAddress := fmt.Sprintf("tcp://%s:%d", compose.MustInferDockerHost(), c.Containers["mqtt"].MustGetFirstPublicPort(1883, "tcp"))
+
+	opts := mqtt.NewClientOptions()
+	opts.AddBroker(brokerAddress)
+	opts.SetClientID("device-hub-test-client")
+
+	client := mqtt.NewClient(opts)
 
 	compose.MustConnectWithDefaults(func() error {
 		if token := client.Connect(); token.Wait() && token.Error() != nil {
