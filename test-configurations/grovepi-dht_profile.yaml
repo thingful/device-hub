@@ -1,0 +1,35 @@
+---
+type: profile
+kind: script
+configuration:
+  profile-name : grovepi/dht
+  profile-description : blah blah blah
+  profile-version: 1.0.0-beta
+  script-main: xxx
+  script-runtime: javascript
+  script-input: raw
+  script-contents: >
+      function xxx ( input )
+      {
+        temp = input[1] | input[2] << 8 | input[3] << 16 | input[4] << 24
+        humidity = input[5] | input[6] << 8 | input[7] << 16 | input[8] << 24
+        return {
+          'temp' : Bytes2Float32(temp),
+          'humidity' :  Bytes2Float32(humidity)
+        }
+      }
+      function Bytes2Float32(bytes) {
+        var sign = (bytes & 0x80000000) ? -1 : 1;
+        var exponent = ((bytes >> 23) & 0xFF) - 127;
+        var significand = (bytes & ~(-1 << 23));
+        
+        if (exponent == 128)
+            return sign * ((significand) ? Number.NaN : Number.POSITIVE_INFINITY);
+        if (exponent == -127) {
+            if (significand == 0) return sign * 0.0;
+            exponent = -126;
+            significand /= (1 << 22);
+        } else significand = (significand | (1 << 23)) / (1 << 23);
+        
+        return sign * significand * Math.pow(2, exponent);
+      }

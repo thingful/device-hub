@@ -3,5 +3,5 @@ uid: grovepi-dht-listener
 type: listener
 kind: grovepi-dht
 configuration:
-    grovepi-sample-rate: 0.2
-    grovepi-pin: D7
+    sample-rate-ms: 10000
+    pin: D7
