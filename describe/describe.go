@@ -310,3 +310,16 @@ func (v Values) Float32(key string) (float32, bool) {
 	return i, true
 
 }
+
+// Float32WithDefault returns a float32 or a default value if not found
+func (v Values) Float32WithDefault(key string, defaultValue float32) float32 {
+
+	value, found := v.Float32(key)
+
+	if !found {
+
+		return defaultValue
+	}
+
+	return value
+}
