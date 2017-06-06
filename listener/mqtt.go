@@ -34,7 +34,7 @@ func (m *mqttlistener) NewChannel(topic string) (hub.Channel, error) {
 	out := make(chan hub.Message)
 
 	handler := func(client mqtt.Client, msg mqtt.Message) {
-		input := newHubMessage(msg.Payload(), "MQTT", msg.Topic())
+		input := NewHubMessage(msg.Payload(), "MQTT", msg.Topic())
 		out <- input
 	}
 

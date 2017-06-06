@@ -4,6 +4,15 @@ package listener
 
 import hub "github.com/thingful/device-hub"
 
+// NewDefaultChannel returns a defaultChannel instance
+func NewDefaultChannel(errors chan error, out chan hub.Message, closer func() error) defaultChannel {
+	return defaultChannel{
+		errors: errors,
+		out:    out,
+		close:  closer,
+	}
+}
+
 // defaultChannel is an implementation of Channel
 type defaultChannel struct {
 	errors chan error

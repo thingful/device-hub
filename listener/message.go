@@ -9,7 +9,7 @@ import (
 	hub "github.com/thingful/device-hub"
 )
 
-func newHubMessage(payload []byte, protocol, uri string) hub.Message {
+func NewHubMessage(payload []byte, protocol, uri string) hub.Message {
 
 	host, err := os.Hostname()
 
