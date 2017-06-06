@@ -110,37 +110,23 @@ func (grovePi *GrovePi) PinMode(pin byte, mode string) error {
 }
 
 func (grovePi *GrovePi) ReadDHT(pin byte) ([]byte, error) {
-	b := []byte{DHT_READ, pin, 1, 0}
+	b := []byte{DHT_READ, pin, 0, 0}
 	return grovePi.readDHTRawData(b)
 }
 
-/*
-func (grovePi *GrovePi) ReadDHT(pin byte) (float32, float32, error) {
-	b := []byte{DHT_READ, pin, 1, 0}
-	rawdata, err := grovePi.readDHTRawData(b)
-	if err != nil {
-		return 0, 0, err
-	}
-	temperatureData := rawdata[1:5]
-
-	tInt := int32(temperatureData[0]) | int32(temperatureData[1])<<8 | int32(temperatureData[2])<<16 | int32(temperatureData[3])<<24
-	t := (*(*float32)(unsafe.Pointer(&tInt)))
-
-	humidityData := rawdata[5:9]
-	humInt := int32(humidityData[0]) | int32(humidityData[1])<<8 | int32(humidityData[2])<<16 | int32(humidityData[3])<<24
-	h := (*(*float32)(unsafe.Pointer(&humInt)))
-	return t, h, nil
-}
-*/
 func (grovePi *GrovePi) readDHTRawData(cmd []byte) ([]byte, error) {
 
 	err := grovePi.i2cDevice.Write(1, cmd)
 	if err != nil {
 		return nil, err
 	}
+
 	time.Sleep(600 * time.Millisecond)
+
 	grovePi.i2cDevice.ReadByte(1)
+
 	time.Sleep(100 * time.Millisecond)
+
 	raw, err := grovePi.i2cDevice.Read(1, 9)
 	if err != nil {
 		return nil, err
