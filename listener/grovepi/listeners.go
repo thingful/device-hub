@@ -1,7 +1,9 @@
 package grovepi
 
 import (
+	"errors"
 	"fmt"
+	"sync"
 	"time"
 
 	hub "github.com/thingful/device-hub"
@@ -41,9 +43,18 @@ func newDHTListener(sampleTimeInMs int32) (*dhtListener, error) {
 type dhtListener struct {
 	sampleTimeInMs int32
 	close          chan struct{}
+	started        bool
+	lock           sync.Mutex
 }
 
 func (h *dhtListener) NewChannel(uri string) (hub.Channel, error) {
+
+	h.lock.Lock()
+	defer h.lock.Unlock()
+	if h.started {
+		return nil, errors.New("listener already monitoring an existing humidity sensor")
+	}
+	h.started = true
 
 	var pin byte
 	switch uri {
@@ -73,7 +84,7 @@ func (h *dhtListener) NewChannel(uri string) (hub.Channel, error) {
 	out := make(chan hub.Message)
 
 	channel := listener.NewDefaultChannel(errors, out, func() error {
-		return nil
+		return h.Close()
 	})
 
 	go h.loop(channel, pin)
@@ -92,10 +103,11 @@ func (h *dhtListener) loop(channel hub.Channel, pin byte) {
 	grove := InitGrovePi(0x04)
 	wait := time.Millisecond * time.Duration(h.sampleTimeInMs)
 
+l:
 	for {
 		select {
 		case <-h.close:
-			return
+			break l
 		case <-time.Tick(wait):
 
 		}
@@ -109,5 +121,4 @@ func (h *dhtListener) loop(channel hub.Channel, pin byte) {
 		}
 
 	}
-
 }
