@@ -4,4 +4,3 @@ type: listener
 kind: grovepi-dht
 configuration:
     sample-rate-ms: 10000
-    pin: D7

@@ -19,68 +19,55 @@ func init() {
 		Description: "Sample rate in milliseconds",
 	}
 
-	grovepi_pin := describe.Parameter{
-		Name:        "pin",
-		Type:        describe.String,
-		Required:    true,
-		Description: "Pin to read data from",
-		Examples:    []string{"A0", "A1", "A2", "D2", "D3", "D4", "D5", "D6", "D7", "D8"},
-	}
-
 	hub.RegisterListener("grovepi-dht",
 		func(config describe.Values) (hub.Listener, error) {
 
 			hertz := config.Int32WithDefault(grovepi_samplerate.Name, grovepi_samplerate.Default.(int32))
-
-			pinStr := config.MustString(grovepi_pin.Name)
-			var pin byte
-			switch pinStr {
-			case "AO":
-				pin = byte(A0)
-			case "A1":
-				pin = byte(A1)
-			case "A2":
-				pin = byte(A2)
-			case "D2":
-				pin = byte(D2)
-			case "D3":
-				pin = byte(D3)
-			case "D4":
-				pin = byte(D4)
-			case "D5":
-				pin = byte(D5)
-			case "D6":
-				pin = byte(D6)
-			case "D7":
-				pin = byte(D7)
-			default:
-				return nil, fmt.Errorf("unknown pin : %s", pinStr)
-			}
-
-			return newDHTListener(hertz, pin)
+			return newDHTListener(hertz)
 		},
 		describe.Parameters{
 			grovepi_samplerate,
-			grovepi_pin,
 		})
 
 }
 
-func newDHTListener(sampleTimeInMs int32, pin byte) (*dhtListener, error) {
+func newDHTListener(sampleTimeInMs int32) (*dhtListener, error) {
 	return &dhtListener{
 		sampleTimeInMs: sampleTimeInMs,
-		pin:            pin,
 		close:          make(chan struct{}),
 	}, nil
 }
 
 type dhtListener struct {
 	sampleTimeInMs int32
-	pin            byte
 	close          chan struct{}
 }
 
 func (h *dhtListener) NewChannel(uri string) (hub.Channel, error) {
+
+	var pin byte
+	switch uri {
+	case "AO":
+		pin = byte(A0)
+	case "A1":
+		pin = byte(A1)
+	case "A2":
+		pin = byte(A2)
+	case "D2":
+		pin = byte(D2)
+	case "D3":
+		pin = byte(D3)
+	case "D4":
+		pin = byte(D4)
+	case "D5":
+		pin = byte(D5)
+	case "D6":
+		pin = byte(D6)
+	case "D7":
+		pin = byte(D7)
+	default:
+		return nil, fmt.Errorf("unknown uri : %s", uri)
+	}
 
 	errors := make(chan error)
 	out := make(chan hub.Message)
@@ -89,7 +76,7 @@ func (h *dhtListener) NewChannel(uri string) (hub.Channel, error) {
 		return nil
 	})
 
-	go h.loop(channel)
+	go h.loop(channel, pin)
 
 	return channel, nil
 }
@@ -99,7 +86,7 @@ func (h *dhtListener) Close() error {
 	return nil
 }
 
-func (h *dhtListener) loop(channel hub.Channel) {
+func (h *dhtListener) loop(channel hub.Channel, pin byte) {
 
 	// What is this magic number??
 	grove := InitGrovePi(0x04)
@@ -113,10 +100,10 @@ func (h *dhtListener) loop(channel hub.Channel) {
 
 		}
 
-		data, err := grove.ReadDHT(h.pin)
+		data, err := grove.ReadDHT(pin)
 
 		if err == nil {
-			channel.Out() <- listener.NewHubMessage(data, "GROVEPI", "TODO : CHANGEME")
+			channel.Out() <- listener.NewHubMessage(data, "GROVEPI", string(pin))
 		} else {
 			channel.Errors() <- err
 		}
