@@ -5,6 +5,20 @@ configuration:
   profile-name : grovepi/dht
   profile-description : blah blah blah
   profile-version: 1.0.0-beta
+  schema: >
+   {
+        "@context": {
+            "decode"    : "http://decode.eu#",
+            "m3-lite"   : "http://purl.org/iot/vocab/m3-lite#",
+            "humidity"  : "m3-lite:AirHumidity",
+            "temp"      : "m3-lite:AirTemperature",
+            "domain"    : "decode:hasDomain"
+        },
+        "@type" : "m3-lite:Sensor",
+        "domain": {
+            "@type": "m3-lite:Environment"
+        }
+   }
   script-main: xxx
   script-runtime: javascript
   script-input: raw
