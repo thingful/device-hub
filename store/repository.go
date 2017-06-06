@@ -60,12 +60,6 @@ func NewRepository(store *Store) *Repository {
 
 func (e *Repository) UpdateOrCreateEntity(item proto.Entity) (string, error) {
 
-	hash, err := hash(item)
-
-	if err != nil {
-		return "", err
-	}
-
 	var bucket bucket
 
 	switch strings.ToLower(item.Type) {
@@ -89,11 +83,11 @@ func (e *Repository) UpdateOrCreateEntity(item proto.Entity) (string, error) {
 	case "profile":
 		bucket = e.Profiles.bucket
 
-		if item.Configuration["profile-name"] != "" {
+		if item.Configuration["profile-name"] != "" && item.Uid == "" {
 			// TODO : consider adding version to the profile-name?
 			// Would be useful for having multiple profiles running
 			// at the same time.
-			hash = []byte(item.Configuration["profile-name"])
+			item.Uid = item.Configuration["profile-name"]
 		}
 
 	default:
@@ -101,10 +95,17 @@ func (e *Repository) UpdateOrCreateEntity(item proto.Entity) (string, error) {
 	}
 
 	if item.Uid == "" {
+
+		hash, err := hash(item)
+
+		if err != nil {
+			return "", err
+		}
+
 		item.Uid = string(hash)
 	}
 
-	err = e.store.Insert(bucket, []byte(item.Uid), item)
+	err := e.store.Insert(bucket, []byte(item.Uid), item)
 
 	if err != nil {
 		return "", err
