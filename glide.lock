@@ -1,5 +1,5 @@
 hash: 41413bf9dbab29817253dcad6608086361e41d9a982a08c8e06404f838dc8d1e
-updated: 2017-05-31T13:45:08.873259426+01:00
+updated: 2017-06-06T22:48:12.72110712+01:00
 imports:
 - name: cloud.google.com/go
   version: ed63fb27efcf32e25fe7837e4662457d3da4c4f2
@@ -31,6 +31,8 @@ imports:
   version: 24e783b9eebdcded8ac31bdab1de2d79d8788350
   subpackages:
   - compose
+- name: github.com/mrmorphic/hwio
+  version: 4af3c0a919085ce9b99bbe5a8e3334b805618c2e
 - name: github.com/robertkrimen/otto
   version: 1861f2408b93febb6dca3e39483fa6fe63d6e70f
   subpackages:
