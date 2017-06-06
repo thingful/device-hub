@@ -79,6 +79,7 @@ func (h *dhtListener) Close() error {
 
 func (h *dhtListener) loop(channel hub.Channel) {
 
+	// What is this magic number??
 	grove := InitGrovePi(0x04)
 
 	for {
@@ -91,7 +92,7 @@ func (h *dhtListener) loop(channel hub.Channel) {
 
 		data, err := grove.ReadDHT(h.pin)
 
-		if err != nil {
+		if err == nil {
 			channel.Out() <- listener.NewHubMessage(data, "GROVEPI", "TODO : CHANGEME")
 		} else {
 			channel.Errors() <- err
