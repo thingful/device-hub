@@ -28,6 +28,9 @@ const (
 
 	// Bool type is a true/false value
 	Bool = typez("bool")
+
+	// Float32 type is a float32
+	Float32 = typez("float32")
 )
 
 // Parameter describes a configuration parameter
@@ -120,6 +123,13 @@ func NewValues(config map[string]string, params Parameters) (Values, error) {
 
 			if !ok {
 				return values, fmt.Errorf("%s is not of type Url", k)
+			}
+		case Float32:
+
+			_, ok := values.Float32(k)
+
+			if !ok {
+				return values, fmt.Errorf("%s is not of type Int32", k)
 			}
 
 		default:
@@ -277,5 +287,26 @@ func (v Values) Url(key string) (string, bool) {
 	}
 
 	return value, true
+
+}
+
+// Float32 returns a float32 and true if a value exists and can be cast to an int64
+func (v Values) Float32(key string) (float32, bool) {
+
+	v.Lock()
+	value, found := v.collection[key]
+	v.Unlock()
+
+	if !found {
+		return 0, false
+	}
+
+	i, err := cast.ToFloat32E(value.Value)
+
+	if err != nil {
+		return 0, false
+	}
+
+	return i, true
 
 }
