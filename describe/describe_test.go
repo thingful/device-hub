@@ -48,6 +48,7 @@ func TestNewValues_AllValuesRequired(t *testing.T) {
 	b, bfound := values.Bool("a-bool")
 	assert.True(t, bfound)
 	assert.True(t, b)
+
 }
 
 func TestNewValues_NoValuesRequired(t *testing.T) {
@@ -112,7 +113,7 @@ func TestNewValues_InvalidURL(t *testing.T) {
 
 }
 
-func TestFloat64(t *testing.T) {
+func TestFloat32(t *testing.T) {
 
 	t.Parallel()
 
