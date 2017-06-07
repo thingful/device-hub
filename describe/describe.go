@@ -290,7 +290,7 @@ func (v Values) Url(key string) (string, bool) {
 
 }
 
-// Float32 returns a float32 and true if a value exists and can be cast to an int64
+// Float32 returns a float32 and true if a value exists and can be cast to an float32
 func (v Values) Float32(key string) (float32, bool) {
 
 	v.Lock()
