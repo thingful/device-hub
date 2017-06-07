@@ -83,29 +83,17 @@ func (e *Repository) UpdateOrCreateEntity(item proto.Entity) (string, error) {
 	case "profile":
 		bucket = e.Profiles.bucket
 
-		if item.Configuration["profile-name"] != "" && item.Uid == "" {
-			// TODO : consider adding version to the profile-name?
-			// Would be useful for having multiple profiles running
-			// at the same time.
-			item.Uid = item.Configuration["profile-name"]
-		}
-
 	default:
 		return "", fmt.Errorf("type : %s not registered", item.Type)
 	}
 
-	if item.Uid == "" {
+	err := ensureEntityHasUID(&item)
 
-		hash, err := hash(item)
-
-		if err != nil {
-			return "", err
-		}
-
-		item.Uid = string(hash)
+	if err != nil {
+		return "", err
 	}
 
-	err := e.store.Insert(bucket, []byte(item.Uid), item)
+	err = e.store.Insert(bucket, []byte(item.Uid), item)
 
 	if err != nil {
 		return "", err
@@ -178,6 +166,36 @@ func (e *Repository) Search(filter string) ([]*proto.Entity, error) {
 	}
 
 	return all, nil
+}
+
+func ensureEntityHasUID(entity *proto.Entity) error {
+
+	if entity.Uid != "" {
+		return nil
+	}
+
+	switch strings.ToLower(entity.Type) {
+
+	case "profile":
+
+		if entity.Configuration["profile-name"] != "" {
+			// TODO : consider adding version to the profile-name?
+			// Would be useful for having multiple profiles running
+			// at the same time.
+			entity.Uid = entity.Configuration["profile-name"]
+		}
+
+	}
+
+	hash, err := hash(entity)
+
+	if err != nil {
+		return err
+	}
+
+	entity.Uid = string(hash)
+	return nil
+
 }
 
 func hash(data interface{}) ([]byte, error) {
