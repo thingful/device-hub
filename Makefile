@@ -12,7 +12,7 @@ GO_COVER = go tool cover
 GO_BENCH = go test -bench=.
 ARTEFACT_DIR = coverage
 
-all: pi linux darwin ## build executables for the various environments
+all: check-license pi linux darwin ## build executables for the various environments
 
 .PHONY: all
 
@@ -42,7 +42,7 @@ bench: ## run benchmark tests
 coverage: test_integration ## generate and display coverage report
 	$(GO_COVER) -func=$(ARTEFACT_DIR)/cover-integration.out
 
-.PHONY: test_integration 
+.PHONY: test_integration
 
 proto: ## regenerate protobuf files
 	protoc --gofast_out=plugins=grpc:. ./proto/*.proto
@@ -89,5 +89,7 @@ tmp/build/$(CLI_EXE_NAME)-darwin-amd64:
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
-.PHONY: help
+check-license:
+	@./scripts/check-license.sh
 
+.PHONY: help
