@@ -129,7 +129,7 @@ func NewValues(config map[string]string, params Parameters) (Values, error) {
 			_, ok := values.Float32(k)
 
 			if !ok {
-				return values, fmt.Errorf("%s is not of type Int32", k)
+				return values, fmt.Errorf("%s is not of type Float32", k)
 			}
 
 		default:
