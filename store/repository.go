@@ -176,6 +176,7 @@ func ensureEntityHasUID(entity *proto.Entity) error {
 
 	switch strings.ToLower(entity.Type) {
 
+	// profile entities should default to the profile-name
 	case "profile":
 
 		if entity.Configuration["profile-name"] != "" {
@@ -183,8 +184,8 @@ func ensureEntityHasUID(entity *proto.Entity) error {
 			// Would be useful for having multiple profiles running
 			// at the same time.
 			entity.Uid = entity.Configuration["profile-name"]
+			return nil
 		}
-
 	}
 
 	hash, err := hash(entity)
