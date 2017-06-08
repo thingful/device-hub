@@ -12,9 +12,14 @@ GO_COVER = go tool cover
 GO_BENCH = go test -bench=.
 ARTEFACT_DIR = coverage
 
-all: check-license pi linux darwin ## build executables for the various environments
+all: pi linux darwin ## build executables for the various environments
 
 .PHONY: all
+
+check-license: ## check the license header in every code file
+		@./scripts/check-license.sh
+
+.PHONY: check-license
 
 test: ## run tests
 	$(GO_TEST) $(PACKAGES)
@@ -88,8 +93,5 @@ tmp/build/$(CLI_EXE_NAME)-darwin-amd64:
 # 'help' parses the Makefile and displays the help text
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
-
-check-license:
-	@./scripts/check-license.sh
 
 .PHONY: help
