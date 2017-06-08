@@ -186,17 +186,18 @@ func ensureEntityHasUID(entity *proto.Entity) error {
 			entity.Uid = entity.Configuration["profile-name"]
 			return nil
 		}
+	default:
+		hash, err := hash(entity)
+
+		if err != nil {
+			return err
+		}
+
+		entity.Uid = string(hash)
+		return nil
+
 	}
-
-	hash, err := hash(entity)
-
-	if err != nil {
-		return err
-	}
-
-	entity.Uid = string(hash)
 	return nil
-
 }
 
 func hash(data interface{}) ([]byte, error) {
