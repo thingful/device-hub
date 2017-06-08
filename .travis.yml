@@ -9,3 +9,6 @@ services:
 
 script:
     make docker_up coverage
+
+notifications:
+    slack: thingful:1X9OpFzHUf1i7Y9lPyHoNGld
