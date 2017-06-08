@@ -50,7 +50,7 @@ func TestUIDIsNotSetOnEntity(t *testing.T) {
 	assert.Equal(t, "foobar", profile.Uid)
 }
 
-func TestProfileUidDefaultsToProfileName(t *testing.T) {
+func TestProfileUIDDefaultsToProfileName(t *testing.T) {
 	t.Parallel()
 
 	profile := &proto.Entity{
