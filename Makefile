@@ -12,7 +12,7 @@ GO_COVER = go tool cover
 GO_BENCH = go test -bench=.
 ARTEFACT_DIR = coverage
 
-all: pi linux darwin ## build executables for the various environments
+all: pi linux-i386 linux-amd64 darwin ## build executables for the various environments
 
 .PHONY: all
 
@@ -65,11 +65,19 @@ docker_up: ## run dependencies as docker containers
 
 darwin: tmp/build/$(EXE_NAME)-darwin-amd64 tmp/build/$(CLI_EXE_NAME)-darwin-amd64 ## build for mac
 
-linux: tmp/build/$(EXE_NAME)-linux-amd64 tmp/build/$(CLI_EXE_NAME)-linux-amd64 ## build for linux
+linux-i386: tmp/build/$(EXE_NAME)-linux-i386 tmp/build/$(CLI_EXE_NAME)-linux-i386 ## build for linux i386
+
+linux-amd64: tmp/build/$(EXE_NAME)-linux-amd64 tmp/build/$(CLI_EXE_NAME)-linux-amd64 ## build for linux amd64
 
 pi: tmp/build/$(EXE_NAME)-linux-arm tmp/build/$(CLI_EXE_NAME)-linux-arm ## build for raspberry-pi
 
-.PHONY: darwin linux pi
+.PHONY: darwin linux-i386 linux-amd64 pi
+
+tmp/build/$(EXE_NAME)-linux-i386:
+	GOOS=linux GOARCH=386 go build $(BUILD_FLAGS) -o $(@) ./cmd/device-hub
+
+tmp/build/$(CLI_EXE_NAME)-linux-i386:
+	GOOS=linux GOARCH=386 go build $(BUILD_FLAGS) -o $(@) ./cmd/device-hub-cli
 
 tmp/build/$(EXE_NAME)-linux-amd64:
 	GOOS=linux GOARCH=amd64 go build $(BUILD_FLAGS) -o $(@) ./cmd/device-hub
