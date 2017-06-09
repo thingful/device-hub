@@ -50,9 +50,6 @@ func (s *Store) MustCreateBuckets(buckets []bucket) {
 
 }
 
-func mustCreateBucket(tx *bolt.Tx, bucket bucket) {
-}
-
 func (s *Store) Insert(bucket bucket, uid []byte, data interface{}) error {
 
 	err := s.db.Update(func(tx *bolt.Tx) error {

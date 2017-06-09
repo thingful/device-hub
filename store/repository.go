@@ -60,17 +60,11 @@ func NewRepository(store *Store) *Repository {
 
 func (e *Repository) UpdateOrCreateEntity(item proto.Entity) (string, error) {
 
-	hash, err := hash(item)
-
-	if err != nil {
-		return "", err
-	}
-
-	var bucket bucket
+	var b bucket
 
 	switch strings.ToLower(item.Type) {
 	case "listener":
-		bucket = e.Listeners.bucket
+		b = e.Listeners.bucket
 
 		exists := hub.IsListenerRegistered(item.Kind)
 
@@ -79,7 +73,7 @@ func (e *Repository) UpdateOrCreateEntity(item proto.Entity) (string, error) {
 		}
 
 	case "endpoint":
-		bucket = e.Endpoints.bucket
+		b = e.Endpoints.bucket
 
 		exists := hub.IsEndpointRegistered(item.Kind)
 		if !exists {
@@ -87,24 +81,19 @@ func (e *Repository) UpdateOrCreateEntity(item proto.Entity) (string, error) {
 		}
 
 	case "profile":
-		bucket = e.Profiles.bucket
-
-		if item.Configuration["profile-name"] != "" {
-			// TODO : consider adding version to the profile-name?
-			// Would be useful for having multiple profiles running
-			// at the same time.
-			hash = []byte(item.Configuration["profile-name"])
-		}
+		b = e.Profiles.bucket
 
 	default:
 		return "", fmt.Errorf("type : %s not registered", item.Type)
 	}
 
-	if item.Uid == "" {
-		item.Uid = string(hash)
+	err := ensureEntityHasUID(&item)
+
+	if err != nil {
+		return "", err
 	}
 
-	err = e.store.Insert(bucket, []byte(item.Uid), item)
+	err = e.store.Insert(b, []byte(item.Uid), item)
 
 	if err != nil {
 		return "", err
@@ -177,6 +166,38 @@ func (e *Repository) Search(filter string) ([]*proto.Entity, error) {
 	}
 
 	return all, nil
+}
+
+func ensureEntityHasUID(entity *proto.Entity) error {
+
+	if entity.Uid != "" {
+		return nil
+	}
+
+	switch strings.ToLower(entity.Type) {
+
+	// profile entities should default to the profile-name
+	case "profile":
+
+		if entity.Configuration["profile-name"] != "" {
+			// TODO : consider adding version to the profile-name?
+			// Would be useful for having multiple profiles running
+			// at the same time.
+			entity.Uid = entity.Configuration["profile-name"]
+			return nil
+		}
+	default:
+		hash, err := hash(entity)
+
+		if err != nil {
+			return err
+		}
+
+		entity.Uid = string(hash)
+		return nil
+
+	}
+	return nil
 }
 
 func hash(data interface{}) ([]byte, error) {
