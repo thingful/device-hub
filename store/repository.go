@@ -60,11 +60,11 @@ func NewRepository(store *Store) *Repository {
 
 func (e *Repository) UpdateOrCreateEntity(item proto.Entity) (string, error) {
 
-	var bucket bucket
+	var b bucket
 
 	switch strings.ToLower(item.Type) {
 	case "listener":
-		bucket = e.Listeners.bucket
+		b = e.Listeners.bucket
 
 		exists := hub.IsListenerRegistered(item.Kind)
 
@@ -73,7 +73,7 @@ func (e *Repository) UpdateOrCreateEntity(item proto.Entity) (string, error) {
 		}
 
 	case "endpoint":
-		bucket = e.Endpoints.bucket
+		b = e.Endpoints.bucket
 
 		exists := hub.IsEndpointRegistered(item.Kind)
 		if !exists {
@@ -81,7 +81,7 @@ func (e *Repository) UpdateOrCreateEntity(item proto.Entity) (string, error) {
 		}
 
 	case "profile":
-		bucket = e.Profiles.bucket
+		b = e.Profiles.bucket
 
 	default:
 		return "", fmt.Errorf("type : %s not registered", item.Type)
@@ -93,7 +93,7 @@ func (e *Repository) UpdateOrCreateEntity(item proto.Entity) (string, error) {
 		return "", err
 	}
 
-	err = e.store.Insert(bucket, []byte(item.Uid), item)
+	err = e.store.Insert(b, []byte(item.Uid), item)
 
 	if err != nil {
 		return "", err
