@@ -16,6 +16,11 @@ all: pi linux darwin ## build executables for the various environments
 
 .PHONY: all
 
+check-license: ## check the license header in every code file
+		@./scripts/check-license.sh
+
+.PHONY: check-license
+
 test: ## run tests
 	$(GO_TEST) $(PACKAGES)
 
@@ -42,7 +47,7 @@ bench: ## run benchmark tests
 coverage: test_integration ## generate and display coverage report
 	$(GO_COVER) -func=$(ARTEFACT_DIR)/cover-integration.out
 
-.PHONY: test_integration 
+.PHONY: test_integration
 
 proto: ## regenerate protobuf files
 	protoc --gofast_out=plugins=grpc:. ./proto/*.proto
@@ -90,4 +95,3 @@ help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
 .PHONY: help
-

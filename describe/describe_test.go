@@ -112,3 +112,29 @@ func TestNewValues_InvalidURL(t *testing.T) {
 	assert.NotNil(t, err)
 
 }
+
+func TestFloat32(t *testing.T) {
+
+	t.Parallel()
+
+	config := map[string]string{
+		"a-float32": "1.23",
+	}
+
+	params := Parameters{
+		Parameter{Name: "a-float32", Type: Float32, Required: true},
+	}
+
+	values, _ := NewValues(config, params)
+
+	f, ffound := values.Float32("a-float32")
+	assert.True(t, ffound)
+	assert.Equal(t, float32(1.23), f)
+
+	f, ffound = values.Float32("does-not-exist")
+	assert.False(t, ffound)
+
+	f = values.Float32WithDefault("does-not-exist", float32(4.56))
+	assert.Equal(t, float32(4.56), f)
+
+}
