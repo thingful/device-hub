@@ -96,13 +96,13 @@ Output is built to ./tmp/build/
 Run
 ---
 
-Start the device-hub
+Start the device-hub server
 
 ```
-./device-hub-linux-amd64
+./device-hub-linux-amd64 server
 ```
 
-Configure with the cli
+Configure with the client
 
 To import a folder of configuration files
 
