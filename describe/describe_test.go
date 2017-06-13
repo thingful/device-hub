@@ -129,12 +129,9 @@ func TestNewValues_ValidURL(t *testing.T) {
 
 	assert.Nil(t, err)
 
-	url, ok := values.Url("a-url")
+	_, ok := values.Url("a-url")
 
 	assert.True(t, ok)
-
-	assert.Equal(t, url.Scheme, "tcp")
-
 }
 
 func TestFloat32(t *testing.T) {
