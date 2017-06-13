@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"net"
 	"os"
+	"path"
 	"path/filepath"
 
 	"github.com/fiorix/protoc-gen-cobra/iocodec"
@@ -160,7 +161,8 @@ func roundTrip(sample interface{}, fn roundTripFunc) error {
 
 			fmt.Println(fi.Name())
 
-			f, d, err := decoderFromPath(cfg.RequestDir + fi.Name())
+			folderPath := path.Join(cfg.RequestDir, fi.Name())
+			f, d, err := decoderFromPath(folderPath)
 
 			if err != nil {
 				return err
