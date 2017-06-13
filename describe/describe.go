@@ -4,6 +4,7 @@ package describe
 
 import (
 	"fmt"
+	"net/url"
 	"sync"
 
 	"github.com/asaskevich/govalidator"
@@ -273,20 +274,26 @@ func (v Values) Int64(key string) (int64, bool) {
 }
 
 // Url returns a Url and true if a value exists and can be cast to an url
-func (v Values) Url(key string) (string, bool) {
+func (v Values) Url(key string) (*url.URL, bool) {
 
 	value, found := v.String(key)
 
 	if !found {
-		return "", false
+		return nil, false
 	}
 
 	valid := govalidator.IsRequestURL(value)
 	if !valid {
-		return "", false
+		return nil, false
 	}
 
-	return value, true
+	url, err := url.Parse(value)
+
+	if err != nil {
+		return nil, false
+	}
+
+	return url, true
 
 }
 

@@ -18,7 +18,7 @@ func init() {
 		Name:        "mqtt-broker-address",
 		Type:        describe.Url,
 		Required:    true,
-		Description: "address to bind to",
+		Description: "address to connect to",
 		Examples:    []string{"tcp://0.0.0.0:1883"},
 	}
 
@@ -92,10 +92,10 @@ func init() {
 
 	http_bindingAddress := describe.Parameter{
 		Name:        "http-binding-address",
-		Type:        describe.Url,
+		Type:        describe.String,
 		Required:    true,
 		Description: "address to bind to",
-		Examples:    []string{"tcp://0.0.0.0:9090", "tcp://*:9090"},
+		Examples:    []string{"0.0.0.0:9090", "*:9090", ":8000"},
 	}
 
 	hub.RegisterListener("http",
