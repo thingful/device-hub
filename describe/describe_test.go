@@ -113,6 +113,30 @@ func TestNewValues_InvalidURL(t *testing.T) {
 
 }
 
+func TestNewValues_ValidURL(t *testing.T) {
+
+	t.Parallel()
+
+	config := map[string]string{
+		"a-url": "tcp://0.0.0.0:8080",
+	}
+
+	params := Parameters{
+		Parameter{Name: "a-url", Type: Url, Required: true},
+	}
+
+	values, err := NewValues(config, params)
+
+	assert.Nil(t, err)
+
+	url, ok := values.Url("a-url")
+
+	assert.True(t, ok)
+
+	assert.Equal(t, url.Scheme, "tcp")
+
+}
+
 func TestFloat32(t *testing.T) {
 
 	t.Parallel()
