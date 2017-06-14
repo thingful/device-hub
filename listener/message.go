@@ -6,6 +6,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/rs/xid"
+
 	hub "github.com/thingful/device-hub"
 )
 
@@ -24,6 +26,7 @@ func newHubMessage(payload []byte, protocol, uri string) hub.Message {
 			hub.PIPE_PROTOCOL_KEY:  protocol,
 			hub.PIPE_TIMESTAMP_KEY: time.Now().UTC(),
 			hub.HOSTNAME_KEY:       host,
+			hub.MESSAGE_ID:         xid.New().String(),
 		},
 	}
 	return m
