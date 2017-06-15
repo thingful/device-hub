@@ -82,11 +82,17 @@ func TestStatisticsOnChannelOut(t *testing.T) {
 
 	ctx := context.Background()
 
+	ctx, closerFunc := context.WithCancel(ctx)
+
 	messageChannel := make(chan hub.Message)
 
 	mock := &mocks.Channel{
 		ErrorChannel:   make(chan error),
 		MessageChannel: messageChannel,
+		Closer: func() error {
+			closerFunc()
+			return nil
+		},
 	}
 
 	pipe := newRuntimePipe(store.Pipe{})
@@ -105,6 +111,10 @@ func TestStatisticsOnChannelOut(t *testing.T) {
 		Metadata: map[string]interface{}{},
 	}
 	messageChannel <- message
+
+	mock.Close()
+
+	<-ctx.Done()
 
 	assert.Equal(t, uint64(1), pipe.Statistics.Processed.Ok)
 	assert.Equal(t, uint64(1), pipe.Statistics.Processed.Total)
