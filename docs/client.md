@@ -1,5 +1,6 @@
-CLI Commands
+Client CLI Commands
 =========================
+```
 - Name:           create
   Description:    Creates Listeners, Endpoints and Profile resources
   Flags:
@@ -55,9 +56,10 @@ CLI Commands
 
 - Name:           help
   Description:    Help about any command
-
+```
 CLI Global Flags
 =================
+```
 - Flag:           -s
   Large Format:   --server-addr <string>
   Description:    Server address in form of host:port
@@ -75,10 +77,10 @@ CLI Global Flags
 - Flag:           --timeout <duration>
   Description:     Client connection timeout
   Default:          10s
-
+```
 CLI Global Security Flags
 =========================
-
+```
 - Flag:           --auth-token <string>
   Description:    Authorization token
 
@@ -91,10 +93,10 @@ CLI Global Security Flags
 
 - Flag:           --jwt-key-file <string>
   Description:    Jwt key file
-
+```
 CLI Global TLS Security Flags
 =============================
-
+```
 - Flag:           --tls
   Description:    Enable TLS
 
@@ -112,3 +114,4 @@ CLI Global TLS Security Flags
 
 - Flag:           --tls-server-name <string>
   Description:    TLS Server name override
+  ```

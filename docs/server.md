@@ -1,5 +1,6 @@
 CLI Commands
 =========================
+```
 - Name:           server
   Description:    Start device hub
 
@@ -8,9 +9,10 @@ CLI Commands
 
 - Name:           help
   Description:    Help about any command
-
+```
 CLI Global Flags
 =================
+```
 - Flag:           -b
   Large Format:   --binding <string>
   Description:    Binding address in form of {ip}:port
@@ -19,9 +21,10 @@ CLI Global Flags
 - Flag:           --data <string>
   Description:    Path to db folder
   Default:        Current directory "."
-
+```
 CLI Global TLS Security Flags
 =============================
+```
 - Flag:           --tls
   Description:    Enable tls
 
@@ -33,4 +36,4 @@ CLI Global TLS Security Flags
 
 - Flag:           --tls-key-file <string>
   Description:    Client key file
-  
+```
