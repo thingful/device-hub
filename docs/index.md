@@ -11,11 +11,10 @@ License
 Copyright © 2017 thingful
 
 Released under the terms of "DECODE Accepted Software License"
-
-==<hr/>==
+<hr/>
 
 <h3>Documentation</h3>
 
-* [Client] (/thingful/device-hub/docs/client.md)
-* [Server] (/thingful/device-hub/docs/server.md)
-* [Security] (/thingful/device-hub/docs/security.md)
+* [Client] (/thingful/device-hub/blob/master/docs/client.md)
+* [Server] (/thingful/device-hub/blob/master/docs/server.md)
+* [Security] (/thingful/device-hub/blob/master/docs/security.md)

@@ -1,3 +1,13 @@
+Copyright © 2017 thingful
+
+Released under the terms of "DECODE Accepted Software License"
+<hr/>
+
+Client CLI
+=========================
+```device-hub-cli [command]```
+
+
 Client CLI Commands
 =========================
 ```
