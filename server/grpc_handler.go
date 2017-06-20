@@ -48,17 +48,23 @@ func (s *handler) Delete(ctx context.Context, request *proto.DeleteRequest) (*pr
 	// TODO : consider moving this into the manager
 	running := true
 
-	switch strings.ToLower(request.Type) {
+	entity := proto.Entity{
+		Uid:           request.Uid,
+		Type:          request.Type,
+		Configuration: request.Configuration,
+	}
+
+	switch strings.ToLower(entity.Type) {
 	case "listener":
 
 		running = s.manager.Any(func(p *runtime.Pipe) bool {
-			return p.Listener.Uid == request.Uid
+			return p.Listener.Uid == entity.Uid
 		})
 
 	case "endpoint":
 		running = s.manager.Any(func(p *runtime.Pipe) bool {
 			for _, e := range p.Endpoints {
-				if e.Uid == request.Uid {
+				if e.Uid == entity.Uid {
 					return true
 				}
 			}
@@ -67,25 +73,25 @@ func (s *handler) Delete(ctx context.Context, request *proto.DeleteRequest) (*pr
 	case "profile":
 
 		running = s.manager.Any(func(p *runtime.Pipe) bool {
-			return p.Profile.Uid == request.Uid
+			return p.Profile.Uid == entity.Uid
 		})
 
 	default:
 		return &proto.DeleteReply{
 			Ok:    false,
-			Error: fmt.Sprintf("type : %s not found", request.Type),
+			Error: fmt.Sprintf("type : %s not found", entity.Type),
 		}, nil
 	}
 
 	if running {
 		return &proto.DeleteReply{
 			Ok:    false,
-			Error: fmt.Sprintf("type : %s, uid : %s is currently being used, stop pipe before deleting", request.Type, request.Uid),
+			Error: fmt.Sprintf("type : %s, uid : %s is currently being used, stop pipe before deleting", entity.Type, entity.Uid),
 		}, nil
 
 	}
 
-	err := s.manager.Repository.Delete(request.Type, request.Uid)
+	err := s.manager.Repository.Delete(entity)
 
 	if err != nil {
 		return &proto.DeleteReply{
