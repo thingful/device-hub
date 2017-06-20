@@ -4,6 +4,7 @@ package store
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"hash/crc32"
 	"strings"
@@ -102,20 +103,26 @@ func (e *Repository) UpdateOrCreateEntity(item proto.Entity) (string, error) {
 	return item.Uid, nil
 }
 
-func (e *Repository) Delete(typez, uid string) error {
+func (e *Repository) Delete(entity proto.Entity) error {
 
-	switch strings.ToLower(typez) {
+	err := ensureEntityHasUID(&entity)
+
+	if err != nil {
+		return err
+	}
+
+	switch strings.ToLower(entity.Type) {
 	case "listener":
-		return e.Listeners.Delete(uid)
+		return e.Listeners.Delete(entity.Uid)
 	case "endpoint":
-		return e.Endpoints.Delete(uid)
+		return e.Endpoints.Delete(entity.Uid)
 	case "profile":
-		return e.Profiles.Delete(uid)
+		return e.Profiles.Delete(entity.Uid)
 	case "pipes":
-		return e.Pipes.Delete(uid)
+		return e.Pipes.Delete(entity.Uid)
 
 	default:
-		return fmt.Errorf("type : %s not found", typez)
+		return fmt.Errorf("type : %s not found", entity.Type)
 	}
 }
 
@@ -186,6 +193,9 @@ func ensureEntityHasUID(entity *proto.Entity) error {
 			entity.Uid = entity.Configuration["profile-name"]
 			return nil
 		}
+
+		return errors.New("profile uid cannot be created - no 'profile-name'")
+
 	default:
 		hash, err := hash(entity)
 

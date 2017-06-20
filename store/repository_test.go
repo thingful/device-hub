@@ -14,7 +14,6 @@ func TestUIDIsSetOnEntity(t *testing.T) {
 
 	listener := &proto.Entity{Type: "listener"}
 	endpoint := &proto.Entity{Type: "endpoint"}
-	profile := &proto.Entity{Type: "profile"}
 
 	err := ensureEntityHasUID(listener)
 	assert.Nil(t, err)
@@ -22,13 +21,8 @@ func TestUIDIsSetOnEntity(t *testing.T) {
 	err = ensureEntityHasUID(endpoint)
 	assert.Nil(t, err)
 
-	err = ensureEntityHasUID(profile)
-	assert.Nil(t, err)
-
 	// uids shouldn't be equal
 	assert.NotEqual(t, listener.Uid, endpoint.Uid)
-	assert.NotEqual(t, endpoint.Uid, profile.Uid)
-	assert.NotEqual(t, profile.Uid, listener.Uid)
 }
 
 func TestUIDIsNotSetOnEntity(t *testing.T) {
@@ -65,4 +59,16 @@ func TestProfileUIDDefaultsToProfileName(t *testing.T) {
 	assert.Nil(t, err)
 
 	assert.Equal(t, "foobar", profile.Uid)
+}
+
+func TestProfileUIDErrorsIfNoProfileName(t *testing.T) {
+	t.Parallel()
+
+	profile := &proto.Entity{
+		Type:          "profile",
+		Configuration: map[string]string{}}
+
+	err := ensureEntityHasUID(profile)
+	assert.NotNil(t, err)
+
 }

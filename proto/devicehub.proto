@@ -37,8 +37,10 @@ message CreateReply {
 }
 
 message DeleteRequest {
-    string type = 1;
-    string uid = 2;
+    string uid = 1;
+    string type = 2;
+    string kind = 3;
+    map<string, string> configuration = 4;
 }
 
 message DeleteReply {
