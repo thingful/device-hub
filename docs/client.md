@@ -5,7 +5,10 @@ Released under the terms of "DECODE Accepted Software License"
 
 Client CLI
 =========================
-```device-hub-cli [command]```
+```
+device-hub-cli [command]
+device-hub-cli [global-flags] [command]
+```
 
 
 Client CLI Commands
