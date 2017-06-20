@@ -8,9 +8,11 @@ import (
 
 	"github.com/fiorix/protoc-gen-cobra/iocodec"
 	"github.com/spf13/cobra"
-	hub "github.com/thingful/device-hub"
 	"github.com/thingful/device-hub/describe"
+	"github.com/thingful/device-hub/endpoint"
+	"github.com/thingful/device-hub/listener"
 	"github.com/thingful/device-hub/proto"
+	"github.com/thingful/device-hub/registry"
 )
 
 var createCommand = &cobra.Command{
@@ -36,12 +38,17 @@ var createCommand = &cobra.Command{
 			// validate the policy file before sending it over the wire
 			var params describe.Parameters
 
+			register := registry.New()
+
+			endpoint.Register(register)
+			listener.Register(register)
+
 			switch strings.ToLower(v.Type) {
 
 			case "listener":
-				params, err = hub.DescribeListener(v.Kind)
+				params, err = register.DescribeListener(v.Kind)
 			case "endpoint":
-				params, err = hub.DescribeEndpoint(v.Kind)
+				params, err = register.DescribeEndpoint(v.Kind)
 			}
 
 			if err != nil {
