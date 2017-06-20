@@ -4,6 +4,7 @@ package store
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"hash/crc32"
 	"strings"
@@ -192,6 +193,9 @@ func ensureEntityHasUID(entity *proto.Entity) error {
 			entity.Uid = entity.Configuration["profile-name"]
 			return nil
 		}
+
+		return errors.New("profile uid cannot be created - no 'profile-name'")
+
 	default:
 		hash, err := hash(entity)
 
