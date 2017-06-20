@@ -11,7 +11,7 @@ Client CLI
 Client CLI Commands
 =========================
 ```
-- Name:           create
+- Command Name:   create [-d|-f]=<string>
   Description:    Creates Listeners, Endpoints and Profile resources
   Flags:
   - Flag:         -d
@@ -19,17 +19,17 @@ Client CLI Commands
     Is required:  Yes if -f isn't specified
     Description:  Directory containing client request file(s) (must be json, yaml, or xml) 
     Parameter:    A filesystem path
-    Example:      create -d=./test-configurations/
+    Example:      device-hub-cli create -d=./test-configurations/
 
   - Flag:         -f
     Large Format: --request-file <string>
     Is required:  Yes if -d isn't specified
     Description:  Client request file (must be json, yaml, or xml); use "-" for stdin + json
     Parameter:    Directory containing client request file(s) (must be json, yaml, or xml) 
-    Example:      create -f=./test-configurations/mqtt_listener.yaml
+    Example:      device-hub-cli create -f=./test-configurations/mqtt_listener.yaml
 
 
-- Name:           delete
+- Command Name:   delete [-d|-f]=<string>
   Description:    Delete listener, profile and endpoint resources
   Flags:
   - Flag:         -d
@@ -37,35 +37,68 @@ Client CLI Commands
     Is required:  Yes if -f isn't specified
     Description:  Directory containing client request file(s) (must be json, yaml, or xml) 
     Parameter:    A filesystem path
-    Example:      create -d=./test-configurations/
+    Example:      device-hub-cli delete -d=./test-configurations/
 
   - Flag:         -f
     Large Format: --request-file <string>
     Is required:  Yes if -d isn't specified
     Description:  Client request file (must be json, yaml, or xml); use "-" for stdin + json
     Parameter:    Directory containing client request file(s) (must be json, yaml, or xml) 
-    Example:      create -f=./test-configurations/mqtt_listener.yaml
+    Example:      device-hub-cli delete -f=./test-configurations/mqtt_listener.yaml
 
-- Name:           describe
-  Description:    Describe parameters for endpoint and listeners
 
-- Name:           get
-  Description:    Display one or many resources
+- Command Name:   describe [listener|endpoint] [mqtt|stdout]
+  Description:    Describe parameters for endpoints and listeners
+  Example:        device-hub-cli listener mqtt                 
 
-- Name:           list
+
+- Command Name:   get [listener|endpoint|profile|all]
+  Description:    Display one or many resources by type or using "all" as * filter, 
+  Example:        device-hub-cli get all 
+
+
+- Command Name:   list
   Description:    List running pipes
 
-- Name:           start
+
+- Command Name:   start [-e <string> -l <string> -u <string>] <string>
   Description:    Start processing messages on an URI
+  Flags:
+  - Flag:         -e
+    Description:  Endpoint uid to push messages to, may be specified multiple times
+    Large Format: --endpoint <stringSlice>
+    Is required:  Yes
 
-- Name:           stop
+  - Flag:         -l
+    Description:  Listener uid to accept messages on
+    Large Format: --listener <string>
+    Is required:  Yes
+  
+  - Flag:         -u
+    Description:  Uri to listen on
+    Large Format: --uri <string>
+    Is required:  Yes
+
+  - Flag:         -t
+    Description:  Colon separated (k:v) runtime tags to attach to requests, may be specified multiple times
+    Large Format: --tags <stringSlice>
+  
+  Example:        device-hub-cli start -e=stdout-endpoint -l=http-listener-local-port-8085 -u=/a thingful/helsinki-bus
+
+
+- Command Name:   stop <string>
   Description:    Stop processing messages on an URI
+  Example:        device-hub-cli stop /a
 
-- Name:           version
+
+- Command Name:   version
   Description:    Display version information
+  Example:        device-hub-cli version
 
-- Name:           help
+
+- Command Name:   help <string>
   Description:    Help about any command
+  Example:        device-hub-cli help stop
 ```
 CLI Global Flags
 =================
