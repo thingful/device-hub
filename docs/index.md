@@ -15,6 +15,8 @@ Released under the terms of "DECODE Accepted Software License"
 
 <h3>Documentation</h3>
 
-* [Client] (/thingful/device-hub/blob/master/docs/client.md)
-* [Server] (/thingful/device-hub/blob/master/docs/server.md)
-* [Security] (/thingful/device-hub/blob/master/docs/security.md)
+* [Client](https://github.com/thingful/device-hub/blob/master/docs/client.md)
+
+* [Server](https://github.com/thingful/device-hub/blob/master/docs/server.md)
+
+* [Security](https://github.com/thingful/device-hub/blob/master/docs/security.md)
