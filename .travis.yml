@@ -7,6 +7,9 @@ sudo: required
 services:
   - docker
 
+before_script:
+  - go install github.com/pmezard/licenses
+
 script:
   - make check-license
   - make docker_up coverage
