@@ -5,23 +5,15 @@ set -o nounset
 set -o pipefail
 
 ret=0
-packages=glide.lock
-#enabled_license="MIT\|APACHE\|ANOTHER"
-enabled_license="MIT" 
+enabled_license="MIT\|APACHE"
+#enabled_license="MIT" 
+IFS=$'\n'
 
-while IFS= read line
-do
-	if [[ $line == *"name:"* ]]; then
-		package="$(echo $line | awk -F ': ' ' {print $NF} ')"
-		#echo $package
-		if [ ! -f vendor/$package/LICENSE* 2>/dev/null ]; then
-		    echo "vendor/$package doesn't contain a License File"
-            ret=1
-		fi
-        if ! grep -q $enabled_license vendor/$package/LICENSE*; then
-            echo "vendor/$package doesn't have a compatible License"
-            ret=1
-        fi
+for line in $(licenses -w ./../device-hub); do
+	if ! echo $line | awk '{ print $2 }' | grep -q $enabled_license; then
+		echo "${line} -> missing or wrong license"
+		ret=1
 	fi
-done <"$packages"
+done
+
 exit $ret
