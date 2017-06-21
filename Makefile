@@ -16,8 +16,9 @@ all: pi linux-i386 linux-amd64 darwin ## build executables for the various envir
 
 .PHONY: all
 
-check-license: ## check the license header in every code file
+check-license: ## check the license header in every code file & check vendor licenses
 		@./scripts/check-license.sh
+		@./scripts/check-vendor-license.sh
 
 .PHONY: check-license
 
