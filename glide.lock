@@ -1,16 +1,16 @@
-hash: 89352861d62b5f5f65195611386edd188c469c70f2b26d00e4d6732f8fc2c4c5
-updated: 2017-06-22T07:26:28.868765875-04:00
+hash: d86aa5d6267bb36bcb7b95f3033627d63a0fdd681db16762555c153d70d86aa1
+updated: 2017-06-13T23:00:32.362463-04:00
 imports:
 - name: cloud.google.com/go
   version: ed63fb27efcf32e25fe7837e4662457d3da4c4f2
   subpackages:
   - compute/metadata
 - name: github.com/asaskevich/govalidator
-  version: 4918b99a7cb949bb295f3c7bbaf24b577d806e35
+  version: aa5cce4a76edb1a5acecab1870c17abbffb5419e
 - name: github.com/boltdb/bolt
-  version: 583e8937c61f1af6513608ccc75c97b6abdf4ff9
+  version: e9cf4fae01b5a8ff89d0ec6b32f0d9c9f79aefdd
 - name: github.com/eclipse/paho.mqtt.golang
-  version: 45f9b18f4864c81d49c3ed01e5faec9eeb05de31
+  version: 69afaac643519c4a3d3e7877e3b8ad5b48b15568
   subpackages:
   - packets
 - name: github.com/fiorix/protoc-gen-cobra
@@ -26,7 +26,7 @@ imports:
 - name: github.com/inconshreveable/mousetrap
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/kelseyhightower/envconfig
-  version: f611eb38b3875cc3bd991ca91c51d06446afa14c
+  version: 8bf4bbfc795e2c7c8a5ea47b707453ed019e2ad4
 - name: github.com/mdevilliers/go-compose
   version: 24e783b9eebdcded8ac31bdab1de2d79d8788350
   subpackages:
@@ -43,9 +43,9 @@ imports:
 - name: github.com/rs/xid
   version: 02dd45c33376f85d1064355dc790dcc4850596b1
 - name: github.com/sirupsen/logrus
-  version: 202f25545ea4cf9b191ff7f846df5d87c9382c2b
+  version: 5e5dc898656f695e2a086b8e12559febbfc01562
 - name: github.com/speps/go-hashids
-  version: d1d57a886aa7e3ef6092b70ceab077e35ee8e0ce
+  version: 2aa1a76a4e7c76dbe7d39f40661ab0261d70153a
 - name: github.com/spf13/cast
   version: acbeb36b902d72a7a4c18e8f3241075e7ab763e4
 - name: github.com/spf13/cobra
@@ -99,7 +99,7 @@ imports:
   subpackages:
   - googleapis/rpc/status
 - name: google.golang.org/grpc
-  version: 42c095b6c9bdd80d4435b064508c398afdb0ec99
+  version: d8960bd63c6743defa6d54926e5edfa8e4a28e43
   subpackages:
   - codes
   - credentials
@@ -117,8 +117,6 @@ imports:
   - status
   - tap
   - transport
-- name: gopkg.in/natefinch/lumberjack.v2
-  version: a96e63847dc3c67d17befa69c303767e2f84e54f
 - name: gopkg.in/sourcemap.v1
   version: 6e83acea0053641eff084973fee085f0c193c61a
   subpackages:
