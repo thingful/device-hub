@@ -38,7 +38,7 @@ var createCommand = &cobra.Command{
 			// validate the policy file before sending it over the wire
 			var params describe.Parameters
 
-			register := registry.New()
+			register := registry.Default
 
 			endpoint.Register(register)
 			listener.Register(register)

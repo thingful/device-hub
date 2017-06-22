@@ -20,6 +20,10 @@ type Registry struct {
 	listenersLock      sync.RWMutex
 }
 
+var (
+	Default = New()
+)
+
 func New() *Registry {
 
 	return &Registry{

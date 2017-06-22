@@ -29,7 +29,7 @@ var describeCommand = &cobra.Command{
 		var params describe.Parameters
 		var err error
 
-		register := registry.New()
+		register := registry.Default
 
 		endpoint.Register(register)
 		listener.Register(register)
