@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/natefinch/lumberjack"
 	"github.com/sirupsen/logrus"
 )
 
@@ -22,14 +23,16 @@ func NewLogger(version, logpath string) Logger {
 	log := logrus.New()
 	log.Formatter = new(logrus.JSONFormatter)
 	log.Level = logrus.InfoLevel
-	log.Out = os.Stdout
+	// log.Out = os.Stdout
 	if len(logpath) != 0 {
-		file, err := os.OpenFile(logpath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-		if err == nil {
-			log.Out = file
-		} else {
-			log.Errorf("Failed to log to file:%s, using STDOUT", logpath)
+		log.Out = &lumberjack.Logger{
+			Filename:   logpath,
+			MaxSize:    1,
+			MaxBackups: 3,
+			MaxAge:     28,
 		}
+	} else {
+		log.Out = os.Stdout
 	}
 	logger := log.WithFields(defaultFields(version))
 	return &l{entry: logger}
