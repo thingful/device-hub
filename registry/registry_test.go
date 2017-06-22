@@ -2,18 +2,9 @@
 
 package registry
 
-import (
-	"io/ioutil"
-	"os"
-	"path"
-	"testing"
+//"github.com/thingful/device-hub/listener"
 
-	"github.com/fiorix/protoc-gen-cobra/iocodec"
-	"github.com/stretchr/testify/assert"
-	"github.com/thingful/device-hub/listener"
-	"github.com/thingful/device-hub/proto"
-)
-
+/*
 func TestConfigurationFile(t *testing.T) {
 
 	//for each file in ./test-configurations/
@@ -41,11 +32,11 @@ func TestConfigurationFile(t *testing.T) {
 		assert.NotEmpty(t, entity.Type)
 
 		register := New()
-		listener.Register(register)
+		//listener.Register(register)
 	}
 
 	//load file
 
 	//parse and describe
 
-}
+}*/
