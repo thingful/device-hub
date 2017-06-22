@@ -34,7 +34,7 @@ var serverCommand = &cobra.Command{
 		s := store.NewStore(db)
 		repository := store.NewRepository(s)
 
-		manager, err := runtime.NewEndpointManager(ctx, repository, utils.NewLogger(hub.DaemonVersionString()))
+		manager, err := runtime.NewEndpointManager(ctx, repository, utils.NewLogger(hub.DaemonVersionString(), _config.LogFile))
 
 		if err != nil {
 			return err
@@ -54,6 +54,7 @@ var serverCommand = &cobra.Command{
 			CertFilePath:      _config.CertFile,
 			KeyFilePath:       _config.KeyFile,
 			TrustedCAFilePath: _config.CACertFile,
+			LogFile:           _config.LogFile,
 		}, manager)
 
 		return err

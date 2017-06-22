@@ -33,6 +33,7 @@ type config struct {
 	CertFile   string `envconfig:"TLS_CERT_FILE"`
 	KeyFile    string `envconfig:"TLS_KEY_FILE"`
 	Data       string `envconfig:"DATA" default:"."`
+	LogFile    string `envconfig:"CONFIG_FILE" default:""`
 }
 
 func newConfig() *config {
@@ -48,6 +49,7 @@ func (o *config) AddFlags(fs *pflag.FlagSet) {
 	fs.StringVar(&o.CertFile, "tls-cert-file", o.CertFile, "client certificate file")
 	fs.StringVar(&o.KeyFile, "tls-key-file", o.KeyFile, "client key file")
 	fs.StringVar(&o.Data, "data", o.Data, "path to db folder, defaults to current directory")
+	fs.StringVar(&o.LogFile, "log-file", o.LogFile, "path to log file, defaults to STDOUT")
 }
 
 func init() {

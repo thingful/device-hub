@@ -18,11 +18,19 @@ const (
 // NewLogger creates and returns a new instance of the Logger type. This
 // initializes the logger with a tagged logrus Entry initialized with the
 // version string and hostname.
-func NewLogger(version string) Logger {
+func NewLogger(version, logpath string) Logger {
 	log := logrus.New()
 	log.Formatter = new(logrus.JSONFormatter)
 	log.Level = logrus.InfoLevel
 	log.Out = os.Stdout
+	if len(logpath) != 0 {
+		file, err := os.OpenFile(logpath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+		if err == nil {
+			log.Out = file
+		} else {
+			log.Errorf("Failed to log to file:%s, using STDOUT", logpath)
+		}
+	}
 	logger := log.WithFields(defaultFields(version))
 	return &l{entry: logger}
 }
