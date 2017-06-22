@@ -2,16 +2,15 @@ package hashids
 
 import (
 	"math"
-	"reflect"
 	"testing"
 )
 
-func TestEncodeDecode(t *testing.T) {
+func TestEncryptDecrypt(t *testing.T) {
 	hdata := NewData()
 	hdata.MinLength = 30
 	hdata.Salt = "this is my salt"
 
-	hid, _ := NewWithData(hdata)
+	hid := NewWithData(hdata)
 
 	numbers := []int{45, 434, 1313, 99}
 	hash, err := hid.Encode(numbers)
@@ -22,17 +21,23 @@ func TestEncodeDecode(t *testing.T) {
 
 	t.Logf("%v -> %v -> %v", numbers, hash, dec)
 
-	if !reflect.DeepEqual(dec, numbers) {
-		t.Errorf("Decoded numbers `%v` did not match with original `%v`", dec, numbers)
+	if len(numbers) != len(dec) {
+		t.Error("lengths do not match")
+	}
+
+	for i, n := range numbers {
+		if n != dec[i] {
+			t.Fail()
+		}
 	}
 }
 
-func TestEncodeDecodeInt64(t *testing.T) {
+func TestEncryptDecryptInt64(t *testing.T) {
 	hdata := NewData()
 	hdata.MinLength = 30
 	hdata.Salt = "this is my salt"
 
-	hid, _ := NewWithData(hdata)
+	hid := NewWithData(hdata)
 
 	numbers := []int64{45, 434, 1313, 99, math.MaxInt64}
 	hash, err := hid.EncodeInt64(numbers)
@@ -43,17 +48,23 @@ func TestEncodeDecodeInt64(t *testing.T) {
 
 	t.Logf("%v -> %v -> %v", numbers, hash, dec)
 
-	if !reflect.DeepEqual(dec, numbers) {
-		t.Errorf("Decoded numbers `%v` did not match with original `%v`", dec, numbers)
+	if len(numbers) != len(dec) {
+		t.Error("lengths do not match")
+	}
+
+	for i, n := range numbers {
+		if n != dec[i] {
+			t.Fail()
+		}
 	}
 }
 
-func TestEncodeWithKnownHash(t *testing.T) {
+func TestEncryptWithKnownHash(t *testing.T) {
 	hdata := NewData()
 	hdata.MinLength = 0
 	hdata.Salt = "this is my salt"
 
-	hid, _ := NewWithData(hdata)
+	hid := NewWithData(hdata)
 
 	numbers := []int{45, 434, 1313, 99}
 	hash, err := hid.Encode(numbers)
@@ -68,12 +79,12 @@ func TestEncodeWithKnownHash(t *testing.T) {
 	}
 }
 
-func TestDecodeWithKnownHash(t *testing.T) {
+func TestDecryptWithKnownHash(t *testing.T) {
 	hdata := NewData()
 	hdata.MinLength = 0
 	hdata.Salt = "this is my salt"
 
-	hid, _ := NewWithData(hdata)
+	hid := NewWithData(hdata)
 
 	hash := "7nnhzEsDkiYa"
 	numbers := hid.Decode(hash)
@@ -81,8 +92,10 @@ func TestDecodeWithKnownHash(t *testing.T) {
 	t.Logf("%v -> %v", hash, numbers)
 
 	expected := []int{45, 434, 1313, 99}
-	if !reflect.DeepEqual(numbers, expected) {
-		t.Errorf("Decoded numbers `%v` did not match with expected `%v`", numbers, expected)
+	for i, n := range numbers {
+		if n != expected[i] {
+			t.Fail()
+		}
 	}
 }
 
@@ -90,7 +103,7 @@ func TestDefaultLength(t *testing.T) {
 	hdata := NewData()
 	hdata.Salt = "this is my salt"
 
-	hid, _ := NewWithData(hdata)
+	hid := NewWithData(hdata)
 
 	numbers := []int{45, 434, 1313, 99}
 	hash, err := hid.Encode(numbers)
@@ -101,8 +114,14 @@ func TestDefaultLength(t *testing.T) {
 
 	t.Logf("%v -> %v -> %v", numbers, hash, dec)
 
-	if !reflect.DeepEqual(dec, numbers) {
-		t.Errorf("Decoded numbers `%v` did not match with original `%v`", dec, numbers)
+	if len(numbers) != len(dec) {
+		t.Error("lengths do not match")
+	}
+
+	for i, n := range numbers {
+		if n != dec[i] {
+			t.Fail()
+		}
 	}
 }
 
@@ -110,7 +129,7 @@ func TestMinLength(t *testing.T) {
 	hdata := NewData()
 	hdata.Salt = "salt1"
 	hdata.MinLength = 10
-	hid, _ := NewWithData(hdata)
+	hid := NewWithData(hdata)
 	hid.Encode([]int{0})
 }
 
@@ -119,7 +138,7 @@ func TestCustomAlphabet(t *testing.T) {
 	hdata.Alphabet = "PleasAkMEFoThStx"
 	hdata.Salt = "this is my salt"
 
-	hid, _ := NewWithData(hdata)
+	hid := NewWithData(hdata)
 
 	numbers := []int{45, 434, 1313, 99}
 	hash, err := hid.Encode(numbers)
@@ -130,48 +149,30 @@ func TestCustomAlphabet(t *testing.T) {
 
 	t.Logf("%v -> %v -> %v", numbers, hash, dec)
 
-	if !reflect.DeepEqual(dec, numbers) {
-		t.Errorf("Decoded numbers `%v` did not match with original `%v`", dec, numbers)
+	if len(numbers) != len(dec) {
+		t.Error("lengths do not match")
+	}
+
+	for i, n := range numbers {
+		if n != dec[i] {
+			t.Fail()
+		}
 	}
 }
 
-func TestDecodeWithError(t *testing.T) {
+func TestDecryptWithError(t *testing.T) {
 	hdata := NewData()
 	hdata.Alphabet = "PleasAkMEFoThStx"
 	hdata.Salt = "this is my salt"
 
-	hid, _ := NewWithData(hdata)
+	hid := NewWithData(hdata)
 	// hash now contains a letter not in the alphabet
 	dec, err := hid.DecodeWithError("MAkhkloFAxAoskaZ")
 
 	if dec != nil {
-		t.Error("Expected `nil` but got `%v`", dec)
+		t.Error("DecryptWithError should have returned nil result")
 	}
-	expected := "alphabet used for hash was different"
-	if err == nil || err.Error() != expected {
-		t.Errorf("Expected error `%s` but got `%s`", expected, err)
-	}
-}
-
-// tests issue #28
-func TestDecodeWithWrongSalt(t *testing.T) {
-	hdata := NewData()
-	hdata.Alphabet = "PleasAkMEFoThStx"
-	hdata.Salt = "temp"
-
-	hidEncode, _ := NewWithData(hdata)
-
-	numbers := []int{45, 434, 1313, 99}
-	hash, _ := hidEncode.Encode(numbers)
-
-	hdata.Salt = "test"
-	hidDecode, _ := NewWithData(hdata)
-	dec, err := hidDecode.DecodeWithError(hash)
-
-	t.Logf("%v -> %v -> %v", numbers, hash, dec)
-
-	expected := "mismatch between encode and decode"
-	if err == nil || err.Error() != expected {
-		t.Errorf("Expected error `%s` but got `%s`", expected, err)
+	if err == nil {
+		t.Error("DecryptWithError should have returned error")
 	}
 }

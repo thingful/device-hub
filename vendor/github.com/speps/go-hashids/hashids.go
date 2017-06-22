@@ -8,9 +8,7 @@ package hashids
 
 import (
 	"errors"
-	"fmt"
 	"math"
-	"strings"
 )
 
 const (
@@ -54,23 +52,20 @@ func NewData() *HashIDData {
 }
 
 // New creates a new HashID
-func New() (*HashID, error) {
+func New() *HashID {
 	return NewWithData(NewData())
 }
 
 // NewWithData creates a new HashID with the provided HashIDData
-func NewWithData(data *HashIDData) (*HashID, error) {
+func NewWithData(data *HashIDData) *HashID {
 	if len(data.Alphabet) < minAlphabetLength {
-		return nil, fmt.Errorf("alphabet must contain at least %d characters", minAlphabetLength)
-	}
-	if strings.Contains(data.Alphabet, " ") {
-		return nil, fmt.Errorf("alphabet may not contain spaces")
+		panic(errors.New("alphabet must contain at least 16 characters"))
 	}
 	// Check if all characters are unique in Alphabet
 	uniqueCheck := make(map[rune]bool, len(data.Alphabet))
 	for _, a := range data.Alphabet {
 		if _, found := uniqueCheck[a]; found {
-			return nil, fmt.Errorf("duplicate character in alphabet: %s", string([]rune{a}))
+			panic(errors.New("duplicate character in alphabet"))
 		}
 		uniqueCheck[a] = true
 	}
@@ -130,7 +125,7 @@ func NewWithData(data *HashIDData) (*HashID, error) {
 		salt:      salt,
 		seps:      seps,
 		guards:    guards,
-	}, nil
+	}
 }
 
 // Encode hashes an array of int to a string containing at least MinLength characters taken from the Alphabet.
@@ -202,7 +197,7 @@ func (h *HashID) EncodeInt64(numbers []int64) (string, error) {
 	return string(result), nil
 }
 
-// DEPRECATED: Use DecodeWithError instead
+// DEPRECATED: Use DecryptWithError instead
 // Decode unhashes the string passed to an array of int.
 // It is symmetric with Encode if the Alphabet and Salt are the same ones which were used to hash.
 // MinLength has no effect on Decode.
@@ -229,7 +224,7 @@ func (h *HashID) DecodeWithError(hash string) ([]int, error) {
 	return result, nil
 }
 
-// DEPRECATED: Use DecodeInt64WithError instead
+// DEPRECATED: Use DecryptInt64WithError instead
 // DecodeInt64 unhashes the string passed to an array of int64.
 // It is symmetric with EncodeInt64 if the Alphabet and Salt are the same ones which were used to hash.
 // MinLength has no effect on DecodeInt64.
@@ -268,11 +263,6 @@ func (h *HashID) DecodeInt64WithError(hash string) ([]int64, error) {
 			}
 			result = append(result, number)
 		}
-	}
-
-	sanityCheck, _ := h.EncodeInt64(result)
-	if sanityCheck != hash {
-		return result, errors.New("mismatch between encode and decode")
 	}
 
 	return result, nil
@@ -321,7 +311,7 @@ func hash(input int64, alphabet []rune) []rune {
 
 func unhash(input, alphabet []rune) (int64, error) {
 	result := int64(0)
-	for _, inputRune := range input {
+	for i, inputRune := range input {
 		alphabetPos := -1
 		for pos, alphabetRune := range alphabet {
 			if inputRune == alphabetRune {
@@ -333,7 +323,7 @@ func unhash(input, alphabet []rune) (int64, error) {
 			return 0, errors.New("alphabet used for hash was different")
 		}
 
-		result = result*int64(len(alphabet)) + int64(alphabetPos)
+		result += int64(alphabetPos) * int64(math.Pow(float64(len(alphabet)), float64(len(input)-i-1)))
 	}
 	return result, nil
 }
