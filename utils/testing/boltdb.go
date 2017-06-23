@@ -13,6 +13,7 @@ type boltDBConnection struct {
 	path string
 }
 
+// DialBoltDB returns an isolated connection to a boltDB instance. Suitable for parallel testing.
 func DialBoltDB() (*boltDBConnection, error) {
 
 	// Generate temporary filename.
@@ -33,6 +34,7 @@ func DialBoltDB() (*boltDBConnection, error) {
 	}, nil
 }
 
+// MustDialBoltDB returns an isolated connection or panics.
 func MustDialBoltDB() *boltDBConnection {
 
 	conn, err := DialBoltDB()
@@ -43,12 +45,14 @@ func MustDialBoltDB() *boltDBConnection {
 	return conn
 }
 
+// Close cleans up the boltdb connection.
 func (c *boltDBConnection) Close() error {
 	defer os.Remove(c.path)
 	return c.DB.Close()
 
 }
 
+// MustClose clears up the connection or panics.
 func (c *boltDBConnection) MustClose() {
 	err := c.Close()
 	if err != nil {
