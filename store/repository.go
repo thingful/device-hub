@@ -16,7 +16,7 @@ import (
 
 type bucket struct {
 	name  []byte
-	store *Store
+	store Storer
 }
 
 // Repository facilitates some higher level store interactions
@@ -25,10 +25,19 @@ type Repository struct {
 	Endpoints entityBucket
 	Profiles  entityBucket
 	Pipes     pipeBucket
-	store     *Store
+	store     Storer
 }
 
-func NewRepository(store *Store) *Repository {
+type Storer interface {
+	MustCreateBuckets(buckets []bucket)
+	Insert(bucket bucket, uid []byte, data interface{}) error
+	Update(bucket bucket, uid []byte, data interface{}) error
+	Delete(bucket bucket, uid []byte) error
+	One(bucket bucket, uid []byte, out interface{}) error
+	List(bucket bucket, to interface{}) error
+}
+
+func NewRepository(store Storer) *Repository {
 	r := &Repository{
 		Listeners: entityBucket{
 			bucket: bucket{name: []byte("listeners"),
