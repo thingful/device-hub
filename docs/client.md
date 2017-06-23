@@ -52,7 +52,7 @@ Client CLI Commands
 
 - Command Name:   describe [listener|endpoint] [mqtt|stdout]
   Description:    Describe parameters for endpoints and listeners
-  Example:        device-hub-cli listener mqtt                 
+  Example:        device-hub-cli listener mqtt
 
 
 - Command Name:   get [listener|endpoint|profile|all]
