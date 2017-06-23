@@ -1,26 +1,46 @@
 // Copyright © 2017 thingful
 
-package hub
+package registry
 
 import (
 	"fmt"
 	"sync"
 
+	hub "github.com/thingful/device-hub"
 	"github.com/thingful/device-hub/describe"
 )
 
-var (
-	endpoints          = map[string]lazy{}
-	endpointParameters = map[string][]describe.Parameter{}
-	endpointsLock      = sync.RWMutex{}
+type Registry struct {
+	endpoints          map[string]lazy
+	endpointParameters map[string][]describe.Parameter
+	endpointsLock      sync.RWMutex
 
-	listeners          = map[string]lazy{}
-	listenerParameters = map[string][]describe.Parameter{}
-	listenersLock      = sync.RWMutex{}
+	listeners          map[string]lazy
+	listenerParameters map[string][]describe.Parameter
+	listenersLock      sync.RWMutex
+}
+
+var (
+	// Default is a reference to a registry that can be used both as a convenience and to 'register'
+	// endpoints and listeners when embedding in 'custom' deployments.
+	Default = New()
 )
 
-type endpointBuilder func(config describe.Values) (Endpoint, error)
-type listenerBuilder func(config describe.Values) (Listener, error)
+func New() *Registry {
+
+	return &Registry{
+		endpoints:          map[string]lazy{},
+		endpointParameters: map[string][]describe.Parameter{},
+		endpointsLock:      sync.RWMutex{},
+
+		listeners:          map[string]lazy{},
+		listenerParameters: map[string][]describe.Parameter{},
+		listenersLock:      sync.RWMutex{},
+	}
+}
+
+type endpointBuilder func(config describe.Values) (hub.Endpoint, error)
+type listenerBuilder func(config describe.Values) (hub.Listener, error)
 
 type builderFunc func(config describe.Values) (interface{}, error)
 
@@ -30,42 +50,42 @@ type lazy struct {
 }
 
 // RegisterEndpoint will store the builder with the correct name
-func RegisterEndpoint(typez string, builder endpointBuilder, params describe.Parameters) {
+func (r *Registry) RegisterEndpoint(typez string, builder endpointBuilder, params describe.Parameters) {
 
 	if len(params) == 0 {
 		panic("endpoint registered without any parameters")
 	}
 
-	endpointsLock.Lock()
-	defer endpointsLock.Unlock()
+	r.endpointsLock.Lock()
+	defer r.endpointsLock.Unlock()
 
-	endpoints[typez] = lazy{
+	r.endpoints[typez] = lazy{
 		builder: func(config describe.Values) (interface{}, error) {
 			i, err := builder(config)
 			return i, err
 		},
 	}
 
-	endpointParameters[typez] = params
+	r.endpointParameters[typez] = params
 
 }
 
 // IsEndpointRegistered confirms if the endpoint has been registered
-func IsEndpointRegistered(typez string) bool {
+func (r *Registry) IsEndpointRegistered(typez string) bool {
 
-	endpointsLock.Lock()
-	_, found := endpoints[typez]
-	endpointsLock.Unlock()
+	r.endpointsLock.Lock()
+	_, found := r.endpoints[typez]
+	r.endpointsLock.Unlock()
 
 	return found
 }
 
 // DescribeEndpoint returns a collection of Parameter describing its configuration
-func DescribeEndpoint(typez string) (describe.Parameters, error) {
+func (r *Registry) DescribeEndpoint(typez string) (describe.Parameters, error) {
 
-	endpointsLock.Lock()
-	params, found := endpointParameters[typez]
-	endpointsLock.Unlock()
+	r.endpointsLock.Lock()
+	params, found := r.endpointParameters[typez]
+	r.endpointsLock.Unlock()
 
 	if !found {
 		return nil, fmt.Errorf("no parameters found for endpoint : %s", typez)
@@ -75,41 +95,41 @@ func DescribeEndpoint(typez string) (describe.Parameters, error) {
 }
 
 // RegisterListener will store the builder with the correct name
-func RegisterListener(typez string, builder listenerBuilder, params describe.Parameters) {
+func (r *Registry) RegisterListener(typez string, builder listenerBuilder, params describe.Parameters) {
 
 	if len(params) == 0 {
 		panic("listener registered without any parameters")
 	}
 
-	listenersLock.Lock()
-	defer listenersLock.Unlock()
+	r.listenersLock.Lock()
+	defer r.listenersLock.Unlock()
 
-	listeners[typez] = lazy{
+	r.listeners[typez] = lazy{
 		builder: func(config describe.Values) (interface{}, error) {
 			i, err := builder(config)
 			return i, err
 		},
 	}
 
-	listenerParameters[typez] = params
+	r.listenerParameters[typez] = params
 }
 
 // IsListenerRegistered confirms if the listener has been registered
-func IsListenerRegistered(typez string) bool {
+func (r *Registry) IsListenerRegistered(typez string) bool {
 
-	listenersLock.Lock()
-	_, found := listeners[typez]
-	listenersLock.Unlock()
+	r.listenersLock.Lock()
+	_, found := r.listeners[typez]
+	r.listenersLock.Unlock()
 
 	return found
 }
 
 // DescribeListener returns a collection of Parameter describing its configuration
-func DescribeListener(typez string) (describe.Parameters, error) {
+func (r *Registry) DescribeListener(typez string) (describe.Parameters, error) {
 
-	listenersLock.Lock()
-	params, found := listenerParameters[typez]
-	listenersLock.Unlock()
+	r.listenersLock.Lock()
+	params, found := r.listenerParameters[typez]
+	r.listenersLock.Unlock()
 
 	if !found {
 		return nil, fmt.Errorf("no parameters found for listener : %s", typez)
@@ -119,11 +139,11 @@ func DescribeListener(typez string) (describe.Parameters, error) {
 }
 
 // EndpointByName returns or creates an Endpoint of specified type
-func EndpointByName(uid, typez string, conf map[string]string) (Endpoint, error) {
+func (r *Registry) EndpointByName(uid, typez string, conf map[string]string) (hub.Endpoint, error) {
 
-	endpointsLock.Lock()
-	parameters, found := endpointParameters[typez]
-	endpointsLock.Unlock()
+	r.endpointsLock.Lock()
+	parameters, found := r.endpointParameters[typez]
+	r.endpointsLock.Unlock()
 
 	if !found {
 		return nil, fmt.Errorf("parameters for type %s not found", typez)
@@ -135,13 +155,13 @@ func EndpointByName(uid, typez string, conf map[string]string) (Endpoint, error)
 		return nil, err
 	}
 
-	f, err := genericByName(endpoints, uid, typez, values)
+	f, err := genericByName(r.endpoints, uid, typez, values)
 
 	if err != nil {
 		return nil, err
 	}
 
-	e, ok := f.(Endpoint)
+	e, ok := f.(hub.Endpoint)
 
 	if !ok {
 		return nil, fmt.Errorf("builder registered with uid %s, type %s does not implement the Endpoint interface", uid, typez)
@@ -151,11 +171,11 @@ func EndpointByName(uid, typez string, conf map[string]string) (Endpoint, error)
 }
 
 // ListenerByName returns or creates a Listener of specified type
-func ListenerByName(uid, typez string, conf map[string]string) (Listener, error) {
+func (r *Registry) ListenerByName(uid, typez string, conf map[string]string) (hub.Listener, error) {
 
-	listenersLock.Lock()
-	parameters, found := listenerParameters[typez]
-	listenersLock.Unlock()
+	r.listenersLock.Lock()
+	parameters, found := r.listenerParameters[typez]
+	r.listenersLock.Unlock()
 
 	if !found {
 		return nil, fmt.Errorf("parameters for type %s not found", typez)
@@ -167,13 +187,13 @@ func ListenerByName(uid, typez string, conf map[string]string) (Listener, error)
 		return nil, err
 	}
 
-	f, err := genericByName(listeners, uid, typez, values)
+	f, err := genericByName(r.listeners, uid, typez, values)
 
 	if err != nil {
 		return nil, err
 	}
 
-	l, ok := f.(Listener)
+	l, ok := f.(hub.Listener)
 
 	if !ok {
 		return nil, fmt.Errorf("builder registered with uid %s, type %s does not implement the Listener interface", uid, typez)
