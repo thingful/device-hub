@@ -16,12 +16,6 @@ type boltDBStore struct {
 	db *bolt.DB
 }
 
-var (
-	ErrSlicePtrNeeded = errors.New("slice ptr needed")
-
-	ErrNotFound = errors.New("not found")
-)
-
 // NewStore returns a initilised Storer instance using BoltDB as the backing store
 func NewBoltDBStore(db *bolt.DB) Storer {
 	return &boltDBStore{
