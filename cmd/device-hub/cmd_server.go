@@ -31,7 +31,7 @@ var serverCommand = &cobra.Command{
 
 		ctx := context.Background()
 
-		s := store.NewStore(db)
+		s := store.NewBoltDBStore(db)
 		repository := store.NewRepository(s)
 
 		manager, err := runtime.NewEndpointManager(ctx, repository, utils.NewLogger(hub.DaemonVersionString()))
