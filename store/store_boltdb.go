@@ -11,7 +11,7 @@ import (
 	"github.com/boltdb/bolt"
 )
 
-// Store is the entry point for the boltdb
+// boltDBStore implements Storer
 type boltDBStore struct {
 	db *bolt.DB
 }
