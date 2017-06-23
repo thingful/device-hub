@@ -21,6 +21,8 @@ type Registry struct {
 }
 
 var (
+	// Default is a reference to a registry that can be used both as a convenience and to 'register'
+	// endpoints and listeners when embedding in 'custom' deployments.
 	Default = New()
 )
 
