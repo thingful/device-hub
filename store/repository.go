@@ -33,11 +33,8 @@ type Storer interface {
 	// MustCreateBuckets will ensure the underlying storage exists for the entities
 	MustCreateBuckets(buckets []bucket)
 
-	// Insert will insert an entity or error
-	Insert(bucket bucket, uid []byte, data interface{}) error
-
-	// Update will update an entity or error
-	Update(bucket bucket, uid []byte, data interface{}) error
+	// InsertOrUpdate will insert or update an entity or error
+	InsertOrUpdate(bucket bucket, uid []byte, data interface{}) error
 
 	// Delete will remove an entity or error
 	Delete(bucket bucket, uid []byte) error
@@ -124,7 +121,7 @@ func (e *Repository) UpdateOrCreateEntity(item proto.Entity) (string, error) {
 		return "", err
 	}
 
-	err = e.store.Insert(b, []byte(item.Uid), item)
+	err = e.store.InsertOrUpdate(b, []byte(item.Uid), item)
 
 	if err != nil {
 		return "", err

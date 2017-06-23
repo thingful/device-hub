@@ -44,7 +44,7 @@ func (s *boltDBStore) MustCreateBuckets(buckets []bucket) {
 
 }
 
-func (s *boltDBStore) Insert(bucket bucket, uid []byte, data interface{}) error {
+func (s *boltDBStore) InsertOrUpdate(bucket bucket, uid []byte, data interface{}) error {
 
 	err := s.db.Update(func(tx *bolt.Tx) error {
 
@@ -62,23 +62,6 @@ func (s *boltDBStore) Insert(bucket bucket, uid []byte, data interface{}) error 
 		}
 
 		return b.Put([]byte(uid), buf)
-
-	})
-	return err
-}
-
-func (s *boltDBStore) Update(bucket bucket, uid []byte, data interface{}) error {
-
-	err := s.db.Update(func(tx *bolt.Tx) error {
-
-		b := tx.Bucket(bucket.name)
-
-		buf, err := json.Marshal(data)
-		if err != nil {
-			return err
-		}
-
-		return b.Put(uid, buf)
 
 	})
 	return err

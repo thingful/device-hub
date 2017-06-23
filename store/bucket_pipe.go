@@ -33,7 +33,7 @@ type Profile struct {
 }
 
 func (p pipeBucket) CreateOrUpdate(pipe Pipe) error {
-	return p.store.Insert(p.bucket, []byte(pipe.Uri), pipe)
+	return p.store.InsertOrUpdate(p.bucket, []byte(pipe.Uri), pipe)
 }
 
 func (p pipeBucket) List() ([]Pipe, error) {
