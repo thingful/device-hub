@@ -52,10 +52,10 @@ func newConfig() *config {
 
 func (o *config) AddFlags(fs *pflag.FlagSet) {
 	fs.StringVarP(&o.ServerAddr, "server-addr", "s", o.ServerAddr, "server address in form of host:port")
-	fs.StringVarP(&o.RequestFile, "request-file", "f", o.RequestFile, "client request file (must be json, yaml, or xml); use \"-\" for stdin + json")
-	fs.StringVarP(&o.RequestDir, "request-dir", "d", o.RequestDir, "directory containing client request file(s) (must be json, yaml, or xml)")
+	fs.StringVarP(&o.RequestFile, "request-file", "f", o.RequestFile, "client request file (must be yaml); use \"-\" for stdin + json")
+	fs.StringVarP(&o.RequestDir, "request-dir", "d", o.RequestDir, "directory containing client request file(s) (must be yaml)")
 	fs.BoolVarP(&o.PrintSampleRequest, "print-sample-request", "p", o.PrintSampleRequest, "print sample request file and exit")
-	fs.StringVarP(&o.ResponseFormat, "response-format", "o", o.ResponseFormat, "response format (json, prettyjson, yaml, or xml)")
+	fs.StringVarP(&o.ResponseFormat, "response-format", "o", o.ResponseFormat, "response format (json, prettyjson or yaml)")
 	fs.DurationVar(&o.Timeout, "timeout", o.Timeout, "client connection timeout")
 	fs.BoolVar(&o.TLS, "tls", o.TLS, "enable tls")
 	fs.StringVar(&o.ServerName, "tls-server-name", o.ServerName, "tls server name override")

@@ -209,13 +209,13 @@ func decoderFromPath(filePath string) (*os.File, iocodec.Decoder, error) {
 
 	if len(ext) > 0 && ext[0] == '.' {
 		ext = ext[1:]
+		if ext != "yaml" {
+			return nil, nil, fmt.Errorf("invalid request file format: %q", ext)
+
+		}
 	}
 
-	dm, ok := iocodec.DefaultDecoders[ext]
-
-	if !ok {
-		return nil, nil, fmt.Errorf("invalid request file format: %q", ext)
-	}
+	dm, _ := iocodec.DefaultDecoders["yaml"]
 
 	return f, dm.NewDecoder(f), nil
 }
