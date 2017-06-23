@@ -12,7 +12,7 @@ import (
 )
 
 // Store is the entry point for the boltdb
-type Store struct {
+type boltDBStore struct {
 	db *bolt.DB
 }
 
@@ -22,14 +22,14 @@ var (
 	ErrNotFound = errors.New("not found")
 )
 
-// NewStore returns a initilised Store instance
-func NewStore(db *bolt.DB) *Store {
-	return &Store{
+// NewStore returns a initilised Storer instance using BoltDB as the backing store
+func NewBoltDBStore(db *bolt.DB) Storer {
+	return &boltDBStore{
 		db: db,
 	}
 }
 
-func (s *Store) MustCreateBuckets(buckets []bucket) {
+func (s *boltDBStore) MustCreateBuckets(buckets []bucket) {
 
 	err := s.db.Update(func(tx *bolt.Tx) error {
 
@@ -50,7 +50,7 @@ func (s *Store) MustCreateBuckets(buckets []bucket) {
 
 }
 
-func (s *Store) Insert(bucket bucket, uid []byte, data interface{}) error {
+func (s *boltDBStore) Insert(bucket bucket, uid []byte, data interface{}) error {
 
 	err := s.db.Update(func(tx *bolt.Tx) error {
 
@@ -73,7 +73,7 @@ func (s *Store) Insert(bucket bucket, uid []byte, data interface{}) error {
 	return err
 }
 
-func (s *Store) Update(bucket bucket, uid []byte, data interface{}) error {
+func (s *boltDBStore) Update(bucket bucket, uid []byte, data interface{}) error {
 
 	err := s.db.Update(func(tx *bolt.Tx) error {
 
@@ -90,7 +90,7 @@ func (s *Store) Update(bucket bucket, uid []byte, data interface{}) error {
 	return err
 }
 
-func (s *Store) Delete(bucket bucket, uid []byte) error {
+func (s *boltDBStore) Delete(bucket bucket, uid []byte) error {
 
 	err := s.db.Update(func(tx *bolt.Tx) error {
 
@@ -102,7 +102,7 @@ func (s *Store) Delete(bucket bucket, uid []byte) error {
 	return err
 }
 
-func (s *Store) One(bucket bucket, uid []byte, out interface{}) error {
+func (s *boltDBStore) One(bucket bucket, uid []byte, out interface{}) error {
 
 	err := s.db.View(func(tx *bolt.Tx) error {
 
@@ -127,7 +127,7 @@ func (s *Store) One(bucket bucket, uid []byte, out interface{}) error {
 	return err
 }
 
-func (s *Store) List(bucket bucket, to interface{}) error {
+func (s *boltDBStore) List(bucket bucket, to interface{}) error {
 
 	ref := reflect.ValueOf(to)
 
