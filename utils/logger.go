@@ -10,6 +10,7 @@ import (
 
 	"github.com/natefinch/lumberjack"
 	"github.com/sirupsen/logrus"
+	logrus_syslog "github.com/sirupsen/logrus/hooks/syslog"
 )
 
 const (
@@ -18,18 +19,28 @@ const (
 
 // NewLogger creates and returns a new instance of the Logger type. This
 // initializes the logger with a tagged logrus Entry initialized with the
-// version string and hostname.
-func NewLogger(version, logpath string) Logger {
+// version string, hostname and two logging options (syslog & logpath)
+// If syslog is true the logger will use local syslog method
+// If syslog is false logpath will be evaluated as log file with rotation
+// STDOUT is the logging fallback method
+func NewLogger(version string, syslog bool, logpath string) Logger {
 	log := logrus.New()
+	if syslog {
+		hook, err := logrus_syslog.NewSyslogHook("", "", syslog.LOG_INFO, "device-hub")
+		if err == nil {
+			log.Hooks.Add(hook)
+			return &l{entry: log}
+		}
+	}
 	log.Formatter = new(logrus.JSONFormatter)
 	log.Level = logrus.InfoLevel
-	// log.Out = os.Stdout
+	// Test values for rotation, these should be parametrized
 	if len(logpath) != 0 {
 		log.Out = &lumberjack.Logger{
 			Filename:   logpath,
-			MaxSize:    1,
+			MaxSize:    1, // Mb
 			MaxBackups: 3,
-			MaxAge:     28,
+			MaxAge:     28, // days
 		}
 	} else {
 		log.Out = os.Stdout
@@ -56,7 +67,7 @@ func defaultFields(version string) logrus.Fields {
 	pid := os.Getpid()
 
 	return logrus.Fields{
-		"name":     "pomelo",
+		"name":     "device-hub",
 		"version":  version,
 		"hostname": hostname,
 		"pid":      pid,
