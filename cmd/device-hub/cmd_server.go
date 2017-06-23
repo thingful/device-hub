@@ -36,8 +36,10 @@ var serverCommand = &cobra.Command{
 
 		s := store.NewStore(db)
 
-		endpoint.Register(registry.Default)
-		listener.Register(registry.Default)
+		register := registry.Default
+
+		endpoint.Register(register)
+		listener.Register(register)
 
 		repository := store.NewRepository(s, registry.Default)
 
