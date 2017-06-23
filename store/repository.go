@@ -33,8 +33,8 @@ type Storer interface {
 	// MustCreateBuckets will ensure the underlying storage exists for the entities
 	MustCreateBuckets(buckets []bucket)
 
-	// InsertOrUpdate will insert or update an entity or error
-	InsertOrUpdate(bucket bucket, uid []byte, data interface{}) error
+	// Insert will insert an entity or error
+	Insert(bucket bucket, uid []byte, data interface{}) error
 
 	// Delete will remove an entity or error
 	Delete(bucket bucket, uid []byte) error
@@ -53,6 +53,9 @@ var (
 
 	// ErrNotFound is returned if the item searched for doesn not exist
 	ErrNotFound = errors.New("not found")
+
+	// ErrItemAlreadyExists is returned if inserting an item that already exists
+	ErrItemAlreadyExists = errors.New("item already exists")
 )
 
 func NewRepository(store Storer) *Repository {
@@ -121,7 +124,7 @@ func (e *Repository) UpdateOrCreateEntity(item proto.Entity) (string, error) {
 		return "", err
 	}
 
-	err = e.store.InsertOrUpdate(b, []byte(item.Uid), item)
+	err = e.store.Insert(b, []byte(item.Uid), item)
 
 	if err != nil {
 		return "", err

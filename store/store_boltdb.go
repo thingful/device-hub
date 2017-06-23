@@ -4,7 +4,6 @@ package store
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"reflect"
 
@@ -44,7 +43,7 @@ func (s *boltDBStore) MustCreateBuckets(buckets []bucket) {
 
 }
 
-func (s *boltDBStore) InsertOrUpdate(bucket bucket, uid []byte, data interface{}) error {
+func (s *boltDBStore) Insert(bucket bucket, uid []byte, data interface{}) error {
 
 	err := s.db.Update(func(tx *bolt.Tx) error {
 
@@ -53,7 +52,7 @@ func (s *boltDBStore) InsertOrUpdate(bucket bucket, uid []byte, data interface{}
 		existing := b.Get(uid)
 
 		if len(existing) > 0 {
-			return errors.New("item already exists")
+			return ErrItemAlreadyExists
 		}
 
 		buf, err := json.Marshal(data)

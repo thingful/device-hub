@@ -32,8 +32,8 @@ type Profile struct {
 	Script  engine.Script
 }
 
-func (p pipeBucket) CreateOrUpdate(pipe Pipe) error {
-	return p.store.InsertOrUpdate(p.bucket, []byte(pipe.Uri), pipe)
+func (p pipeBucket) Insert(pipe Pipe) error {
+	return p.store.Insert(p.bucket, []byte(pipe.Uri), pipe)
 }
 
 func (p pipeBucket) List() ([]Pipe, error) {
