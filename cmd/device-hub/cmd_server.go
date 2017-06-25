@@ -4,9 +4,7 @@ package main
 
 import (
 	"context"
-	"fmt"
 
-	"github.com/boltdb/bolt"
 	"github.com/spf13/cobra"
 	hub "github.com/thingful/device-hub"
 	"github.com/thingful/device-hub/runtime"
@@ -20,18 +18,18 @@ var serverCommand = &cobra.Command{
 	Short: "Start device hub.",
 	RunE: func(cmd *cobra.Command, args []string) error {
 
-		dbFile := fmt.Sprintf("%s/device-hub.db", _config.Data)
+		//		dbFile := fmt.Sprintf("%s/device-hub.db", _config.Data)
 
-		db, err := bolt.Open(dbFile, 0600, nil)
+		//	db, err := bolt.Open(dbFile, 0600, nil)
 
-		if err != nil {
-			return err
-		}
-		defer db.Close()
+		//	if err != nil {
+		//		return err
+		//	}
+		//	defer db.Close()
 
 		ctx := context.Background()
 
-		s := store.NewBoltDBStore(db)
+		s := store.NewFileStore(_config.Data)
 		repository := store.NewRepository(s)
 
 		manager, err := runtime.NewEndpointManager(ctx, repository, utils.NewLogger(hub.DaemonVersionString()))
