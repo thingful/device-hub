@@ -3,6 +3,7 @@ package utils
 
 import (
 	"io/ioutil"
+	"log/syslog"
 	"os"
 	"runtime"
 	"strings"
@@ -23,22 +24,23 @@ const (
 // If syslog is true the logger will use local syslog method
 // If syslog is false logpath will be evaluated as log file with rotation
 // STDOUT is the logging fallback method
-func NewLogger(version string, syslog bool, logpath string) Logger {
+func NewLogger(version string, syslogEnabled bool, logpath string) Logger {
 	log := logrus.New()
-	if syslog {
+	if syslogEnabled {
 		hook, err := logrus_syslog.NewSyslogHook("", "", syslog.LOG_INFO, "device-hub")
 		if err == nil {
 			log.Hooks.Add(hook)
-			return &l{entry: log}
+			logger := log.WithFields(defaultFields(version))
+			return &l{entry: logger}
 		}
 	}
 	log.Formatter = new(logrus.JSONFormatter)
 	log.Level = logrus.InfoLevel
-	// Test values for rotation, these should be parametrized
+	// TODO Parameterize Maximums
 	if len(logpath) != 0 {
 		log.Out = &lumberjack.Logger{
 			Filename:   logpath,
-			MaxSize:    1, // Mb
+			MaxSize:    3, // Mb
 			MaxBackups: 3,
 			MaxAge:     28, // days
 		}
