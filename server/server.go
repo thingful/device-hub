@@ -25,7 +25,8 @@ type Options struct {
 	CertFilePath      string
 	KeyFilePath       string
 	TrustedCAFilePath string
-	LogFile           string
+	LogFile           bool
+	LogPath           string
 	Syslog            bool
 }
 

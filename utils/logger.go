@@ -23,13 +23,14 @@ const (
 // initializes the logger with a tagged logrus Entry initialized with the
 // version string, hostname and two logging options (syslog & logpath)
 // By default logrus write to STDERR, NewLogger use STDOUT by default
-// If syslog is true the logger will use local syslog method and STDOUT
+// If syslogEnabled is true the logger will use local syslog method and STDOUT
 // with basic text format.
-// If syslog is false 'logpath' will be evaluated as log file path with rotation
-// and also will be used STDOUT, both with json format.
-func NewLogger(version string, syslogEnabled bool, logpath string) Logger {
+// If syslogEnabled is false and logfileEnabled is true the logger will write
+// to "logpath" file (./device-hub by default) and also to STDOUT, both in json format.
+func NewLogger(version string, syslogEnabled, logfileEnabled bool, logpath string) Logger {
 	log := logrus.New()
 	log.Out = os.Stdout
+
 	if syslogEnabled {
 		hook, err := logrus_syslog.NewSyslogHook("", "", syslog.LOG_INFO, "device-hub")
 		if err != nil {
@@ -46,8 +47,9 @@ func NewLogger(version string, syslogEnabled bool, logpath string) Logger {
 
 	log.Formatter = new(logrus.JSONFormatter)
 	log.Level = logrus.InfoLevel
+
 	// TODO Parameterize Maximums
-	if len(logpath) != 0 {
+	if logfileEnabled {
 		fileLogger := &lumberjack.Logger{
 			Filename:   logpath,
 			MaxSize:    3, // Mb
@@ -56,6 +58,7 @@ func NewLogger(version string, syslogEnabled bool, logpath string) Logger {
 		}
 		log.Out = io.MultiWriter(fileLogger, os.Stdout)
 	}
+
 	logger := log.WithFields(defaultFields(version))
 	return &l{entry: logger}
 }
