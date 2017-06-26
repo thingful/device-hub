@@ -2,6 +2,7 @@
 package utils
 
 import (
+	"io"
 	"io/ioutil"
 	"log/syslog"
 	"os"
@@ -21,11 +22,14 @@ const (
 // NewLogger creates and returns a new instance of the Logger type. This
 // initializes the logger with a tagged logrus Entry initialized with the
 // version string, hostname and two logging options (syslog & logpath)
-// If syslog is true the logger will use local syslog method
-// If syslog is false logpath will be evaluated as log file with rotation
-// STDOUT is the logging fallback method
+// By default logrus write to STDERR, NewLogger use STDOUT by default
+// If syslog is true the logger will use local syslog method and STDOUT
+// with basic text format.
+// If syslog is false 'logpath' will be evaluated as log file path with rotation
+// and also will be used STDOUT, both with json format.
 func NewLogger(version string, syslogEnabled bool, logpath string) Logger {
 	log := logrus.New()
+	log.Out = os.Stdout
 	if syslogEnabled {
 		hook, err := logrus_syslog.NewSyslogHook("", "", syslog.LOG_INFO, "device-hub")
 		if err != nil {
@@ -39,18 +43,18 @@ func NewLogger(version string, syslogEnabled bool, logpath string) Logger {
 		logger := log.WithFields(defaultFields(version))
 		return &l{entry: logger}
 	}
+
 	log.Formatter = new(logrus.JSONFormatter)
 	log.Level = logrus.InfoLevel
 	// TODO Parameterize Maximums
 	if len(logpath) != 0 {
-		log.Out = &lumberjack.Logger{
+		fileLogger := &lumberjack.Logger{
 			Filename:   logpath,
 			MaxSize:    3, // Mb
 			MaxBackups: 3,
 			MaxAge:     28, // days
 		}
-	} else {
-		log.Out = os.Stdout
+		log.Out = io.MultiWriter(fileLogger, os.Stdout)
 	}
 	logger := log.WithFields(defaultFields(version))
 	return &l{entry: logger}
