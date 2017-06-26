@@ -1,11 +1,12 @@
 // Copyright © 2017 thingful
 
-package hub
+package registry
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	hub "github.com/thingful/device-hub"
 	"github.com/thingful/device-hub/describe"
 )
 
@@ -13,15 +14,16 @@ type mockEndpoint struct {
 	count int
 }
 
-func (m mockEndpoint) Write(v Message) error {
+func (m mockEndpoint) Write(v hub.Message) error {
 	return nil
 }
 
 func TestBuildersAreCached(t *testing.T) {
 
 	count := 0
+	registry := New()
 
-	RegisterEndpoint("simple", func(config describe.Values) (Endpoint, error) {
+	registry.RegisterEndpoint("simple", func(config describe.Values) (hub.Endpoint, error) {
 
 		count++
 		return mockEndpoint{count: count}, nil
@@ -30,16 +32,16 @@ func TestBuildersAreCached(t *testing.T) {
 		describe.Parameter{},
 	})
 
-	one, err := EndpointByName("foo", "simple", map[string]string{})
+	one, err := registry.EndpointByName("foo", "simple", map[string]string{})
 	assert.Nil(t, err)
 
-	two, err := EndpointByName("foo", "simple", map[string]string{})
+	two, err := registry.EndpointByName("foo", "simple", map[string]string{})
 	assert.Nil(t, err)
 
 	assert.Equal(t, one, two)
 	assert.Equal(t, one.(mockEndpoint).count, two.(mockEndpoint).count)
 
-	three, err := EndpointByName("bar", "simple", map[string]string{})
+	three, err := registry.EndpointByName("bar", "simple", map[string]string{})
 
 	assert.Nil(t, err)
 	assert.NotEqual(t, one, three)
@@ -49,7 +51,9 @@ func TestBuildersAreCached(t *testing.T) {
 
 func TestErrorThrownForIncorrectType(t *testing.T) {
 
-	RegisterEndpoint("endpoint", func(config describe.Values) (Endpoint, error) {
+	registry := New()
+
+	registry.RegisterEndpoint("endpoint", func(config describe.Values) (hub.Endpoint, error) {
 
 		return mockEndpoint{}, nil
 
@@ -57,7 +61,7 @@ func TestErrorThrownForIncorrectType(t *testing.T) {
 		describe.Parameter{},
 	})
 
-	_, err := ListenerByName("foo", "endpoint", map[string]string{})
+	_, err := registry.ListenerByName("foo", "endpoint", map[string]string{})
 
 	assert.NotNil(t, err)
 }

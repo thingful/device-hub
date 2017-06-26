@@ -10,9 +10,11 @@ import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	hub "github.com/thingful/device-hub"
 	"github.com/thingful/device-hub/describe"
+
+	"github.com/thingful/device-hub/registry"
 )
 
-func init() {
+func Register(r *registry.Registry) {
 
 	mqtt_bindingAddress := describe.Parameter{
 		Name:        "mqtt-broker-address",
@@ -36,7 +38,7 @@ func init() {
 		Description: "user password for mqtt server",
 	}
 
-	hub.RegisterListener("mqtt",
+	r.RegisterListener("mqtt",
 
 		func(config describe.Values) (hub.Listener, error) {
 
@@ -98,7 +100,7 @@ func init() {
 		Examples:    []string{"0.0.0.0:9090", "*:9090", ":8000"},
 	}
 
-	hub.RegisterListener("http",
+	r.RegisterListener("http",
 		func(config describe.Values) (hub.Listener, error) {
 
 			binding := config.MustString(http_bindingAddress.Name)

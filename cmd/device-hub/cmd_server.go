@@ -9,6 +9,9 @@ import (
 	"github.com/boltdb/bolt"
 	"github.com/spf13/cobra"
 	hub "github.com/thingful/device-hub"
+	"github.com/thingful/device-hub/endpoint"
+	"github.com/thingful/device-hub/listener"
+	"github.com/thingful/device-hub/registry"
 	"github.com/thingful/device-hub/runtime"
 	"github.com/thingful/device-hub/server"
 	"github.com/thingful/device-hub/store"
@@ -32,9 +35,18 @@ var serverCommand = &cobra.Command{
 		ctx := context.Background()
 
 		s := store.NewStore(db)
-		repository := store.NewRepository(s)
 
-		manager, err := runtime.NewEndpointManager(ctx, repository, utils.NewLogger(hub.DaemonVersionString(), _config.Syslog, _config.LogFile))
+		register := registry.Default
+
+		endpoint.Register(register)
+		listener.Register(register)
+
+		repository := store.NewRepository(s, registry.Default)
+
+		manager, err := runtime.NewEndpointManager(ctx,
+			repository,
+			register,
+			utils.NewLogger(hub.DaemonVersionString(), _config.Syslog, _config.LogFile))
 
 		if err != nil {
 			return err
