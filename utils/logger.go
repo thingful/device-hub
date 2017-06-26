@@ -29,6 +29,9 @@ func NewLogger(version string, syslogEnabled bool, logpath string) Logger {
 	if syslogEnabled {
 		hook, err := logrus_syslog.NewSyslogHook("", "", syslog.LOG_INFO, "device-hub")
 		if err == nil {
+			log.Formatter = &logrus.TextFormatter{
+				DisableColors: true,
+			}
 			log.Hooks.Add(hook)
 			logger := log.WithFields(defaultFields(version))
 			return &l{entry: logger}
