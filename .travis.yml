@@ -7,8 +7,12 @@ sudo: required
 services:
   - docker
 
+before_script:
+  - go get github.com/chespinoza/goliscan
+  
 script:
   - make check-license
+  - make check-vendor-licenses
   - make docker_up coverage
 
 notifications:
