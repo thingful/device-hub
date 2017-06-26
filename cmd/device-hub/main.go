@@ -33,7 +33,7 @@ type config struct {
 	CertFile   string `envconfig:"TLS_CERT_FILE"`
 	KeyFile    string `envconfig:"TLS_KEY_FILE"`
 	Data       string `envconfig:"DATA" default:"."`
-	LogFile    string `envconfig:"CONFIG_FILE" default:""`
+	LogFile    string `envconfig:"LOG_FILE" default:""`
 	Syslog     bool   `envconfig:"SYSLOG"`
 }
 
