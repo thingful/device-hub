@@ -15,7 +15,6 @@
 package mqtt
 
 import (
-	"fmt"
 	"io/ioutil"
 	"testing"
 
@@ -45,9 +44,7 @@ func Test_exists_no(t *testing.T) {
 }
 
 func isemptydir(dir string) bool {
-	if !exists(dir) {
-		panic(fmt.Errorf("Directory %s does not exist", dir))
-	}
+	chkcond(exists(dir))
 	files, err := ioutil.ReadDir(dir)
 	chkerr(err)
 	return len(files) == 0

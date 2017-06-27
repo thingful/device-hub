@@ -46,7 +46,10 @@ var serverCommand = &cobra.Command{
 		manager, err := runtime.NewEndpointManager(ctx,
 			repository,
 			register,
-			utils.NewLogger(hub.DaemonVersionString()))
+			utils.NewLogger(hub.DaemonVersionString(),
+				_config.Syslog,
+				_config.LogFile,
+				_config.LogPath))
 
 		if err != nil {
 			return err
@@ -66,6 +69,9 @@ var serverCommand = &cobra.Command{
 			CertFilePath:      _config.CertFile,
 			KeyFilePath:       _config.KeyFile,
 			TrustedCAFilePath: _config.CACertFile,
+			LogFile:           _config.LogFile,
+			LogPath:           _config.LogPath,
+			Syslog:            _config.Syslog,
 		}, manager)
 
 		return err

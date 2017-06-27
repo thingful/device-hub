@@ -22,7 +22,6 @@ func loop(ctx context.Context,
 	tags map[string]string) {
 
 	scripter := engine.New(logger)
-
 	// ensure the map for the Statistics.Sent is set up correctly
 	for k, _ := range endpoints {
 		p.Statistics.Sent[k] = &proto.Counters{}
@@ -47,7 +46,6 @@ func loop(ctx context.Context,
 			logger.Error(err)
 
 		case input := <-channel.Out():
-
 			p.Statistics.Received.Total++
 			p.Statistics.Received.Ok++
 

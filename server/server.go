@@ -25,6 +25,9 @@ type Options struct {
 	CertFilePath      string
 	KeyFilePath       string
 	TrustedCAFilePath string
+	LogFile           bool
+	LogPath           string
+	Syslog            bool
 }
 
 func Serve(options Options, manager *runtime.Manager) error {
