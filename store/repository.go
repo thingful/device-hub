@@ -44,6 +44,9 @@ type Storer interface {
 
 	// List will return an array of entities or error
 	List(bucket bucket, to interface{}) error
+
+	// Close will finalise and close all resources or return an error
+	Close() error
 }
 
 var (

@@ -146,3 +146,7 @@ func (s *boltDBStore) List(bucket bucket, to interface{}) error {
 
 	return nil
 }
+
+func (s *boltDBStore) Close() error {
+	return s.db.Close()
+}

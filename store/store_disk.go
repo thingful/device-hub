@@ -165,3 +165,7 @@ func (f *fileStore) List(bucket bucket, to interface{}) error {
 
 	return nil
 }
+
+func (f *fileStore) Close() error {
+	return nil
+}
