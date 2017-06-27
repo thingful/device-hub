@@ -32,7 +32,7 @@ var serverCommand = &cobra.Command{
 
 		ctx := context.Background()
 
-		s := store.NewFileStore(_config.Data)
+		s := store.NewFileStore(_config.DataDir)
 
 		register := registry.Default
 
