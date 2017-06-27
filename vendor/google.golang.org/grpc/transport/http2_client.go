@@ -541,7 +541,9 @@ func (t *http2Client) NewStream(ctx context.Context, callHdr *CallHdr) (_ *Strea
 			return nil, connectionErrorf(true, err, "transport: %v", err)
 		}
 	}
+	s.mu.Lock()
 	s.bytesSent = true
+	s.mu.Unlock()
 
 	if t.statsHandler != nil {
 		outHeader := &stats.OutHeader{
@@ -565,6 +567,10 @@ func (t *http2Client) CloseStream(s *Stream, err error) {
 	if t.activeStreams == nil {
 		t.mu.Unlock()
 		return
+	}
+	if err != nil {
+		// notify in-flight streams, before the deletion
+		s.write(recvMsg{err: err})
 	}
 	delete(t.activeStreams, s.id)
 	if t.state == draining && len(t.activeStreams) == 0 {
@@ -1020,7 +1026,9 @@ func (t *http2Client) operateHeaders(frame *http2.MetaHeadersFrame) {
 	if !ok {
 		return
 	}
+	s.mu.Lock()
 	s.bytesReceived = true
+	s.mu.Unlock()
 	var state decodeState
 	if err := state.decodeResponseHeader(frame); err != nil {
 		s.mu.Lock()

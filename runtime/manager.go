@@ -12,6 +12,7 @@ import (
 	hub "github.com/thingful/device-hub"
 	"github.com/thingful/device-hub/engine"
 	"github.com/thingful/device-hub/proto"
+	"github.com/thingful/device-hub/registry"
 	"github.com/thingful/device-hub/store"
 	"github.com/thingful/device-hub/utils"
 )
@@ -22,7 +23,8 @@ type Manager struct {
 	ctx        context.Context
 	pipes      map[string]*Pipe
 	sync.RWMutex
-	logger utils.Logger
+	register *registry.Registry
+	logger   utils.Logger
 }
 
 // pipe holds runtime state information including various counters
@@ -64,7 +66,10 @@ func newRuntimePipe(p store.Pipe) *Pipe {
 type PipePredicate func(*Pipe) bool
 
 // NewEndpointManager returns a manager instance or an error
-func NewEndpointManager(ctx context.Context, repository *store.Repository, logger utils.Logger) (*Manager, error) {
+func NewEndpointManager(ctx context.Context,
+	repository *store.Repository,
+	registry *registry.Registry,
+	logger utils.Logger) (*Manager, error) {
 
 	// load any existing pipes from the database to
 	// serve as the initial running state
@@ -83,6 +88,7 @@ func NewEndpointManager(ctx context.Context, repository *store.Repository, logge
 		Repository: repository,
 		pipes:      pipes,
 		ctx:        ctx,
+		register:   registry,
 		logger:     logger,
 	}, nil
 }
@@ -98,7 +104,7 @@ func (m *Manager) Start() error {
 
 		if p.State != proto.Pipe_RUNNING {
 
-			listener, err := hub.ListenerByName(p.Listener.Uid, p.Listener.Kind, p.Listener.Configuration)
+			listener, err := m.register.ListenerByName(p.Listener.Uid, p.Listener.Kind, p.Listener.Configuration)
 
 			if err != nil {
 				return err
@@ -108,7 +114,7 @@ func (m *Manager) Start() error {
 
 			for _, e := range p.Endpoints {
 
-				newendpoint, err := hub.EndpointByName(e.Uid, e.Kind, e.Configuration)
+				newendpoint, err := m.register.EndpointByName(e.Uid, e.Kind, e.Configuration)
 
 				if err != nil {
 					return err

@@ -16,10 +16,20 @@ all: pi linux-i386 linux-amd64 darwin ## build executables for the various envir
 
 .PHONY: all
 
+get-build-deps: ## install dependencies to check code before build
+	go get github.com/chespinoza/goliscan
+
+.PHONY: get-build-deps
+
 check-license: ## check the license header in every code file
-		@./scripts/check-license.sh
+	@./scripts/check-license.sh
 
 .PHONY: check-license
+
+check-vendor-licenses: ## check if licenses of project dependencies meet project requirements 
+	@goliscan check --direct-only
+	@goliscan check --indirect-only
+.PHONY: check-vendor-licenses
 
 test: ## run tests
 	$(GO_TEST) $(PACKAGES)
@@ -63,38 +73,38 @@ docker_up: ## run dependencies as docker containers
 .PHONY: docker_up
 
 
-darwin: tmp/build/$(EXE_NAME)-darwin-amd64 tmp/build/$(CLI_EXE_NAME)-darwin-amd64 ## build for mac
+darwin: tmp/build/darwin-amd64/$(EXE_NAME) tmp/build/darwin-amd64/$(CLI_EXE_NAME) ## build for mac
 
-linux-i386: tmp/build/$(EXE_NAME)-linux-i386 tmp/build/$(CLI_EXE_NAME)-linux-i386 ## build for linux i386
+linux-i386: tmp/build/linux-i386/$(EXE_NAME) tmp/build/linux-i386/$(CLI_EXE_NAME) ## build for linux i386
 
-linux-amd64: tmp/build/$(EXE_NAME)-linux-amd64 tmp/build/$(CLI_EXE_NAME)-linux-amd64 ## build for linux amd64
+linux-amd64: tmp/build/linux-amd64/$(EXE_NAME) tmp/build/linux-amd64/$(CLI_EXE_NAME) ## build for linux amd64
 
-pi: tmp/build/$(EXE_NAME)-linux-arm tmp/build/$(CLI_EXE_NAME)-linux-arm ## build for raspberry-pi
+pi: tmp/build/linux-arm/$(EXE_NAME) tmp/build/linux-arm/$(CLI_EXE_NAME) ## build for raspberry-pi
 
 .PHONY: darwin linux-i386 linux-amd64 pi
 
-tmp/build/$(EXE_NAME)-linux-i386:
+tmp/build/linux-i386/$(EXE_NAME):
 	GOOS=linux GOARCH=386 go build $(BUILD_FLAGS) -o $(@) ./cmd/device-hub
 
-tmp/build/$(CLI_EXE_NAME)-linux-i386:
+tmp/build/linux-i386/$(CLI_EXE_NAME):
 	GOOS=linux GOARCH=386 go build $(BUILD_FLAGS) -o $(@) ./cmd/device-hub-cli
 
-tmp/build/$(EXE_NAME)-linux-amd64:
+tmp/build/linux-amd64/$(EXE_NAME):
 	GOOS=linux GOARCH=amd64 go build $(BUILD_FLAGS) -o $(@) ./cmd/device-hub
 
-tmp/build/$(CLI_EXE_NAME)-linux-amd64:
+tmp/build/linux-amd64/$(CLI_EXE_NAME):
 	GOOS=linux GOARCH=amd64 go build $(BUILD_FLAGS) -o $(@) ./cmd/device-hub-cli
 
-tmp/build/$(EXE_NAME)-linux-arm:
+tmp/build/linux-arm/$(EXE_NAME):
 	GOOS=linux GOARCH=arm go build $(BUILD_FLAGS) -o $(@) ./cmd/device-hub
 
-tmp/build/$(CLI_EXE_NAME)-linux-arm:
+tmp/build/linux-arm/$(CLI_EXE_NAME):
 	GOOS=linux GOARCH=arm go build $(BUILD_FLAGS) -o $(@) ./cmd/device-hub-cli
 
-tmp/build/$(EXE_NAME)-darwin-amd64:
+tmp/build/darwin-amd64/$(EXE_NAME):
 	GOOS=darwin GOARCH=amd64 go build $(BUILD_FLAGS) -o $(@) ./cmd/device-hub
 
-tmp/build/$(CLI_EXE_NAME)-darwin-amd64:
+tmp/build/darwin-amd64/$(CLI_EXE_NAME):
 	GOOS=darwin GOARCH=amd64 go build $(BUILD_FLAGS) -o $(@) ./cmd/device-hub-cli
 
 

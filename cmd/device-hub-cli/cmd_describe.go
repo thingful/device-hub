@@ -8,8 +8,10 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	hub "github.com/thingful/device-hub"
 	"github.com/thingful/device-hub/describe"
+	"github.com/thingful/device-hub/endpoint"
+	"github.com/thingful/device-hub/listener"
+	"github.com/thingful/device-hub/registry"
 )
 
 var describeCommand = &cobra.Command{
@@ -27,12 +29,17 @@ var describeCommand = &cobra.Command{
 		var params describe.Parameters
 		var err error
 
+		register := registry.Default
+
+		endpoint.Register(register)
+		listener.Register(register)
+
 		switch typez {
 		case "listener":
-			params, err = hub.DescribeListener(kind)
+			params, err = register.DescribeListener(kind)
 
 		case "endpoint":
-			params, err = hub.DescribeEndpoint(kind)
+			params, err = register.DescribeEndpoint(kind)
 
 		default:
 			return errors.New("describe [listener|endpoint] kind")

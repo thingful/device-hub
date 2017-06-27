@@ -7,6 +7,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/thingful/device-hub/proto"
+
+	testing_helper "github.com/thingful/device-hub/utils/testing"
 )
 
 func TestUIDIsSetOnEntity(t *testing.T) {
@@ -71,4 +73,62 @@ func TestProfileUIDErrorsIfNoProfileName(t *testing.T) {
 	err := ensureEntityHasUID(profile)
 	assert.NotNil(t, err)
 
+}
+
+func TestBoltDB_ListenersCreatedSearchedAndDeleted(t *testing.T) {
+
+	t.Parallel()
+
+	conn := testing_helper.MustDialBoltDB()
+	defer conn.MustClose()
+
+	store := NewBoltDBStore(conn.DB)
+
+	r := &mockregister{
+		listenerRegistered: true,
+	}
+
+	repository := NewRepository(store, r)
+
+	entity := proto.Entity{
+		Type: "listener",
+		Kind: "http",
+		Uid:  "xxx",
+	}
+
+	uid, err := repository.UpdateOrCreateEntity(entity)
+	assert.Nil(t, err)
+	assert.Equal(t, entity.Uid, uid)
+
+	listeners, err := repository.Search("l")
+
+	assert.Nil(t, err)
+	assert.Len(t, listeners, 1)
+
+	l, err := repository.Listeners.One("xxx")
+
+	assert.Nil(t, err)
+	assert.Equal(t, entity.Uid, l.Uid)
+
+	err = repository.Listeners.Delete("xxx")
+	assert.Nil(t, err)
+
+	listeners, err = repository.Search("l")
+
+	assert.Nil(t, err)
+	assert.Len(t, listeners, 0)
+
+}
+
+type mockregister struct {
+	listenerRegistered bool
+	endpointRegistered bool
+}
+
+func (r *mockregister) IsListenerRegistered(string) bool {
+	return r.listenerRegistered
+}
+
+func (r *mockregister) IsEndpointRegistered(string) bool {
+	return r.endpointRegistered
 }

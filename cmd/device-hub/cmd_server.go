@@ -7,6 +7,9 @@ import (
 
 	"github.com/spf13/cobra"
 	hub "github.com/thingful/device-hub"
+	"github.com/thingful/device-hub/endpoint"
+	"github.com/thingful/device-hub/listener"
+	"github.com/thingful/device-hub/registry"
 	"github.com/thingful/device-hub/runtime"
 	"github.com/thingful/device-hub/server"
 	"github.com/thingful/device-hub/store"
@@ -30,9 +33,21 @@ var serverCommand = &cobra.Command{
 		ctx := context.Background()
 
 		s := store.NewFileStore(_config.Data)
-		repository := store.NewRepository(s)
 
-		manager, err := runtime.NewEndpointManager(ctx, repository, utils.NewLogger(hub.DaemonVersionString()))
+		register := registry.Default
+
+		endpoint.Register(register)
+		listener.Register(register)
+
+		repository := store.NewRepository(s, register)
+
+		manager, err := runtime.NewEndpointManager(ctx,
+			repository,
+			register,
+			utils.NewLogger(hub.DaemonVersionString(),
+				_config.Syslog,
+				_config.LogFile,
+				_config.LogPath))
 
 		if err != nil {
 			return err
@@ -52,6 +67,9 @@ var serverCommand = &cobra.Command{
 			CertFilePath:      _config.CertFile,
 			KeyFilePath:       _config.KeyFile,
 			TrustedCAFilePath: _config.CACertFile,
+			LogFile:           _config.LogFile,
+			LogPath:           _config.LogPath,
+			Syslog:            _config.Syslog,
 		}, manager)
 
 		return err

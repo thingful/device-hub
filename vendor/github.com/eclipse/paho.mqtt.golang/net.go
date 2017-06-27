@@ -87,18 +87,7 @@ func incoming(c *client) {
 			break
 		}
 		DEBUG.Println(NET, "Received Message")
-		select {
-		case c.ibound <- cp:
-			// Notify keepalive logic that we recently received a packet
-			if c.options.KeepAlive != 0 {
-				c.packetResp <- struct{}{}
-			}
-		case <-c.stop:
-			// This avoids a deadlock should a message arrive while shutting down.
-			// In that case the "reader" of c.ibound might already be gone
-			WARN.Println(NET, "incoming dropped a received message during shutdown")
-			break
-		}
+		c.ibound <- cp
 	}
 	// We received an error on read.
 	// If disconnect is in progress, swallow error and return
@@ -170,9 +159,7 @@ func outgoing(c *client) {
 			}
 		}
 		// Reset ping timer after sending control packet.
-		if c.options.KeepAlive != 0 {
-			c.keepaliveReset <- struct{}{}
-		}
+		c.pingTimer.Reset(c.options.KeepAlive)
 	}
 }
 
@@ -199,8 +186,8 @@ func alllogic(c *client) {
 				sa := msg.(*packets.SubackPacket)
 				DEBUG.Println(NET, "received suback, id:", sa.MessageID)
 				token := c.getToken(sa.MessageID).(*SubscribeToken)
-				DEBUG.Println(NET, "granted qoss", sa.ReturnCodes)
-				for i, qos := range sa.ReturnCodes {
+				DEBUG.Println(NET, "granted qoss", sa.GrantedQoss)
+				for i, qos := range sa.GrantedQoss {
 					token.subResult[token.subs[i]] = qos
 				}
 				token.flowComplete()
