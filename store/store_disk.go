@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
-	"reflect"
 	"sync"
 )
 
@@ -119,51 +118,30 @@ func (f *fileStore) List(bucket bucket, to interface{}) error {
 	f.lock.RLock()
 	defer f.lock.RUnlock()
 
-	ref := reflect.ValueOf(to)
-
-	if ref.Kind() != reflect.Ptr || reflect.Indirect(ref).Kind() != reflect.Slice {
-		return ErrSlicePtrNeeded
-	}
-
 	folder := path.Join(f.path, string(bucket.name))
 	listing, err := ioutil.ReadDir(folder)
 
 	if err != nil {
 		return err
 	}
+	ff := func() (map[string][]byte, error) {
 
-	list := map[string][]byte{}
+		list := map[string][]byte{}
 
-	for _, file := range listing {
+		for _, file := range listing {
 
-		fullPath := path.Join(folder, file.Name())
+			fullPath := path.Join(folder, file.Name())
 
-		bytes, err := ioutil.ReadFile(fullPath)
-		if err != nil {
-			return err
+			bytes, err := ioutil.ReadFile(fullPath)
+			if err != nil {
+				return list, err
+			}
+
+			list[file.Name()] = bytes
 		}
-
-		list[file.Name()] = bytes
+		return list, err
 	}
-
-	results := reflect.MakeSlice(reflect.Indirect(ref).Type(), len(list), len(list))
-	i := 0
-	for k, _ := range list {
-		raw := list[k]
-		if raw == nil {
-			return ErrNotFound
-		}
-
-		err = json.Unmarshal(raw, results.Index(i).Addr().Interface())
-		if err != nil {
-			return err
-		}
-		i++
-	}
-
-	reflect.Indirect(ref).Set(results)
-
-	return nil
+	return fff(to, ff)
 }
 
 func (f *fileStore) Close() error {

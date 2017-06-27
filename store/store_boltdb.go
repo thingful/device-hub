@@ -103,25 +103,16 @@ func (s *boltDBStore) One(bucket bucket, uid []byte, out interface{}) error {
 	return err
 }
 
-func (s *boltDBStore) List(bucket bucket, to interface{}) error {
+type m func() (map[string][]byte, error)
 
+func fff(to interface{}, n m) error {
 	ref := reflect.ValueOf(to)
 
 	if ref.Kind() != reflect.Ptr || reflect.Indirect(ref).Kind() != reflect.Slice {
 		return ErrSlicePtrNeeded
 	}
 
-	list := map[string][]byte{}
-	err := s.db.View(func(tx *bolt.Tx) error {
-
-		b := tx.Bucket(bucket.name)
-		b.ForEach(func(k, v []byte) error {
-			list[string(k)] = v
-			return nil
-		})
-
-		return nil
-	})
+	list, err := n()
 
 	if err != nil {
 		return err
@@ -143,8 +134,29 @@ func (s *boltDBStore) List(bucket bucket, to interface{}) error {
 	}
 
 	reflect.Indirect(ref).Set(results)
-
 	return nil
+}
+
+func (s *boltDBStore) List(bucket bucket, to interface{}) error {
+
+	f := func() (map[string][]byte, error) {
+		list := map[string][]byte{}
+		err := s.db.View(func(tx *bolt.Tx) error {
+
+			b := tx.Bucket(bucket.name)
+			b.ForEach(func(k, v []byte) error {
+				list[string(k)] = v
+				return nil
+			})
+
+			return nil
+		})
+
+		return list, err
+
+	}
+
+	return fff(to, f)
 }
 
 func (s *boltDBStore) Close() error {
