@@ -8,7 +8,7 @@ services:
   - docker
 
 before_script:
-  - go get github.com/chespinoza/goliscan
+  - make get-build-deps
   
 script:
   - make check-license

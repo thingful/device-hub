@@ -16,8 +16,13 @@ all: pi linux-i386 linux-amd64 darwin ## build executables for the various envir
 
 .PHONY: all
 
+get-build-deps: ## install dependencies to check code before build
+	go get github.com/chespinoza/goliscan
+
+.PHONY: get-build-deps
+
 check-license: ## check the license header in every code file
-		@./scripts/check-license.sh
+	@./scripts/check-license.sh
 
 .PHONY: check-license
 
