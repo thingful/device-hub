@@ -73,7 +73,7 @@ func init() {
 	RootCmd.AddCommand(versionCommand)
 
 	RootCmd.AddCommand(createCommand)
-	RootCmd.AddCommand(getCommand)
+	RootCmd.AddCommand(showCommand)
 	RootCmd.AddCommand(deleteCommand)
 	RootCmd.AddCommand(startCommand())
 	RootCmd.AddCommand(stopCommand)

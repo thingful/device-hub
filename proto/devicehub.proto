@@ -14,7 +14,7 @@ service Hub {
 
     rpc Delete (DeleteRequest) returns (DeleteReply) {}
 
-    rpc Get (GetRequest) returns (GetReply) {}
+    rpc Show (ShowRequest) returns (ShowReply) {}
 
     rpc Start(StartRequest) returns (StartReply) {}
 
@@ -48,11 +48,11 @@ message DeleteReply {
     string error = 2;
 }
 
-message GetRequest {
+message ShowRequest {
     string filter = 1;
 }
 
-message GetReply {
+message ShowReply {
     bool ok = 1;
     string error = 2;
     repeated Entity entities = 3;
