@@ -27,7 +27,7 @@ func TestConfigurationFilesAreValid(t *testing.T) {
 	endpoint.Register(register)
 
 	//for each file in ./test-configurations/
-	folder := "."
+	folder := "./samples/"
 	listing, err := ioutil.ReadDir(folder)
 
 	for _, fi := range listing {
