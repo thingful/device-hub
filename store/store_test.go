@@ -2,6 +2,7 @@ package store
 
 import (
 	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -9,31 +10,49 @@ import (
 	testing_helper "github.com/thingful/device-hub/utils/testing"
 )
 
+// storeTester is the signature for store tests
+type storeTester func(t *testing.T, store Storer)
+
+var (
+
+	// AllTests contain the complete list of tests that must pass for each Storer
+	AllTests = []storeTester{
+		ListenersCreatedSearchedAndDeleted,
+		EndpointsCreatedSearchedAndDeleted,
+	}
+)
+
 // TestStores will test the complete set of store tests against each implementation
 func TestStores(t *testing.T) {
 
 	t.Parallel()
 
-	// test bolt db first
-	conn := testing_helper.MustDialBoltDB()
-	defer conn.MustClose()
+	// test bolt db
+	for _, test := range AllTests {
 
-	boltDB := NewBoltDBStore(conn.DB)
+		conn := testing_helper.MustDialBoltDB()
+		defer conn.MustClose()
 
-	ListenersCreatedSearchedAndDeleted(t, boltDB)
-	EndpointsCreatedSearchedAndDeleted(t, boltDB)
+		s := NewBoltDBStore(conn.DB)
 
-	// crate a folder for the file store
-	f, err := ioutil.TempDir("", "bolt-test-")
-	if err != nil {
-		t.Fatal(err)
+		test(t, s)
+
 	}
 
-	fileStore := NewFileStore(f)
+	// test fileStore
+	for _, test := range AllTests {
+		// create a temp folder for the file store
+		f, err := ioutil.TempDir("", "bolt-test-")
+		if err != nil {
+			t.Fatal(err)
+		}
 
-	ListenersCreatedSearchedAndDeleted(t, fileStore)
-	EndpointsCreatedSearchedAndDeleted(t, boltDB)
+		defer os.Remove(f)
 
+		s := NewFileStore(f)
+		test(t, s)
+
+	}
 }
 
 func EndpointsCreatedSearchedAndDeleted(t *testing.T, store Storer) {
