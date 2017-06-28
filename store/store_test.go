@@ -24,6 +24,7 @@ var (
 		ListenersCreatedSearchedAndDeleted,
 		EndpointsCreatedSearchedAndDeleted,
 		ProfilesCreatedSearchedAndDeleted,
+		PipesCreatedSearchedAndDeleted,
 		InsertShouldReturnErrorIfSameItemAddedTwice,
 		SearchAllShouldReturnAllEntities,
 	}
@@ -248,6 +249,40 @@ func ProfilesCreatedSearchedAndDeleted(t *testing.T, store Storer) {
 	profiles, err = repository.Search("p")
 	assert.Nil(t, err)
 	assert.Len(t, profiles, 0)
+}
+
+func PipesCreatedSearchedAndDeleted(t *testing.T, store Storer) {
+
+	r := &mockregister{}
+
+	repository := NewRepository(store, r)
+
+	pipe := Pipe{
+		Profile:   Profile{},
+		Listener:  &proto.Entity{},
+		Endpoints: []*proto.Entity{},
+		Uri:       "/foo",
+		Tags:      map[string]string{},
+	}
+
+	err := repository.Pipes.Insert(pipe)
+
+	assert.Nil(t, err)
+
+	pipes, err := repository.Pipes.List()
+
+	assert.Nil(t, err)
+	assert.Len(t, pipes, 1)
+
+	err = repository.Pipes.Delete("/foo")
+
+	assert.Nil(t, err)
+
+	pipes, err = repository.Pipes.List()
+
+	assert.Nil(t, err)
+	assert.Len(t, pipes, 0)
+
 }
 
 type mockregister struct {
