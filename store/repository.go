@@ -4,12 +4,12 @@ package store
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"hash/crc32"
 	"strings"
 
 	hashids "github.com/speps/go-hashids"
-	hub "github.com/thingful/device-hub"
 	"github.com/thingful/device-hub/proto"
 )
 
@@ -25,9 +25,15 @@ type Repository struct {
 	Profiles  entityBucket
 	Pipes     pipeBucket
 	store     *Store
+	register  register
 }
 
-func NewRepository(store *Store) *Repository {
+type register interface {
+	IsEndpointRegistered(string) bool
+	IsListenerRegistered(string) bool
+}
+
+func NewRepository(store *Store, register register) *Repository {
 	r := &Repository{
 		Listeners: entityBucket{
 			bucket: bucket{name: []byte("listeners"),
@@ -45,7 +51,8 @@ func NewRepository(store *Store) *Repository {
 			bucket{name: []byte("pipes"),
 				store: store,
 			}},
-		store: store,
+		store:    store,
+		register: register,
 	}
 
 	store.MustCreateBuckets([]bucket{
@@ -66,7 +73,7 @@ func (e *Repository) UpdateOrCreateEntity(item proto.Entity) (string, error) {
 	case "listener":
 		b = e.Listeners.bucket
 
-		exists := hub.IsListenerRegistered(item.Kind)
+		exists := e.register.IsListenerRegistered(item.Kind)
 
 		if !exists {
 			return "", fmt.Errorf("kind : %s not registered", item.Kind)
@@ -75,7 +82,7 @@ func (e *Repository) UpdateOrCreateEntity(item proto.Entity) (string, error) {
 	case "endpoint":
 		b = e.Endpoints.bucket
 
-		exists := hub.IsEndpointRegistered(item.Kind)
+		exists := e.register.IsEndpointRegistered(item.Kind)
 		if !exists {
 			return "", fmt.Errorf("kind : %s not registered", item.Kind)
 		}
@@ -102,20 +109,26 @@ func (e *Repository) UpdateOrCreateEntity(item proto.Entity) (string, error) {
 	return item.Uid, nil
 }
 
-func (e *Repository) Delete(typez, uid string) error {
+func (e *Repository) Delete(entity proto.Entity) error {
 
-	switch strings.ToLower(typez) {
+	err := ensureEntityHasUID(&entity)
+
+	if err != nil {
+		return err
+	}
+
+	switch strings.ToLower(entity.Type) {
 	case "listener":
-		return e.Listeners.Delete(uid)
+		return e.Listeners.Delete(entity.Uid)
 	case "endpoint":
-		return e.Endpoints.Delete(uid)
+		return e.Endpoints.Delete(entity.Uid)
 	case "profile":
-		return e.Profiles.Delete(uid)
+		return e.Profiles.Delete(entity.Uid)
 	case "pipes":
-		return e.Pipes.Delete(uid)
+		return e.Pipes.Delete(entity.Uid)
 
 	default:
-		return fmt.Errorf("type : %s not found", typez)
+		return fmt.Errorf("type : %s not found", entity.Type)
 	}
 }
 
@@ -186,6 +199,9 @@ func ensureEntityHasUID(entity *proto.Entity) error {
 			entity.Uid = entity.Configuration["profile-name"]
 			return nil
 		}
+
+		return errors.New("profile uid cannot be created - no 'profile-name'")
+
 	default:
 		hash, err := hash(entity)
 

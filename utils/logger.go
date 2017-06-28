@@ -2,13 +2,17 @@
 package utils
 
 import (
+	"io"
 	"io/ioutil"
+	"log/syslog"
 	"os"
 	"runtime"
 	"strings"
 	"time"
 
+	"github.com/natefinch/lumberjack"
 	"github.com/sirupsen/logrus"
+	logrus_syslog "github.com/sirupsen/logrus/hooks/syslog"
 )
 
 const (
@@ -17,12 +21,44 @@ const (
 
 // NewLogger creates and returns a new instance of the Logger type. This
 // initializes the logger with a tagged logrus Entry initialized with the
-// version string and hostname.
-func NewLogger(version string) Logger {
+// version string, hostname and two logging options (syslog & logpath)
+// By default logrus write to STDERR, NewLogger use STDOUT by default
+// If syslogEnabled is true the logger will use local syslog method and STDOUT
+// with basic text format.
+// If syslogEnabled is false and logfileEnabled is true the logger will write
+// to "logpath" file (./device-hub by default) and also to STDOUT, both in json format.
+func NewLogger(version string, syslogEnabled, logfileEnabled bool, logpath string) Logger {
 	log := logrus.New()
+	log.Out = os.Stdout
+
+	if syslogEnabled {
+		hook, err := logrus_syslog.NewSyslogHook("", "", syslog.LOG_INFO, "device-hub")
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		log.Formatter = &logrus.TextFormatter{
+			DisableColors: true,
+		}
+		log.Hooks.Add(hook)
+		logger := log.WithFields(defaultFields(version))
+		return &l{entry: logger}
+	}
+
 	log.Formatter = new(logrus.JSONFormatter)
 	log.Level = logrus.InfoLevel
-	log.Out = os.Stdout
+
+	// TODO Parameterize Maximums
+	if logfileEnabled {
+		fileLogger := &lumberjack.Logger{
+			Filename:   logpath,
+			MaxSize:    3, // Mb
+			MaxBackups: 3,
+			MaxAge:     28, // days
+		}
+		log.Out = io.MultiWriter(fileLogger, os.Stdout)
+	}
+
 	logger := log.WithFields(defaultFields(version))
 	return &l{entry: logger}
 }
@@ -45,7 +81,7 @@ func defaultFields(version string) logrus.Fields {
 	pid := os.Getpid()
 
 	return logrus.Fields{
-		"name":     "pomelo",
+		"name":     "device-hub",
 		"version":  version,
 		"hostname": hostname,
 		"pid":      pid,

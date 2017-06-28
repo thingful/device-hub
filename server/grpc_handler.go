@@ -48,17 +48,23 @@ func (s *handler) Delete(ctx context.Context, request *proto.DeleteRequest) (*pr
 	// TODO : consider moving this into the manager
 	running := true
 
-	switch strings.ToLower(request.Type) {
+	entity := proto.Entity{
+		Uid:           request.Uid,
+		Type:          request.Type,
+		Configuration: request.Configuration,
+	}
+
+	switch strings.ToLower(entity.Type) {
 	case "listener":
 
 		running = s.manager.Any(func(p *runtime.Pipe) bool {
-			return p.Listener.Uid == request.Uid
+			return p.Listener.Uid == entity.Uid
 		})
 
 	case "endpoint":
 		running = s.manager.Any(func(p *runtime.Pipe) bool {
 			for _, e := range p.Endpoints {
-				if e.Uid == request.Uid {
+				if e.Uid == entity.Uid {
 					return true
 				}
 			}
@@ -67,25 +73,25 @@ func (s *handler) Delete(ctx context.Context, request *proto.DeleteRequest) (*pr
 	case "profile":
 
 		running = s.manager.Any(func(p *runtime.Pipe) bool {
-			return p.Profile.Uid == request.Uid
+			return p.Profile.Uid == entity.Uid
 		})
 
 	default:
 		return &proto.DeleteReply{
 			Ok:    false,
-			Error: fmt.Sprintf("type : %s not found", request.Type),
+			Error: fmt.Sprintf("type : %s not found", entity.Type),
 		}, nil
 	}
 
 	if running {
 		return &proto.DeleteReply{
 			Ok:    false,
-			Error: fmt.Sprintf("type : %s, uid : %s is currently being used, stop pipe before deleting", request.Type, request.Uid),
+			Error: fmt.Sprintf("type : %s, uid : %s is currently being used, stop pipe before deleting", entity.Type, entity.Uid),
 		}, nil
 
 	}
 
-	err := s.manager.Repository.Delete(request.Type, request.Uid)
+	err := s.manager.Repository.Delete(entity)
 
 	if err != nil {
 		return &proto.DeleteReply{
@@ -98,8 +104,8 @@ func (s *handler) Delete(ctx context.Context, request *proto.DeleteRequest) (*pr
 	return &proto.DeleteReply{Ok: true}, nil
 }
 
-// Get is a generic method to list listener, endpoint and profile entities
-func (s *handler) Get(ctx context.Context, request *proto.GetRequest) (*proto.GetReply, error) {
+// Show is a generic method to list listener, endpoint and profile entities
+func (s *handler) Show(ctx context.Context, request *proto.ShowRequest) (*proto.ShowReply, error) {
 
 	if strings.ToLower(request.Filter) == "all" {
 		request.Filter = "e,l,p"
@@ -108,13 +114,13 @@ func (s *handler) Get(ctx context.Context, request *proto.GetRequest) (*proto.Ge
 	all, err := s.manager.Repository.Search(request.Filter)
 
 	if err != nil {
-		return &proto.GetReply{
+		return &proto.ShowReply{
 			Ok:    false,
 			Error: err.Error(),
 		}, nil
 	}
 
-	return &proto.GetReply{Ok: true, Entities: all}, nil
+	return &proto.ShowReply{Ok: true, Entities: all}, nil
 }
 
 // Start will start a 'pipe'
@@ -160,10 +166,10 @@ func (s *handler) Stop(ctx context.Context, request *proto.StopRequest) (*proto.
 	return &proto.StopReply{Ok: true}, nil
 }
 
-// List returns all running 'pipes'
-func (s *handler) List(ctx context.Context, request *proto.ListRequest) (*proto.ListReply, error) {
+// Status returns all running 'pipes'
+func (s *handler) Status(ctx context.Context, request *proto.StatusRequest) (*proto.StatusReply, error) {
 
-	pipes := s.manager.List()
+	pipes := s.manager.Status()
 
 	ppipes := []*proto.Pipe{}
 
@@ -190,5 +196,5 @@ func (s *handler) List(ctx context.Context, request *proto.ListRequest) (*proto.
 
 	}
 
-	return &proto.ListReply{Ok: true, Pipes: ppipes}, nil
+	return &proto.StatusReply{Ok: true, Pipes: ppipes}, nil
 }

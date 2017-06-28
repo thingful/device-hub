@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"net"
 	"os"
+	"path"
 	"path/filepath"
 
 	"github.com/fiorix/protoc-gen-cobra/iocodec"
@@ -160,7 +161,8 @@ func roundTrip(sample interface{}, fn roundTripFunc) error {
 
 			fmt.Println(fi.Name())
 
-			f, d, err := decoderFromPath(cfg.RequestDir + fi.Name())
+			folderPath := path.Join(cfg.RequestDir, fi.Name())
+			f, d, err := decoderFromPath(folderPath)
 
 			if err != nil {
 				return err
@@ -207,13 +209,13 @@ func decoderFromPath(filePath string) (*os.File, iocodec.Decoder, error) {
 
 	if len(ext) > 0 && ext[0] == '.' {
 		ext = ext[1:]
+		if ext != "yaml" {
+			return nil, nil, fmt.Errorf("invalid request file format: %q", ext)
+
+		}
 	}
 
-	dm, ok := iocodec.DefaultDecoders[ext]
-
-	if !ok {
-		return nil, nil, fmt.Errorf("invalid request file format: %q", ext)
-	}
+	dm, _ := iocodec.DefaultDecoders["yaml"]
 
 	return f, dm.NewDecoder(f), nil
 }

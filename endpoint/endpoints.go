@@ -5,11 +5,12 @@ package endpoint
 import (
 	hub "github.com/thingful/device-hub"
 	"github.com/thingful/device-hub/describe"
+	"github.com/thingful/device-hub/registry"
 )
 
-func init() {
+func Register(r *registry.Registry) {
 
-	hub.RegisterEndpoint("stdout", func(config describe.Values) (hub.Endpoint, error) {
+	r.RegisterEndpoint("stdout", func(config describe.Values) (hub.Endpoint, error) {
 
 		prettyPrint := config.BoolWithDefault("pretty-print", false)
 
@@ -29,7 +30,7 @@ func init() {
 
 	httpClientTimeoutMS := int32(1000)
 
-	hub.RegisterEndpoint("http", func(config describe.Values) (hub.Endpoint, error) {
+	r.RegisterEndpoint("http", func(config describe.Values) (hub.Endpoint, error) {
 
 		clientTimeOut := config.Int32WithDefault("http-client-timeout-ms", httpClientTimeoutMS)
 		url := config.MustString("http-url")
