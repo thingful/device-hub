@@ -23,7 +23,9 @@ var (
 	AllTests = []storeTester{
 		ListenersCreatedSearchedAndDeleted,
 		EndpointsCreatedSearchedAndDeleted,
+		ProfilesCreatedSearchedAndDeleted,
 		InsertShouldReturnErrorIfSameItemAddedTwice,
+		SearchAllShouldReturnAllEntities,
 	}
 )
 
@@ -62,6 +64,53 @@ func TestStores(t *testing.T) {
 		test(t, s)
 
 	}
+}
+
+func SearchAllShouldReturnAllEntities(t *testing.T, store Storer) {
+	r := &mockregister{
+		endpointRegistered: true,
+		listenerRegistered: true,
+	}
+
+	repository := NewRepository(store, r)
+
+	one := proto.Entity{
+		Type: "endpoint",
+		Kind: "http",
+		Uid:  "one",
+	}
+
+	two := proto.Entity{
+		Type: "listener",
+		Kind: "http",
+		Uid:  "two",
+	}
+
+	three := proto.Entity{
+		Type: "profile",
+		Kind: "script",
+		Configuration: map[string]string{
+			"profile-name": "foo/bar",
+		},
+	}
+
+	uid, err := repository.Insert(one)
+	assert.Nil(t, err)
+	assert.Equal(t, one.Uid, uid)
+
+	uid, err = repository.Insert(two)
+	assert.Nil(t, err)
+	assert.Equal(t, two.Uid, uid)
+
+	uid, err = repository.Insert(three)
+	assert.Nil(t, err)
+	assert.Equal(t, "foo/bar", uid)
+
+	all, err := repository.Search("e,l,p")
+
+	assert.Nil(t, err)
+	assert.Len(t, all, 3)
+
 }
 
 func InsertShouldReturnErrorIfSameItemAddedTwice(t *testing.T, store Storer) {
@@ -162,6 +211,43 @@ func ListenersCreatedSearchedAndDeleted(t *testing.T, store Storer) {
 	assert.Nil(t, err)
 	assert.Len(t, listeners, 0)
 
+}
+
+func ProfilesCreatedSearchedAndDeleted(t *testing.T, store Storer) {
+
+	r := &mockregister{}
+
+	repository := NewRepository(store, r)
+
+	entity := proto.Entity{
+		Type: "profile",
+		Kind: "script",
+		Configuration: map[string]string{
+			"profile-name": "foo/bar",
+		},
+	}
+
+	uid, err := repository.Insert(entity)
+
+	assert.Nil(t, err)
+	assert.Equal(t, "foo/bar", uid)
+
+	profiles, err := repository.Search("p")
+
+	assert.Nil(t, err)
+	assert.Len(t, profiles, 1)
+
+	p, err := repository.Profiles.One("foo/bar")
+
+	assert.Nil(t, err)
+	assert.Equal(t, "foo/bar", p.Uid)
+
+	err = repository.Profiles.Delete("foo/bar")
+	assert.Nil(t, err)
+
+	profiles, err = repository.Search("p")
+	assert.Nil(t, err)
+	assert.Len(t, profiles, 0)
 }
 
 type mockregister struct {

@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 	"sync"
 )
 
@@ -74,7 +75,6 @@ func (f *fileStore) Insert(bucket bucket, uid []byte, data interface{}) error {
 	if err != nil {
 		return err
 	}
-
 	file, err := os.Create(p)
 
 	if err != nil {
@@ -139,12 +139,25 @@ func (f *fileStore) List(bucket bucket, to interface{}) error {
 
 			fullPath := path.Join(folder, file.Name())
 
-			bytes, err := ioutil.ReadFile(fullPath)
+			visit := func(path string, f os.FileInfo, err error) error {
+
+				if !f.IsDir() {
+
+					bytes, err := ioutil.ReadFile(path)
+					if err != nil {
+						return err
+					}
+
+					list[file.Name()] = bytes
+				}
+
+				return nil
+			}
+			err := filepath.Walk(fullPath, visit)
+
 			if err != nil {
 				return list, err
 			}
-
-			list[file.Name()] = bytes
 		}
 		return list, err
 	}
