@@ -14,6 +14,7 @@ import (
 	"github.com/thingful/device-hub/describe"
 	"github.com/thingful/device-hub/endpoint"
 	"github.com/thingful/device-hub/listener"
+	"github.com/thingful/device-hub/listener/grovepi"
 	"github.com/thingful/device-hub/proto"
 	"github.com/thingful/device-hub/registry"
 )
@@ -25,6 +26,7 @@ func TestConfigurationFilesAreValid(t *testing.T) {
 	register := registry.Default
 	listener.Register(register)
 	endpoint.Register(register)
+	grovepi.Register(register)
 
 	//for each file in ./test-configurations/
 	folder := "."
