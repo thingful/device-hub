@@ -5,7 +5,6 @@ package store
 import (
 	"encoding/json"
 	"fmt"
-	"reflect"
 
 	"github.com/boltdb/bolt"
 )
@@ -103,47 +102,16 @@ func (s *boltDBStore) One(bucket bucket, uid []byte, out interface{}) error {
 	return err
 }
 
-type m func() (map[string][]byte, error)
-
-func fff(to interface{}, n m) error {
-	ref := reflect.ValueOf(to)
-
-	if ref.Kind() != reflect.Ptr || reflect.Indirect(ref).Kind() != reflect.Slice {
-		return ErrSlicePtrNeeded
-	}
-
-	list, err := n()
-
-	if err != nil {
-		return err
-	}
-
-	results := reflect.MakeSlice(reflect.Indirect(ref).Type(), len(list), len(list))
-	i := 0
-	for k, _ := range list {
-		raw := list[k]
-		if raw == nil {
-			return ErrNotFound
-		}
-
-		err = json.Unmarshal(raw, results.Index(i).Addr().Interface())
-		if err != nil {
-			return err
-		}
-		i++
-	}
-
-	reflect.Indirect(ref).Set(results)
-	return nil
-}
-
 func (s *boltDBStore) List(bucket bucket, to interface{}) error {
 
-	f := func() (map[string][]byte, error) {
+	// create a collector to retrieve the bucket contents
+	c := func() (map[string][]byte, error) {
+
 		list := map[string][]byte{}
 		err := s.db.View(func(tx *bolt.Tx) error {
 
 			b := tx.Bucket(bucket.name)
+
 			b.ForEach(func(k, v []byte) error {
 				list[string(k)] = v
 				return nil
@@ -156,7 +124,7 @@ func (s *boltDBStore) List(bucket bucket, to interface{}) error {
 
 	}
 
-	return fff(to, f)
+	return deserialiseCollection(to, c)
 }
 
 func (s *boltDBStore) Close() error {

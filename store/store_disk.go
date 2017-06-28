@@ -124,7 +124,9 @@ func (f *fileStore) List(bucket bucket, to interface{}) error {
 	if err != nil {
 		return err
 	}
-	ff := func() (map[string][]byte, error) {
+
+	// create a collector to retrieve the bucket contents
+	c := func() (map[string][]byte, error) {
 
 		list := map[string][]byte{}
 
@@ -141,7 +143,8 @@ func (f *fileStore) List(bucket bucket, to interface{}) error {
 		}
 		return list, err
 	}
-	return fff(to, ff)
+
+	return deserialiseCollection(to, c)
 }
 
 func (f *fileStore) Close() error {
