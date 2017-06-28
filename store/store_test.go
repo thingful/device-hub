@@ -3,6 +3,8 @@ package store
 import (
 	"io/ioutil"
 	"os"
+	"reflect"
+	"runtime"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -19,6 +21,7 @@ var (
 	AllTests = []storeTester{
 		ListenersCreatedSearchedAndDeleted,
 		EndpointsCreatedSearchedAndDeleted,
+		InsertShouldReturnErrorIfSameItemAddedTwice,
 	}
 )
 
@@ -28,7 +31,10 @@ func TestStores(t *testing.T) {
 	t.Parallel()
 
 	// test bolt db
+
 	for _, test := range AllTests {
+
+		t.Logf("boltdb : %s", runtime.FuncForPC(reflect.ValueOf(test).Pointer()).Name())
 
 		conn := testing_helper.MustDialBoltDB()
 		defer conn.MustClose()
@@ -41,18 +47,44 @@ func TestStores(t *testing.T) {
 
 	// test fileStore
 	for _, test := range AllTests {
+
+		t.Logf("fileStore : %s", runtime.FuncForPC(reflect.ValueOf(test).Pointer()).Name())
+
 		// create a temp folder for the file store
 		f, err := ioutil.TempDir("", "bolt-test-")
 		if err != nil {
 			t.Fatal(err)
 		}
-
 		defer os.Remove(f)
 
 		s := NewFileStore(f)
 		test(t, s)
 
 	}
+}
+
+func InsertShouldReturnErrorIfSameItemAddedTwice(t *testing.T, store Storer) {
+
+	r := &mockregister{
+		endpointRegistered: true,
+	}
+
+	repository := NewRepository(store, r)
+
+	entity := proto.Entity{
+		Type: "endpoint",
+		Kind: "http",
+		Uid:  "xxx",
+	}
+
+	uid, err := repository.UpdateOrCreateEntity(entity)
+	assert.Nil(t, err)
+	assert.Equal(t, entity.Uid, uid)
+
+	_, err = repository.UpdateOrCreateEntity(entity)
+	assert.NotNil(t, err)
+	assert.Equal(t, ErrItemAlreadyExists, err)
+
 }
 
 func EndpointsCreatedSearchedAndDeleted(t *testing.T, store Storer) {

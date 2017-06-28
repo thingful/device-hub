@@ -53,19 +53,24 @@ func (f *fileStore) Insert(bucket bucket, uid []byte, data interface{}) error {
 	f.lock.Lock()
 	defer f.lock.Unlock()
 
-	// TODO : check for existing item
+	p := path.Join(f.path, string(bucket.name), string(uid))
 
-	buf, err := json.Marshal(data)
+	// check file exists
+	exists, err := exists(p)
+
+	if exists {
+		return ErrItemAlreadyExists
+	}
+
+	// ensure the full folder path exists
+	folder := path.Dir(p)
+	err = os.MkdirAll(folder, os.ModePerm)
+
 	if err != nil {
 		return err
 	}
 
-	p := path.Join(f.path, string(bucket.name), string(uid))
-
-	// ensure the folder exists
-	folder := path.Dir(p)
-	err = os.MkdirAll(folder, os.ModePerm)
-
+	buf, err := json.Marshal(data)
 	if err != nil {
 		return err
 	}
@@ -149,4 +154,12 @@ func (f *fileStore) List(bucket bucket, to interface{}) error {
 
 func (f *fileStore) Close() error {
 	return nil
+}
+
+func exists(name string) (bool, error) {
+	_, err := os.Stat(name)
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+	return true, err
 }
