@@ -119,7 +119,7 @@ Files can also be imported on an individual basis
 The running configuration can be inspected
 
 ```
-./device-hub-cli get all
+./device-hub-cli show all
 ```
 
 Create some 'pipes' that listen via http on uri /a and /b and output to std output
