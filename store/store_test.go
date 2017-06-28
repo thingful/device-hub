@@ -79,11 +79,11 @@ func InsertShouldReturnErrorIfSameItemAddedTwice(t *testing.T, store Storer) {
 		Uid:  "xxx",
 	}
 
-	uid, err := repository.UpdateOrCreateEntity(entity)
+	uid, err := repository.Insert(entity)
 	assert.Nil(t, err)
 	assert.Equal(t, entity.Uid, uid)
 
-	_, err = repository.UpdateOrCreateEntity(entity)
+	_, err = repository.Insert(entity)
 	assert.NotNil(t, err)
 	assert.Equal(t, ErrItemAlreadyExists, err)
 
@@ -103,7 +103,7 @@ func EndpointsCreatedSearchedAndDeleted(t *testing.T, store Storer) {
 		Uid:  "xxx",
 	}
 
-	uid, err := repository.UpdateOrCreateEntity(entity)
+	uid, err := repository.Insert(entity)
 	assert.Nil(t, err)
 	assert.Equal(t, entity.Uid, uid)
 
@@ -141,7 +141,7 @@ func ListenersCreatedSearchedAndDeleted(t *testing.T, store Storer) {
 		Uid:  "xxx",
 	}
 
-	uid, err := repository.UpdateOrCreateEntity(entity)
+	uid, err := repository.Insert(entity)
 	assert.Nil(t, err)
 	assert.Equal(t, entity.Uid, uid)
 

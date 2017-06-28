@@ -15,7 +15,7 @@ type handler struct {
 	manager *runtime.Manager
 }
 
-// Create inserts or overwrites listener, endpoint and profile entities
+// Create inserts listener, endpoint and profile entities
 func (s *handler) Create(ctx context.Context, request *proto.CreateRequest) (*proto.CreateReply, error) {
 
 	entity := proto.Entity{
@@ -25,7 +25,7 @@ func (s *handler) Create(ctx context.Context, request *proto.CreateRequest) (*pr
 		Configuration: request.Configuration,
 	}
 
-	uid, err := s.manager.Repository.UpdateOrCreateEntity(entity)
+	uid, err := s.manager.Repository.Insert(entity)
 
 	if err != nil {
 		return &proto.CreateReply{

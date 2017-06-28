@@ -98,7 +98,7 @@ func NewRepository(store Storer, register register) *Repository {
 	return r
 }
 
-func (e *Repository) UpdateOrCreateEntity(item proto.Entity) (string, error) {
+func (e *Repository) Insert(item proto.Entity) (string, error) {
 
 	var b bucket
 
