@@ -41,11 +41,11 @@ var serverCommand = &cobra.Command{
 
 			dataImpl = store.NewBoltDBStore(db)
 
-		case "file":
+		case "filestore":
 			dataImpl = store.NewFileStore(_config.DataDir)
 
 		default:
-			return fmt.Errorf("unknown data implementation : %s ", _config.DataImpl)
+			return fmt.Errorf("unknown data implementation : %s, valid values are 'boltdb' or 'filestore'", _config.DataImpl)
 		}
 
 		defer dataImpl.Close()

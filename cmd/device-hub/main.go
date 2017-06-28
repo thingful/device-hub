@@ -52,7 +52,7 @@ func (o *config) AddFlags(fs *pflag.FlagSet) {
 	fs.StringVar(&o.CertFile, "tls-cert-file", o.CertFile, "client certificate file")
 	fs.StringVar(&o.KeyFile, "tls-key-file", o.KeyFile, "client key file")
 	fs.StringVar(&o.DataDir, "data-dir", o.DataDir, "path to db folder, defaults to current directory")
-	fs.StringVar(&o.DataImpl, "data-impl", o.DataImpl, "datastore to use, defaults to boltdb")
+	fs.StringVar(&o.DataImpl, "data-impl", o.DataImpl, "datastore to use, valid values are 'boltdb' or 'filestore', defaults to boltdb")
 	fs.BoolVar(&o.LogFile, "log-file", o.LogFile, "enable log to file")
 	fs.StringVar(&o.LogPath, "log-path", o.LogPath, "path to log file, defaults to ./device-hub.log")
 	fs.BoolVar(&o.Syslog, "log-syslog", o.Syslog, "enable log to local SYSLOG")

@@ -33,7 +33,6 @@ func TestStores(t *testing.T) {
 	t.Parallel()
 
 	// test bolt db
-
 	for _, test := range AllTests {
 
 		t.Logf("boltdb : %s", runtime.FuncForPC(reflect.ValueOf(test).Pointer()).Name())
