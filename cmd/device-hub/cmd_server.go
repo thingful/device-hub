@@ -5,6 +5,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"path"
 	"strings"
 
 	"github.com/boltdb/bolt"
@@ -31,7 +32,7 @@ var serverCommand = &cobra.Command{
 		switch strings.ToLower(_config.DataImpl) {
 		case "boltdb":
 
-			dbFile := fmt.Sprintf("%s/device-hub.db", _config.DataDir)
+			dbFile := path.Join(_config.DataDir, "device-hub.db")
 			db, err := bolt.Open(dbFile, 0600, nil)
 
 			if err != nil {
