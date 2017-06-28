@@ -60,7 +60,7 @@ Client CLI Commands
   Example:        device-hub-cli show all 
 
 
-- Command Name:   list
+- Command Name:   status
   Description:    List running pipes
 
 

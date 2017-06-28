@@ -94,16 +94,16 @@ var stopCommand = &cobra.Command{
 	},
 }
 
-var listCommand = &cobra.Command{
-	Use:   "list",
+var statusCommand = &cobra.Command{
+	Use:   "status",
 	Short: "List running pipes",
 	RunE: func(cmd *cobra.Command, args []string) error {
 
-		v := proto.ListRequest{}
+		v := proto.StatusRequest{}
 
 		err := roundTrip(v, func(cli proto.HubClient, in iocodec.Decoder, out iocodec.Encoder) error {
 
-			resp, err := cli.List(context.Background(), &v)
+			resp, err := cli.Status(context.Background(), &v)
 
 			if err != nil {
 				return err

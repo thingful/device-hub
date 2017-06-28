@@ -20,7 +20,7 @@ service Hub {
 
     rpc Stop(StopRequest) returns (StopReply) {}
 
-    rpc List(ListRequest) returns (ListReply) {}
+    rpc Status(StatusRequest) returns (StatusReply) {}
 }
 
 message CreateRequest {
@@ -87,10 +87,10 @@ message StopReply {
     string error = 2;
 }
 
-message ListRequest {
+message StatusRequest {
 }
 
-message ListReply {
+message StatusReply {
     bool ok = 1;
     string error = 2;
     repeated Pipe pipes = 3;

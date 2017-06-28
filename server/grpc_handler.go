@@ -166,10 +166,10 @@ func (s *handler) Stop(ctx context.Context, request *proto.StopRequest) (*proto.
 	return &proto.StopReply{Ok: true}, nil
 }
 
-// List returns all running 'pipes'
-func (s *handler) List(ctx context.Context, request *proto.ListRequest) (*proto.ListReply, error) {
+// Status returns all running 'pipes'
+func (s *handler) Status(ctx context.Context, request *proto.StatusRequest) (*proto.StatusReply, error) {
 
-	pipes := s.manager.List()
+	pipes := s.manager.Status()
 
 	ppipes := []*proto.Pipe{}
 
@@ -196,5 +196,5 @@ func (s *handler) List(ctx context.Context, request *proto.ListRequest) (*proto.
 
 	}
 
-	return &proto.ListReply{Ok: true, Pipes: ppipes}, nil
+	return &proto.StatusReply{Ok: true, Pipes: ppipes}, nil
 }

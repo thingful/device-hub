@@ -143,8 +143,8 @@ func (m *Manager) Start() error {
 	return nil
 }
 
-// List returns the set of known pipes
-func (m *Manager) List() []Pipe {
+// Status returns the set of known pipes
+func (m *Manager) Status() []Pipe {
 
 	m.RLock()
 	defer m.RUnlock()

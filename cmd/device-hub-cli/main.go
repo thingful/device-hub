@@ -77,7 +77,7 @@ func init() {
 	RootCmd.AddCommand(deleteCommand)
 	RootCmd.AddCommand(startCommand())
 	RootCmd.AddCommand(stopCommand)
-	RootCmd.AddCommand(listCommand)
+	RootCmd.AddCommand(statusCommand)
 	RootCmd.AddCommand(describeCommand)
 
 	_config.AddFlags(RootCmd.PersistentFlags())
