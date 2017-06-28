@@ -7,7 +7,7 @@ import (
 	"reflect"
 )
 
-// collector retunrns a map of []byte arrays from the Storer implementations
+// collector returns a map of []byte arrays from the Storer implementations
 type collector func() (map[string][]byte, error)
 
 // deserialiseCollection executes a collector deserialising it into a passed in interface
