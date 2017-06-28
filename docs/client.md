@@ -55,12 +55,12 @@ Client CLI Commands
   Example:        device-hub-cli listener mqtt
 
 
-- Command Name:   get [listener|endpoint|profile|all]
+- Command Name:   show [listener|endpoint|profile|all]
   Description:    Display one or many resources by type or using "all" as * filter, 
-  Example:        device-hub-cli get all 
+  Example:        device-hub-cli show all 
 
 
-- Command Name:   list
+- Command Name:   status
   Description:    List running pipes
 
 

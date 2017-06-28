@@ -11,18 +11,18 @@ import (
 	"github.com/thingful/device-hub/proto"
 )
 
-var getCommand = &cobra.Command{
-	Use:   "get",
+var showCommand = &cobra.Command{
+	Use:   "show",
 	Short: "Display one or many resources",
 	RunE: func(cmd *cobra.Command, args []string) error {
 
-		v := proto.GetRequest{
+		v := proto.ShowRequest{
 			Filter: strings.Join(args, ","),
 		}
 
 		err := roundTrip(v, func(cli proto.HubClient, in iocodec.Decoder, out iocodec.Encoder) error {
 
-			resp, err := cli.Get(context.Background(), &v)
+			resp, err := cli.Show(context.Background(), &v)
 
 			if err != nil {
 				return err

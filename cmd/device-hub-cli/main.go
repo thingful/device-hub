@@ -73,11 +73,11 @@ func init() {
 	RootCmd.AddCommand(versionCommand)
 
 	RootCmd.AddCommand(createCommand)
-	RootCmd.AddCommand(getCommand)
+	RootCmd.AddCommand(showCommand)
 	RootCmd.AddCommand(deleteCommand)
 	RootCmd.AddCommand(startCommand())
 	RootCmd.AddCommand(stopCommand)
-	RootCmd.AddCommand(listCommand)
+	RootCmd.AddCommand(statusCommand)
 	RootCmd.AddCommand(describeCommand)
 
 	_config.AddFlags(RootCmd.PersistentFlags())
