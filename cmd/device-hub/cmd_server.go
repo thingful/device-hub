@@ -11,6 +11,7 @@ import (
 	hub "github.com/thingful/device-hub"
 	"github.com/thingful/device-hub/endpoint"
 	"github.com/thingful/device-hub/listener"
+	"github.com/thingful/device-hub/listener/grovepi"
 	"github.com/thingful/device-hub/registry"
 	"github.com/thingful/device-hub/runtime"
 	"github.com/thingful/device-hub/server"
@@ -40,6 +41,7 @@ var serverCommand = &cobra.Command{
 
 		endpoint.Register(register)
 		listener.Register(register)
+		grovepi.Register(register)
 
 		repository := store.NewRepository(s, registry.Default)
 

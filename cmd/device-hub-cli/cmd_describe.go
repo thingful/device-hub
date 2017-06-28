@@ -11,6 +11,7 @@ import (
 	"github.com/thingful/device-hub/describe"
 	"github.com/thingful/device-hub/endpoint"
 	"github.com/thingful/device-hub/listener"
+	"github.com/thingful/device-hub/listener/grovepi"
 	"github.com/thingful/device-hub/registry"
 )
 
@@ -33,6 +34,7 @@ var describeCommand = &cobra.Command{
 
 		endpoint.Register(register)
 		listener.Register(register)
+		grovepi.Register(register)
 
 		switch typez {
 		case "listener":

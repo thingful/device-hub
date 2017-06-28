@@ -11,6 +11,7 @@ import (
 	"github.com/thingful/device-hub/describe"
 	"github.com/thingful/device-hub/endpoint"
 	"github.com/thingful/device-hub/listener"
+	"github.com/thingful/device-hub/listener/grovepi"
 	"github.com/thingful/device-hub/proto"
 	"github.com/thingful/device-hub/registry"
 )
@@ -42,6 +43,7 @@ var createCommand = &cobra.Command{
 
 			endpoint.Register(register)
 			listener.Register(register)
+			grovepi.Register(register)
 
 			switch strings.ToLower(v.Type) {
 

@@ -10,10 +10,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"google.golang.org/grpc"
-
-	_ "github.com/thingful/device-hub/endpoint"
-	_ "github.com/thingful/device-hub/listener"
-	_ "github.com/thingful/device-hub/listener/grovepi"
 )
 
 var RootCmd = &cobra.Command{

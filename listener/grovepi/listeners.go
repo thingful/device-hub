@@ -11,9 +11,10 @@ import (
 	hub "github.com/thingful/device-hub"
 	"github.com/thingful/device-hub/describe"
 	"github.com/thingful/device-hub/listener"
+	"github.com/thingful/device-hub/registry"
 )
 
-func init() {
+func Register(r *registry.Registry) {
 
 	grovepi_samplerate := describe.Parameter{
 		Name:        "sample-rate-ms",
@@ -23,7 +24,7 @@ func init() {
 		Description: "Sample rate in milliseconds",
 	}
 
-	hub.RegisterListener("grovepi-dht",
+	r.RegisterListener("grovepi-dht",
 		func(config describe.Values) (hub.Listener, error) {
 
 			hertz := config.Int32WithDefault(grovepi_samplerate.Name, grovepi_samplerate.Default.(int32))
