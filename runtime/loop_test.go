@@ -91,7 +91,7 @@ func TestStatisticsOnChannelOut(t *testing.T) {
 		ErrorChannel:   make(chan error),
 		MessageChannel: messageChannel,
 		Closer: func() error {
-			wg.Done()
+			defer wg.Done()
 			return nil
 		},
 	}
