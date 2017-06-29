@@ -34,7 +34,7 @@ CLI Global Flags
 
 - Flag:           --data-impl <string>
   Description:    datastore implementation to use, valid values are 'boltdb' or 'filestore'
-  Default:        Current directory "."
+  Default:        boltdb
 
 - Flag:           --log-file
   Description:    enable log to file
