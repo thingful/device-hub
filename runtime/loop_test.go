@@ -82,7 +82,8 @@ func TestStatisticsOnChannelOut(t *testing.T) {
 
 	ctx := context.Background()
 
-	ctx, closerFunc := context.WithCancel(ctx)
+	wg := sync.WaitGroup{}
+	wg.Add(3)
 
 	messageChannel := make(chan hub.Message)
 
@@ -90,7 +91,7 @@ func TestStatisticsOnChannelOut(t *testing.T) {
 		ErrorChannel:   make(chan error),
 		MessageChannel: messageChannel,
 		Closer: func() error {
-			closerFunc()
+			wg.Done()
 			return nil
 		},
 	}
@@ -98,9 +99,17 @@ func TestStatisticsOnChannelOut(t *testing.T) {
 	pipe := newRuntimePipe(store.Pipe{})
 
 	endpoints := map[string]hub.Endpoint{
-		"ok": &mocks.Endpoint{},
+		"ok": &mocks.Endpoint{
+			Writer: func(hub.Message) error {
+				defer wg.Done()
+				return nil
+			},
+		},
 		"error": &mocks.Endpoint{
-			Error: errors.New("boo!"),
+			Writer: func(hub.Message) error {
+				defer wg.Done()
+				return errors.New("boo")
+			},
 		},
 	}
 
@@ -113,8 +122,7 @@ func TestStatisticsOnChannelOut(t *testing.T) {
 	messageChannel <- message
 
 	mock.Close()
-
-	<-ctx.Done()
+	wg.Wait()
 
 	assert.Equal(t, uint64(1), pipe.Statistics.Processed.Ok)
 	assert.Equal(t, uint64(1), pipe.Statistics.Processed.Total)
