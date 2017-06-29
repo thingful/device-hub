@@ -28,9 +28,26 @@ CLI Global Flags
   Description:    Binding address in form of {ip}:port
   Default:        :50051
 
-- Flag:           --data <string>
+- Flag:           --data-dir <string>
   Description:    Path to db folder
   Default:        Current directory "."
+
+- Flag:           --data-impl <string>
+  Description:    datastore implementation to use, valid values are 'boltdb' or 'filestore'
+  Default:        Current directory "."
+
+- Flag:           --log-file
+  Description:    enable log to file
+  Default:        false
+
+- Flag:           --log-path <string>
+  Description:    path to log file
+  Default:        ./device-hub.log
+
+- Flag:           --log-syslog
+  Description:    enable log to local SYSLOG
+  Default:        false
+
 ```
 CLI Global TLS Security Flags
 =============================
