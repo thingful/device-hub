@@ -61,6 +61,14 @@ device-hub supports all the platforms golang supports.
 
 The Makefile contains build targets for linux amd64, raspberrypi arm and darwin (mac).
 
+Development
+-----------
+
+If you need to do changes into the .proto files you will have to:
+- [Download]( https://github.com/google/protobuf ) and install the protocol buffer compiler.
+- Run ```make get-build-deps``` to get protobuffer dependencies installed.
+- Run ```make proto``` to compile proto files.
+
 Build
 -----
 
