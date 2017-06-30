@@ -48,7 +48,7 @@ Transport               | Notes
 `STDOUT`                |
 `HTTP`                  |
 
-Example configuration files are in ./test-configurations/
+Example configuration files are in ./examples/config/
 
 The entity connecting a listener to a device profile and then an endpoint is called a 'pipe'.
 
@@ -107,13 +107,13 @@ Configure with the client
 To import a folder of configuration files
 
 ```
-./device-hub-cli create -d=./test-configurations/
+./device-hub-cli create -d=./examples/config/
 ```
 
 Files can also be imported on an individual basis
 
 ```
-./device-hub-cli create -f=./test-configurations/mqtt_listener.yaml
+./device-hub-cli create -f=./examples/config/mqtt_listener.yaml
 ```
 
 The running configuration can be inspected
