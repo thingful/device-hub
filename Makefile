@@ -16,9 +16,10 @@ all: pi linux-i386 linux-amd64 darwin ## build executables for the various envir
 
 .PHONY: all
 
-get-build-deps: ## install dependencies to check code before build
+get-build-deps: ## install build dependencies 
 	go get github.com/chespinoza/goliscan
-
+	go get github.com/gogo/protobuf/protoc-gen-gofast
+	
 .PHONY: get-build-deps
 
 check-license: ## check the license header in every code file
