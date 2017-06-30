@@ -107,13 +107,13 @@ Configure with the client
 To import a folder of configuration files
 
 ```
-./device-hub-cli create -d=./test-configuration/samples/
+./device-hub-cli create -d=./examples/config/
 ```
 
 Files can also be imported on an individual basis
 
 ```
-./device-hub-cli create -f=./test-configuration/samples/mqtt_listener.yaml
+./device-hub-cli create -f=./examples/config/mqtt_listener.yaml
 ```
 
 The running configuration can be inspected

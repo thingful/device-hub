@@ -1,6 +1,6 @@
 // Copyright © 2017 thingful
 
-package config
+package examples
 
 import (
 	"io/ioutil"
@@ -27,7 +27,7 @@ func TestConfigurationFilesAreValid(t *testing.T) {
 	endpoint.Register(register)
 
 	//for each file in ./test-configurations/
-	folder := "./samples/"
+	folder := "./config/"
 	listing, err := ioutil.ReadDir(folder)
 
 	for _, fi := range listing {
