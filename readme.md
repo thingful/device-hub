@@ -48,7 +48,7 @@ Transport               | Notes
 `STDOUT`                |
 `HTTP`                  |
 
-Example configuration files are in ./test-configuration/samples/
+Example configuration files are in ./examples/config/
 
 The entity connecting a listener to a device profile and then an endpoint is called a 'pipe'.
 
