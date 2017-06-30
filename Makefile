@@ -12,14 +12,14 @@ GO_COVER = go tool cover
 GO_BENCH = go test -bench=.
 ARTEFACT_DIR = coverage
 
-all: pi linux-i386 linux-amd64 darwin ## build executables for the various environments
+all: linux-arm linux-i386 linux-amd64 darwin-amd64 ## build executables for the various environments
 
 .PHONY: all
 
 get-build-deps: ## install build dependencies 
 	go get github.com/chespinoza/goliscan
 	go get github.com/gogo/protobuf/protoc-gen-gofast
-	
+
 .PHONY: get-build-deps
 
 check-license: ## check the license header in every code file
@@ -74,15 +74,15 @@ docker_up: ## run dependencies as docker containers
 .PHONY: docker_up
 
 
-darwin: tmp/build/darwin-amd64/$(EXE_NAME) tmp/build/darwin-amd64/$(CLI_EXE_NAME) ## build for mac
+darwin-amd64: tmp/build/darwin-amd64/$(EXE_NAME) tmp/build/darwin-amd64/$(CLI_EXE_NAME) ## build for mac amd64
 
 linux-i386: tmp/build/linux-i386/$(EXE_NAME) tmp/build/linux-i386/$(CLI_EXE_NAME) ## build for linux i386
 
 linux-amd64: tmp/build/linux-amd64/$(EXE_NAME) tmp/build/linux-amd64/$(CLI_EXE_NAME) ## build for linux amd64
 
-pi: tmp/build/linux-arm/$(EXE_NAME) tmp/build/linux-arm/$(CLI_EXE_NAME) ## build for raspberry-pi
+linux-arm: tmp/build/linux-arm/$(EXE_NAME) tmp/build/linux-arm/$(CLI_EXE_NAME) ## build for linux arm (raspberry-pi)
 
-.PHONY: darwin linux-i386 linux-amd64 pi
+.PHONY: darwin-amd64 linux-i386 linux-amd64 linux-arm
 
 tmp/build/linux-i386/$(EXE_NAME):
 	GOOS=linux GOARCH=386 go build $(BUILD_FLAGS) -o $(@) ./cmd/device-hub
