@@ -27,9 +27,15 @@ func (m *Channel) Close() error {
 // Endpoint allows to create a mock Endpoint
 // Implements hub.Endpoint
 type Endpoint struct {
-	Error error
+	Writer func(message hub.Message) error
+	Error  error
 }
 
 func (e *Endpoint) Write(message hub.Message) error {
+
+	if e.Writer != nil {
+		return e.Writer(message)
+	}
+
 	return e.Error
 }

@@ -56,12 +56,19 @@ func TestStatisticsOnChannelError(t *testing.T) {
 	t.Parallel()
 
 	ctx := context.Background()
+	ctx, closerFunc := context.WithCancel(ctx)
+	wg := sync.WaitGroup{}
+	wg.Add(1)
 
 	errorChannel := make(chan error)
 
 	mock := &mocks.Channel{
 		ErrorChannel:   errorChannel,
 		MessageChannel: make(chan hub.Message),
+		Closer: func() error {
+			wg.Done()
+			return nil
+		},
 	}
 
 	pipe := newRuntimePipe(store.Pipe{})
@@ -69,6 +76,12 @@ func TestStatisticsOnChannelError(t *testing.T) {
 	go loop(ctx, pipe, nil, map[string]hub.Endpoint{}, mock, utils.NewNoOpLogger(), map[string]string{})
 
 	errorChannel <- errors.New("boo!")
+
+	// closing the context will close the channel
+	closerFunc()
+
+	<-ctx.Done()
+	wg.Wait()
 
 	assert.Equal(t, uint64(1), pipe.Statistics.Received.Total)
 	assert.Equal(t, uint64(1), pipe.Statistics.Received.Errors)
@@ -81,8 +94,10 @@ func TestStatisticsOnChannelOut(t *testing.T) {
 	t.Parallel()
 
 	ctx := context.Background()
-
 	ctx, closerFunc := context.WithCancel(ctx)
+
+	wg := sync.WaitGroup{}
+	wg.Add(3)
 
 	messageChannel := make(chan hub.Message)
 
@@ -90,7 +105,7 @@ func TestStatisticsOnChannelOut(t *testing.T) {
 		ErrorChannel:   make(chan error),
 		MessageChannel: messageChannel,
 		Closer: func() error {
-			closerFunc()
+			wg.Done()
 			return nil
 		},
 	}
@@ -98,9 +113,17 @@ func TestStatisticsOnChannelOut(t *testing.T) {
 	pipe := newRuntimePipe(store.Pipe{})
 
 	endpoints := map[string]hub.Endpoint{
-		"ok": &mocks.Endpoint{},
+		"ok": &mocks.Endpoint{
+			Writer: func(hub.Message) error {
+				wg.Done()
+				return nil
+			},
+		},
 		"error": &mocks.Endpoint{
-			Error: errors.New("boo!"),
+			Writer: func(hub.Message) error {
+				wg.Done()
+				return errors.New("boo")
+			},
 		},
 	}
 
@@ -112,9 +135,11 @@ func TestStatisticsOnChannelOut(t *testing.T) {
 	}
 	messageChannel <- message
 
-	mock.Close()
-
+	// closing the context will close the channel
+	closerFunc()
 	<-ctx.Done()
+
+	wg.Wait()
 
 	assert.Equal(t, uint64(1), pipe.Statistics.Processed.Ok)
 	assert.Equal(t, uint64(1), pipe.Statistics.Processed.Total)
