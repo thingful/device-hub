@@ -32,7 +32,7 @@ type Profile struct {
 	Script  engine.Script
 }
 
-func (p pipeBucket) CreateOrUpdate(pipe Pipe) error {
+func (p pipeBucket) Insert(pipe Pipe) error {
 	return p.store.Insert(p.bucket, []byte(pipe.Uri), pipe)
 }
 

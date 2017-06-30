@@ -253,7 +253,7 @@ func (m *Manager) StartPipe(uri, listenerUID, profileUID string, endpointUIDs []
 	}
 
 	runtimepipe := newRuntimePipe(pipeconf)
-	err = m.Repository.Pipes.CreateOrUpdate(pipeconf)
+	err = m.Repository.Pipes.Insert(pipeconf)
 
 	if err != nil {
 

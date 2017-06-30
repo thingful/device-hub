@@ -5,6 +5,8 @@ package main
 import (
 	"context"
 	"fmt"
+	"path"
+	"strings"
 
 	"github.com/boltdb/bolt"
 	"github.com/spf13/cobra"
@@ -23,25 +25,37 @@ var serverCommand = &cobra.Command{
 	Short: "Start device hub.",
 	RunE: func(cmd *cobra.Command, args []string) error {
 
-		dbFile := fmt.Sprintf("%s/device-hub.db", _config.Data)
-
-		db, err := bolt.Open(dbFile, 0600, nil)
-
-		if err != nil {
-			return err
-		}
-		defer db.Close()
-
 		ctx := context.Background()
 
-		s := store.NewStore(db)
+		var dataImpl store.Storer
+
+		switch strings.ToLower(_config.DataImpl) {
+		case "boltdb":
+
+			dbFile := path.Join(_config.DataDir, "device-hub.db")
+			db, err := bolt.Open(dbFile, 0600, nil)
+
+			if err != nil {
+				return err
+			}
+
+			dataImpl = store.NewBoltDBStore(db)
+
+		case "filestore":
+			dataImpl = store.NewFileStore(_config.DataDir)
+
+		default:
+			return fmt.Errorf("unknown data implementation : %s, valid values are 'boltdb' or 'filestore'", _config.DataImpl)
+		}
+
+		defer dataImpl.Close()
 
 		register := registry.Default
 
 		endpoint.Register(register)
 		listener.Register(register)
 
-		repository := store.NewRepository(s, registry.Default)
+		repository := store.NewRepository(dataImpl, register)
 
 		manager, err := runtime.NewEndpointManager(ctx,
 			repository,

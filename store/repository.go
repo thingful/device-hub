@@ -15,7 +15,7 @@ import (
 
 type bucket struct {
 	name  []byte
-	store *Store
+	store Storer
 }
 
 // Repository facilitates some higher level store interactions
@@ -24,16 +24,49 @@ type Repository struct {
 	Endpoints entityBucket
 	Profiles  entityBucket
 	Pipes     pipeBucket
-	store     *Store
+	store     Storer
 	register  register
 }
+
+// Storer is the interface a low level storage mechanism needs to implement
+type Storer interface {
+	// MustCreateBuckets will ensure the underlying storage exists for the entities
+	MustCreateBuckets(buckets []bucket)
+
+	// Insert will insert an entity or error
+	Insert(bucket bucket, uid []byte, data interface{}) error
+
+	// Delete will remove an entity or error
+	Delete(bucket bucket, uid []byte) error
+
+	// One will return an entity of error
+	One(bucket bucket, uid []byte, out interface{}) error
+
+	// List will return an array of entities or error
+	List(bucket bucket, to interface{}) error
+
+	// Close will finalise and close all resources or return an error
+	Close() error
+}
+
+var (
+
+	// ErrSlicePtrNeeded is returned when deserialisation requires an array of pointers
+	ErrSlicePtrNeeded = errors.New("slice ptr needed")
+
+	// ErrNotFound is returned if the item searched for doesn not exist
+	ErrNotFound = errors.New("not found")
+
+	// ErrItemAlreadyExists is returned if inserting an item that already exists
+	ErrItemAlreadyExists = errors.New("item already exists")
+)
 
 type register interface {
 	IsEndpointRegistered(string) bool
 	IsListenerRegistered(string) bool
 }
 
-func NewRepository(store *Store, register register) *Repository {
+func NewRepository(store Storer, register register) *Repository {
 	r := &Repository{
 		Listeners: entityBucket{
 			bucket: bucket{name: []byte("listeners"),
@@ -65,7 +98,7 @@ func NewRepository(store *Store, register register) *Repository {
 	return r
 }
 
-func (e *Repository) UpdateOrCreateEntity(item proto.Entity) (string, error) {
+func (e *Repository) Insert(item proto.Entity) (string, error) {
 
 	var b bucket
 
