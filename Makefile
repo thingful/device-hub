@@ -73,6 +73,10 @@ docker_up: ## run dependencies as docker containers
 
 .PHONY: docker_up
 
+docker_build: linux-amd64  ## build a docker container containing the device-hub executables
+	docker build -t thingful/device-hub:latest -t thingful/device-hub:$(SOURCE_VERSION) .
+
+.PHONY: docker_build
 
 darwin-amd64: tmp/build/darwin-amd64/$(EXE_NAME) tmp/build/darwin-amd64/$(CLI_EXE_NAME) ## build for mac amd64
 
