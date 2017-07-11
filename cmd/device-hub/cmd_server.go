@@ -84,7 +84,6 @@ var serverCommand = &cobra.Command{
 			return err
 		}
 
-		fmt.Println(_config)
 		err = server.Serve(server.Options{
 			Binding:           _config.Binding,
 			UseTLS:            _config.TLS,
