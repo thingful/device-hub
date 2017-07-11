@@ -31,10 +31,10 @@ var _config = newConfig()
 type config struct {
 	Binding    string `envconfig:"BINDING" default:":50051" yaml:"binding,omitempty"`
 	TLS        bool   `envconfig:"TLS" yaml:"tls,omitempty"`
-	ServerName string `envconfig:"TLS_SERVER_NAME" yaml:"server_name,omitempty"`
-	CACertFile string `envconfig:"TLS_CA_CERT_FILE" yaml:"ca_cert_file,omitempty"`
-	CertFile   string `envconfig:"TLS_CERT_FILE" yaml:"cert_file,omitempty"`
-	KeyFile    string `envconfig:"TLS_KEY_FILE" yaml:"key_file,omitempty"`
+	ServerName string `envconfig:"TLS_SERVER_NAME" yaml:"tls_server_name,omitempty"`
+	CACertFile string `envconfig:"TLS_CA_CERT_FILE" yaml:"tls_ca_cert_file,omitempty"`
+	CertFile   string `envconfig:"TLS_CERT_FILE" yaml:"tls_cert_file,omitempty"`
+	KeyFile    string `envconfig:"TLS_KEY_FILE" yaml:"tls_key_file,omitempty"`
 	DataDir    string `envconfig:"DATA_DIR" default:"." yaml:"data_dir,omitempty"`
 	DataImpl   string `envconfig:"DATA_IMPL" default:"boltdb" yaml:"data_impl,omitempty"`
 	LogFile    bool   `envconfig:"LOG_FILE" yaml:"log_file,omitempty"`
@@ -61,8 +61,9 @@ func (o *config) AddFlags(fs *pflag.FlagSet) {
 	fs.BoolVar(&o.LogFile, "log-file", o.LogFile, "enable log to file")
 	fs.StringVar(&o.LogPath, "log-path", o.LogPath, "path to log file, defaults to ./device-hub.log")
 	fs.BoolVar(&o.Syslog, "log-syslog", o.Syslog, "enable log to local SYSLOG")
-	fs.BoolVar(&o.ConfigFile, "config-file", o.ConfigFile, "enable config file overriding flags and env vars")
+	fs.BoolVarP(&o.ConfigFile, "config-file", "c", o.ConfigFile, "enable config file overriding flags and env vars")
 	fs.StringVar(&o.ConfigPath, "config-path", o.ConfigPath, "path to config file, defaults to ./config.yaml")
+	fs.Parse(os.Args)
 }
 
 func (o *config) AddConfigFile(cf string) {
@@ -70,7 +71,7 @@ func (o *config) AddConfigFile(cf string) {
 	if err != nil {
 		log.Fatalf("Failed to read config file config.yaml: %s\n", err.Error())
 	}
-	// TODO check & test nontags fields!!!!!
+
 	err = yaml.Unmarshal(content, &o)
 	if err != nil {
 		log.Fatalf("Error parsing config file: %s\n", err.Error())
