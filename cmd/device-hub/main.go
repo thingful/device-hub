@@ -58,7 +58,7 @@ func (o *config) AddFlags(fs *pflag.FlagSet) {
 	fs.StringVar(&o.KeyFile, "tls-key-file", o.KeyFile, "client key file")
 	fs.StringVar(&o.DataDir, "data-dir", o.DataDir, "path to db folder, defaults to current directory")
 	fs.StringVar(&o.DataImpl, "data-impl", o.DataImpl, "datastore to use, valid values are 'boltdb' or 'filestore', defaults to boltdb")
-	fs.BoolVar(&o.LogFile, "log-file", o.LogFile, "enable log to file")
+	fs.BoolVarP(&o.LogFile, "log-file", "l", o.LogFile, "enable log to file")
 	fs.StringVar(&o.LogPath, "log-path", o.LogPath, "path to log file, defaults to ./device-hub.log")
 	fs.BoolVar(&o.Syslog, "log-syslog", o.Syslog, "enable log to local SYSLOG")
 	fs.BoolVarP(&o.ConfigFile, "config-file", "c", o.ConfigFile, "enable config file overriding flags and env vars")
@@ -82,10 +82,6 @@ func init() {
 	RootCmd.AddCommand(versionCommand)
 	RootCmd.AddCommand(serverCommand)
 	_config.AddFlags(RootCmd.PersistentFlags())
-	if _config.ConfigFile {
-		log.Println("Overriding settings with config file")
-		_config.AddConfigFile(_config.ConfigPath)
-	}
 }
 
 func main() {

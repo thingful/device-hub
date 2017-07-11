@@ -5,6 +5,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"path"
 	"strings"
 
@@ -28,6 +29,12 @@ var serverCommand = &cobra.Command{
 		ctx := context.Background()
 
 		var dataImpl store.Storer
+
+		// Load Config File if is enabled
+		if _config.ConfigFile {
+			log.Println("Overriding all settings with config file")
+			_config.AddConfigFile(_config.ConfigPath)
+		}
 
 		switch strings.ToLower(_config.DataImpl) {
 		case "boltdb":
@@ -77,6 +84,7 @@ var serverCommand = &cobra.Command{
 			return err
 		}
 
+		fmt.Println(_config)
 		err = server.Serve(server.Options{
 			Binding:           _config.Binding,
 			UseTLS:            _config.TLS,
