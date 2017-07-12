@@ -115,7 +115,7 @@ Start the device-hub server, the server instance can be customized with env vars
 ```
 Client
 ------
-With the client you can load [settings]( https://github.com/thingful/device-hub/blob/master/docs/client.md#client-cli ) to the server instance.
+The device-hub client [configures]( https://github.com/thingful/device-hub/blob/master/docs/client.md#client-cli ) the server instance.
 
 To import a folder of configuration files
 
