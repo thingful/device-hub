@@ -23,6 +23,15 @@ CLI Commands
 CLI Global Flags
 =================
 ```
+- Flag:           -c
+  Large Format:   --config-file
+  Description:    Enable config file, fields in config file will override flags and env vars
+  Default:        false
+
+- Flag:           --config-path
+  Description:    Path to config file
+  Default:        ./config.yaml
+
 - Flag:           -b
   Large Format:   --binding <string>
   Description:    Binding address in form of {ip}:port

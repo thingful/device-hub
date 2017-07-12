@@ -94,7 +94,7 @@ func (o *config) AddConfigFile(cf string) {
 		log.Printf("Overriding keys: %v with config file\n", keys)
 		return
 	}
-	log.Println("No fields overriden")
+	log.Println("No fields overridden")
 }
 
 func init() {
