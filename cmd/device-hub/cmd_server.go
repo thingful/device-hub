@@ -5,7 +5,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"path"
 	"strings"
 
@@ -32,7 +31,6 @@ var serverCommand = &cobra.Command{
 
 		// Load Config File if is enabled
 		if _config.ConfigFile {
-			log.Println("Overriding all settings with config file")
 			_config.AddConfigFile(_config.ConfigPath)
 		}
 
