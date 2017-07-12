@@ -67,7 +67,9 @@ func (o *config) AddFlags(fs *pflag.FlagSet) {
 }
 
 func (o *config) AddConfigFile(cf string) {
-	var readFields interface{}
+
+	var readFields map[string]interface{}
+
 	content, err := ioutil.ReadFile(cf)
 	if err != nil {
 		log.Fatalf("Failed to read config file config.yaml: %s\n", err.Error())
@@ -85,16 +87,10 @@ func (o *config) AddConfigFile(cf string) {
 
 	keys := make([]string, 0)
 
-	if fields, ok := (readFields).(map[interface{}]interface{}); ok {
-		for k, _ := range fields {
-			if s, ok := k.(string); ok {
-				keys = append(keys, s)
-			}
-		}
-		log.Printf("Overriding keys: %v with config file\n", keys)
-		return
+	for k, _ := range readFields {
+		keys = append(keys, k)
 	}
-	log.Println("No fields overridden")
+	log.Printf("Overriding keys: %v with config file\n", keys)
 }
 
 func init() {
