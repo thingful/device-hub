@@ -3,4 +3,5 @@ type: process
 endpoint-uids:
   - stdout-endpoint
 listener-uid: http-listener-local-port-8085
-tags:
+tags: 
+  - foo:bar

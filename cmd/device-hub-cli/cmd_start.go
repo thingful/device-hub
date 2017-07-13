@@ -79,7 +79,6 @@ func startCommand() *cobra.Command {
 	startCommand.Flags().StringVar(&configPath, "config-path", configPath, "config file path with the required resources")
 	startCommand.ParseFlags(os.Args)
 
-	// fmt.Println("configFile:", configFile)
 	// TODO check type
 	if configFile {
 
@@ -93,11 +92,13 @@ func startCommand() *cobra.Command {
 		if err != nil {
 			log.Fatalf("Error parsing config file [%s]: %s\n", configPath, err.Error())
 		}
-		fmt.Println(readFields)
-		request.Listener = readFields.ListenerUID
-		request.Uri = readFields.URI
-		request.Endpoints = readFields.EndpointUIDs
-		tags = readFields.Tags
+		// No sure about the name yet (process, pipe, etc.)
+		if readFields.Type == "process" {
+			request.Listener = readFields.ListenerUID
+			request.Uri = readFields.URI
+			request.Endpoints = readFields.EndpointUIDs
+			tags = readFields.Tags
+		}
 
 	} else {
 		startCommand.Flags().StringVarP(&request.Listener, "listener", "l", request.Listener, "listener uid to accept messages on")
