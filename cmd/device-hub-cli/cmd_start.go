@@ -93,12 +93,13 @@ func startCommand() *cobra.Command {
 			log.Fatalf("Error parsing config file [%s]: %s\n", configPath, err.Error())
 		}
 		// No sure about the name yet (process, pipe, etc.)
-		if readFields.Type == "process" {
-			request.Listener = readFields.ListenerUID
-			request.Uri = readFields.URI
-			request.Endpoints = readFields.EndpointUIDs
-			tags = readFields.Tags
+		if readFields.Type != "process" {
+			log.Fatal("Config file doesn't have the needed type")
 		}
+		request.Listener = readFields.ListenerUID
+		request.Uri = readFields.URI
+		request.Endpoints = readFields.EndpointUIDs
+		tags = readFields.Tags
 
 	} else {
 		startCommand.Flags().StringVarP(&request.Listener, "listener", "l", request.Listener, "listener uid to accept messages on")
