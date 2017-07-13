@@ -1,0 +1,11 @@
+binding: ":50052"
+tls: true
+tls_server_name: 127.0.0.1
+tls_ca_cert_file: ../../../examples/certs/My_Root_CA.crt
+tls_cert_file: ../../../examples/certs/127.0.0.1.crt
+tls_key_file: ../../../examples/certs/127.0.0.1.key
+data_dir: .
+data_impl: boltdb
+log_file: true
+log_path: custom_log.log
+sys_log: false

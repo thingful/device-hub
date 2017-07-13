@@ -74,7 +74,7 @@ Build
 
 Install golang, docker (if you want to run the integration tests or test with a local mqtt server)
 
-Get the code -
+Get the code
 
 ```
 go get github.com/thingful/device-hub
@@ -101,16 +101,21 @@ make all
 
 Output is built to ./tmp/build/
 
-Run
+Run the Server
 ---
 
-Start the device-hub server
+Start the device-hub server, the server instance can be customized with env vars, flags or a config file, the precedence order is:
+<br>
+```Config File > Flags > Env Vars```
+<br>
+ [More init configuration info.]( https://github.com/thingful/device-hub/blob/master/docs/server.md#cli-global-flags )
 
 ```
 ./device-hub server
 ```
-
-Configure with the client
+Client
+------
+The device-hub client [configures]( https://github.com/thingful/device-hub/blob/master/docs/client.md#client-cli ) the server instance.
 
 To import a folder of configuration files
 
