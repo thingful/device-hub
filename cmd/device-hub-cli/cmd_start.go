@@ -26,7 +26,7 @@ func startCommand() *cobra.Command {
 	type clientConfig struct {
 		URI          string   `yaml:"uri"`
 		Type         string   `yaml:"type"`
-		EndpointUIDs string   `yaml:"endpoint-uid"`
+		EndpointUIDs []string `yaml:"endpoint-uids"`
 		ListenerUID  string   `yaml:"listener-uid"`
 		Tags         []string `yaml:"tags"`
 	}
@@ -96,8 +96,7 @@ func startCommand() *cobra.Command {
 		fmt.Println(readFields)
 		request.Listener = readFields.ListenerUID
 		request.Uri = readFields.URI
-		// TODO Parse string slice
-		//request.Endpoints = readFields.EndpointUIDs
+		request.Endpoints = readFields.EndpointUIDs
 		tags = readFields.Tags
 
 	} else {

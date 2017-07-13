@@ -1,5 +1,6 @@
 uri: /a
 type: process
-endpoint-uids: stdout-endpoint
+endpoint-uids:
+  - stdout-endpoint
 listener-uid: http-listener-local-port-8085
 tags:
