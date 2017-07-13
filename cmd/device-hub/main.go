@@ -20,6 +20,13 @@ import (
 
 var RootCmd = &cobra.Command{
 	Use: "device-hub",
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		// Load Config File if is enabled
+		if _config.ConfigFile {
+			_config.AddConfigFile(_config.ConfigPath)
+
+		}
+	},
 }
 
 // This is a compile-time assertion to ensure that this generated file

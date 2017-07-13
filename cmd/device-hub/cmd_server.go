@@ -23,13 +23,6 @@ import (
 var serverCommand = &cobra.Command{
 	Use:   "server",
 	Short: "Start device hub.",
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		// Load Config File if is enabled
-		if _config.ConfigFile {
-			_config.AddConfigFile(_config.ConfigPath)
-
-		}
-	},
 	RunE: func(cmd *cobra.Command, args []string) error {
 
 		ctx := context.Background()
