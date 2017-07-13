@@ -14,6 +14,8 @@ import (
 	"github.com/thingful/device-hub/proto"
 	"github.com/thingful/device-hub/runtime"
 
+	"log"
+
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/reflection"
@@ -78,7 +80,7 @@ func Serve(options Options, manager *runtime.Manager) error {
 	reflection.Register(grpcServer)
 
 	listener, err := net.Listen("tcp", options.Binding)
-
+	log.Printf("Listening on: [%v]\n", options.Binding)
 	if err != nil {
 		return fmt.Errorf("failed to listen: %v", err)
 	}
