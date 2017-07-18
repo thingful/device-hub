@@ -142,6 +142,8 @@ func (c *cliConf) Load(filePath string) (err error) {
 	return nil
 }
 
+// cliConfSlice contains configs and implements sort interface using
+// "process" type file as the less weight
 type cliConfSlice struct {
 	C []cliConf
 }
@@ -150,18 +152,32 @@ func (c *cliConfSlice) Append(e cliConf) {
 
 	c.C = append(c.C, e)
 }
+
 func (c cliConfSlice) Len() int {
 	return len(c.C)
 }
+
 func (c cliConfSlice) Less(i, j int) bool {
 	if c.C[j].Data["type"] == "process" {
 		return true
 	}
 	return false
 }
+
 func (c cliConfSlice) Swap(i, j int) {
 	c.C[i], c.C[j] = c.C[j], c.C[i]
 }
+
+// Sort is required to put processes at the end when executing create cmd
+func (c cliConfSlice) Sort() {
+	sort.Sort(cliConfSlice(c))
+}
+
+// Reverse is required to put processes at first to stop them before delete resources
+func (c cliConfSlice) Reverse() {
+	sort.Sort(sort.Reverse(cliConfSlice(c)))
+}
+
 func (c cliConfSlice) Print() {
 	for k, v := range c.C {
 		fmt.Println(k, v.Data)
@@ -236,12 +252,12 @@ func roundTrip(sample interface{}, caller string, fn roundTripFunc) error {
 		return err
 	}
 	defer conn.Close()
-	// sort the config items to create & delete cases
+	// sort the config items for both create & delete cases
 	switch caller {
 	case "create":
-		sort.Sort(cliConfSlice(dataSlice))
+		dataSlice.Sort()
 	case "delete":
-		sort.Sort(sort.Reverse(cliConfSlice(dataSlice)))
+		dataSlice.Reverse()
 	}
 
 	for _, d := range dataSlice.C {

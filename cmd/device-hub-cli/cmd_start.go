@@ -41,12 +41,7 @@ func startCommand() *cobra.Command {
 				request.Profile = args[0]
 			}
 			err := roundTrip(request, "start", func(cli proto.HubClient, in rawConf, out iocodec.Encoder) error {
-
-				err := startCall(args, request, tags, cli, in, out)
-				if err != nil {
-					return err
-				}
-				return nil
+				return startCall(args, request, tags, cli, in, out)
 			})
 			return err
 		},
