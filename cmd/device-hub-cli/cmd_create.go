@@ -25,7 +25,7 @@ var createCommand = &cobra.Command{
 			Configuration: map[string]string{},
 		}
 
-		err := roundTrip(sample, func(cli proto.HubClient, in rawConf, out iocodec.Encoder) error {
+		err := roundTrip(sample, "create", func(cli proto.HubClient, in rawConf, out iocodec.Encoder) error {
 
 			v := proto.CreateRequest{}
 

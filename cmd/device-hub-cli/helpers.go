@@ -170,7 +170,7 @@ func (c cliConfSlice) Print() {
 
 type roundTripFunc func(cli proto.HubClient, in rawConf, out iocodec.Encoder) error
 
-func roundTrip(sample interface{}, fn roundTripFunc) error {
+func roundTrip(sample interface{}, caller string, fn roundTripFunc) error {
 	cfg := _config
 
 	var em iocodec.EncoderMaker
@@ -235,11 +235,14 @@ func roundTrip(sample interface{}, fn roundTripFunc) error {
 	if err != nil {
 		return err
 	}
-
 	defer conn.Close()
-
-	// sort slice moving the processes to the end
-	sort.Sort(cliConfSlice(dataSlice))
+	// sort the config items to create & delete cases
+	switch caller {
+	case "create":
+		sort.Sort(cliConfSlice(dataSlice))
+	case "delete":
+		sort.Sort(sort.Reverse(cliConfSlice(dataSlice)))
+	}
 
 	for _, d := range dataSlice.C {
 		err := fn(client, d.Raw, em.NewEncoder(os.Stdout))

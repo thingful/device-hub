@@ -17,13 +17,26 @@ var deleteCommand = &cobra.Command{
 
 		sample := proto.DeleteRequest{}
 
-		err := roundTrip(sample, func(cli proto.HubClient, in rawConf, out iocodec.Encoder) error {
+		err := roundTrip(sample, "delete", func(cli proto.HubClient, in rawConf, out iocodec.Encoder) error {
 
 			v := proto.DeleteRequest{}
 
 			err := in.Decode(&v)
 			if err != nil {
 				return err
+			}
+
+			if v.Type == "process" {
+
+				req := proto.StopRequest{}
+
+				err := in.Decode(&req)
+				if err != nil {
+					return err
+				}
+
+				return stopCall(args, req, cli, in, out)
+
 			}
 
 			resp, err := cli.Delete(context.Background(), &v)

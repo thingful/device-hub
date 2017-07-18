@@ -40,7 +40,7 @@ func startCommand() *cobra.Command {
 			if len(args) > 0 {
 				request.Profile = args[0]
 			}
-			err := roundTrip(request, func(cli proto.HubClient, in rawConf, out iocodec.Encoder) error {
+			err := roundTrip(request, "start", func(cli proto.HubClient, in rawConf, out iocodec.Encoder) error {
 
 				err := startCall(args, request, tags, cli, in, out)
 				if err != nil {
@@ -121,24 +121,33 @@ var stopCommand = &cobra.Command{
 
 		v := proto.StopRequest{}
 
-		err := roundTrip(v, func(cli proto.HubClient, in rawConf, out iocodec.Encoder) error {
-			if len(args) == 0 {
-				return errors.New("specify a uri to stop")
-			}
-
-			v.Uri = strings.TrimSpace(args[0])
-
-			resp, err := cli.Stop(context.Background(), &v)
-
-			if err != nil {
-				return err
-			}
-
-			return out.Encode(resp)
-
+		err := roundTrip(v, "stop", func(cli proto.HubClient, in rawConf, out iocodec.Encoder) error {
+			return stopCall(args, v, cli, in, out)
 		})
 		return err
 	},
+}
+
+func stopCall(args []string, request proto.StopRequest, cli proto.HubClient, in rawConf, out iocodec.Encoder) error {
+
+	err := in.Decode(&request)
+	if err != nil {
+		return err
+	}
+	if len(args) == 0 && request.Uri == "" {
+		return errors.New("specify a uri to stop")
+	}
+	if len(args) > 0 {
+		request.Uri = strings.TrimSpace(args[0])
+	}
+
+	resp, err := cli.Stop(context.Background(), &request)
+
+	if err != nil {
+		return err
+	}
+
+	return out.Encode(resp)
 }
 
 var statusCommand = &cobra.Command{
@@ -148,7 +157,7 @@ var statusCommand = &cobra.Command{
 
 		v := proto.StatusRequest{}
 
-		err := roundTrip(v, func(cli proto.HubClient, in rawConf, out iocodec.Encoder) error {
+		err := roundTrip(v, "status", func(cli proto.HubClient, in rawConf, out iocodec.Encoder) error {
 
 			resp, err := cli.Status(context.Background(), &v)
 
