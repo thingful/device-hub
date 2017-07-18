@@ -25,7 +25,7 @@ var createCommand = &cobra.Command{
 			Configuration: map[string]string{},
 		}
 
-		err := roundTrip(sample, func(cli proto.HubClient, in iocodec.Decoder, out iocodec.Encoder) error {
+		err := roundTrip(sample, func(cli proto.HubClient, in rawConf, out iocodec.Encoder) error {
 
 			v := proto.CreateRequest{}
 
@@ -49,6 +49,13 @@ var createCommand = &cobra.Command{
 				params, err = register.DescribeListener(v.Kind)
 			case "endpoint":
 				params, err = register.DescribeEndpoint(v.Kind)
+			case "process":
+				request := proto.StartRequest{
+					Endpoints: []string{},
+					Tags:      map[string]string{},
+				}
+				tags := []string{}
+				return startCall(args, request, tags, cli, in, out)
 			}
 
 			if err != nil {

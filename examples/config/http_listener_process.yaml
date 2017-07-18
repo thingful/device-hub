@@ -1,7 +1,8 @@
 uri: /a
 type: process
 endpoint-uids:
-  - stdout-endpoint
+  - http-endpoint-example.com
 listener-uid: http-listener-local-port-8085
+profile-uid: thingful/device-1
 tags: 
   - foo:bar

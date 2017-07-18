@@ -17,7 +17,7 @@ var deleteCommand = &cobra.Command{
 
 		sample := proto.DeleteRequest{}
 
-		err := roundTrip(sample, func(cli proto.HubClient, in iocodec.Decoder, out iocodec.Encoder) error {
+		err := roundTrip(sample, func(cli proto.HubClient, in rawConf, out iocodec.Encoder) error {
 
 			v := proto.DeleteRequest{}
 

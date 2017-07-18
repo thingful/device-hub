@@ -11,6 +11,9 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"sort"
+
+	yaml "gopkg.in/yaml.v2"
 
 	"github.com/fiorix/protoc-gen-cobra/iocodec"
 	"github.com/thingful/device-hub/proto"
@@ -108,7 +111,64 @@ func dial() (*grpc.ClientConn, proto.HubClient, error) {
 	return conn, proto.NewHubClient(conn), nil
 }
 
-type roundTripFunc func(cli proto.HubClient, in iocodec.Decoder, out iocodec.Encoder) error
+type rawConf []byte
+
+func (r rawConf) Decode(target interface{}) error {
+	err := yaml.Unmarshal(r, target)
+	if err != nil {
+		return fmt.Errorf("error decoding data: %s", err.Error())
+	}
+	return nil
+}
+
+// Represent a conf file, Data is basically used to order a cliConf Slice
+// Raw contains the file content
+type cliConf struct {
+	Data map[string]interface{}
+	Raw  rawConf
+}
+
+// Load the configuration file to Data
+func (c *cliConf) Load(filePath string) (err error) {
+
+	c.Raw, err = ioutil.ReadFile(filePath)
+	if err != nil {
+		return fmt.Errorf("failed to read file [%s]: %s", filePath, err.Error())
+	}
+	err = yaml.Unmarshal(c.Raw, &c.Data)
+	if err != nil {
+		return fmt.Errorf("error parsing file [%s]: %s", filePath, err.Error())
+	}
+	return nil
+}
+
+type cliConfSlice struct {
+	C []cliConf
+}
+
+func (c *cliConfSlice) Append(e cliConf) {
+
+	c.C = append(c.C, e)
+}
+func (c cliConfSlice) Len() int {
+	return len(c.C)
+}
+func (c cliConfSlice) Less(i, j int) bool {
+	if c.C[j].Data["type"] == "process" {
+		return true
+	}
+	return false
+}
+func (c cliConfSlice) Swap(i, j int) {
+	c.C[i], c.C[j] = c.C[j], c.C[i]
+}
+func (c cliConfSlice) Print() {
+	for k, v := range c.C {
+		fmt.Println(k, v.Data)
+	}
+}
+
+type roundTripFunc func(cli proto.HubClient, in rawConf, out iocodec.Encoder) error
 
 func roundTrip(sample interface{}, fn roundTripFunc) error {
 	cfg := _config
@@ -130,24 +190,23 @@ func roundTrip(sample interface{}, fn roundTripFunc) error {
 		return em.NewEncoder(os.Stdout).Encode(sample)
 	}
 
-	decoders := []iocodec.Decoder{}
-	files := []*os.File{}
+	var dataSlice cliConfSlice
 
 	// either no request file is not specified or set to std-in
 	if (cfg.RequestFile == "" && cfg.RequestDir == "") || cfg.RequestFile == "-" {
-		decoders = append(decoders, iocodec.DefaultDecoders["json"].NewDecoder(os.Stdin))
-
+		// Add empty item to iterate - TODO refactor
+		dataSlice.Append(cliConf{})
 		// or request file is specified
 	} else if cfg.RequestFile != "" {
 
-		f, d, err := decoderFromPath(cfg.RequestFile)
+		var data cliConf
 
+		err := data.Load(cfg.RequestFile)
 		if err != nil {
 			return err
 		}
 
-		decoders = append(decoders, d)
-		files = append(files, f)
+		dataSlice.Append(data)
 
 		// or request dir is specified
 	} else if cfg.RequestDir != "" {
@@ -162,23 +221,15 @@ func roundTrip(sample interface{}, fn roundTripFunc) error {
 			fmt.Println(fi.Name())
 
 			folderPath := path.Join(cfg.RequestDir, fi.Name())
-			f, d, err := decoderFromPath(folderPath)
 
+			var data cliConf
+			err = data.Load(folderPath)
 			if err != nil {
 				return err
 			}
-
-			decoders = append(decoders, d)
-			files = append(files, f)
-
+			dataSlice.Append(data)
 		}
 	}
-
-	defer func() {
-		for i, _ := range files {
-			files[i].Close()
-		}
-	}()
 
 	conn, client, err := dial()
 	if err != nil {
@@ -187,8 +238,11 @@ func roundTrip(sample interface{}, fn roundTripFunc) error {
 
 	defer conn.Close()
 
-	for _, d := range decoders {
-		err := fn(client, d, em.NewEncoder(os.Stdout))
+	// sort slice moving the processes to the end
+	sort.Sort(cliConfSlice(dataSlice))
+
+	for _, d := range dataSlice.C {
+		err := fn(client, d.Raw, em.NewEncoder(os.Stdout))
 
 		if err != nil {
 			return err
@@ -218,4 +272,17 @@ func decoderFromPath(filePath string) (*os.File, iocodec.Decoder, error) {
 	dm, _ := iocodec.DefaultDecoders["yaml"]
 
 	return f, dm.NewDecoder(f), nil
+}
+
+func yamlDecoder(filePath string, target interface{}) error {
+
+	data, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		return fmt.Errorf("failed to read file [%s]: %s", filePath, err.Error())
+	}
+	err = yaml.Unmarshal(data, target)
+	if err != nil {
+		return fmt.Errorf("error parsing file [%s]: %s", filePath, err.Error())
+	}
+	return nil
 }

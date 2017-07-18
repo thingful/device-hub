@@ -20,10 +20,8 @@ var showCommand = &cobra.Command{
 			Filter: strings.Join(args, ","),
 		}
 
-		err := roundTrip(v, func(cli proto.HubClient, in iocodec.Decoder, out iocodec.Encoder) error {
-
+		err := roundTrip(v, func(cli proto.HubClient, in rawConf, out iocodec.Encoder) error {
 			resp, err := cli.Show(context.Background(), &v)
-
 			if err != nil {
 				return err
 			}
