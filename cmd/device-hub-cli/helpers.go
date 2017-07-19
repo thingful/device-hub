@@ -124,8 +124,9 @@ func (r rawConf) Decode(target interface{}) error {
 // Represent a conf file, Data is basically used to order a cliConf Slice
 // Raw contains the file content
 type cliConf struct {
-	Data map[string]interface{}
-	Raw  rawConf
+	FileName string
+	Data     map[string]interface{}
+	Raw      rawConf
 }
 
 // Load the configuration file to Data
@@ -135,6 +136,10 @@ func (c *cliConf) Load(filePath string) (err error) {
 	if err != nil {
 		return fmt.Errorf("failed to read file [%s]: %s", filePath, err.Error())
 	}
+
+	_, fileName := filepath.Split(filePath)
+	c.FileName = fileName
+
 	err = yaml.Unmarshal(c.Raw, &c.Data)
 	if err != nil {
 		return fmt.Errorf("error parsing file [%s]: %s", filePath, err.Error())
@@ -179,9 +184,40 @@ func (c cliConfSlice) Reverse() {
 }
 
 func (c cliConfSlice) Print() {
-	for k, v := range c.C {
-		fmt.Println(k, v.Data)
+	for _, v := range c.C {
+		fmt.Println(v.FileName)
 	}
+}
+
+// GetCliConfig get config for this CLI app
+func (c cliConfSlice) GetCliConfig(cfg *config) error {
+	var conf cliConf
+	if cfg.RequestFile != "" {
+		err := conf.Load(cfg.RequestFile)
+		if err != nil {
+			return err
+		}
+		c.Append(conf)
+		return nil
+	} else if _config.RequestDir != "" {
+		listing, err := ioutil.ReadDir(_config.RequestDir)
+		if err != nil {
+			return err
+		}
+		for _, f := range listing {
+			folderPath := path.Join(cfg.RequestDir, f.Name())
+			var _conf cliConf // check if this could be outer scoped! (conf)
+			err = _conf.Load(folderPath)
+			if err != nil {
+				return err
+			}
+			c.Append(_conf)
+		}
+	}
+	// Sorted with process to the end by default
+	c.Sort()
+	c.Print()
+	return nil
 }
 
 type roundTripFunc func(cli proto.HubClient, in rawConf, out iocodec.Encoder) error
