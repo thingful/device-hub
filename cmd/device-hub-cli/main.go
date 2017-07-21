@@ -90,7 +90,6 @@ func init() {
 	RootCmd.AddCommand(startCommand())
 	RootCmd.AddCommand(stopCommand)
 	RootCmd.AddCommand(statusCommand)
-	RootCmd.AddCommand(describeCommand)
 
 	_config.AddFlags(RootCmd.PersistentFlags())
 }
