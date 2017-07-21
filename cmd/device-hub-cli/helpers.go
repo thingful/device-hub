@@ -9,11 +9,6 @@ import (
 	"io/ioutil"
 	"net"
 	"os"
-	"path"
-	"path/filepath"
-	"sort"
-
-	yaml "gopkg.in/yaml.v2"
 
 	"github.com/fiorix/protoc-gen-cobra/iocodec"
 	"github.com/thingful/device-hub/proto"
@@ -111,118 +106,9 @@ func dial() (*grpc.ClientConn, proto.HubClient, error) {
 	return conn, proto.NewHubClient(conn), nil
 }
 
-type rawConf []byte
+type roundTripFunc func(cli proto.HubClient, in rawContent, out iocodec.Encoder) error
 
-func (r rawConf) Decode(target interface{}) error {
-	err := yaml.Unmarshal(r, target)
-	if err != nil {
-		return fmt.Errorf("error decoding data: %s", err.Error())
-	}
-	return nil
-}
-
-// Represent a conf file, Data is basically used to order a cliConf Slice
-// Raw contains the file content
-type cliConf struct {
-	FileName string
-	Data     map[string]interface{}
-	Raw      rawConf
-}
-
-// Load the configuration file to Data
-func (c *cliConf) Load(filePath string) (err error) {
-
-	c.Raw, err = ioutil.ReadFile(filePath)
-	if err != nil {
-		return fmt.Errorf("failed to read file [%s]: %s", filePath, err.Error())
-	}
-
-	_, fileName := filepath.Split(filePath)
-	c.FileName = fileName
-
-	err = yaml.Unmarshal(c.Raw, &c.Data)
-	if err != nil {
-		return fmt.Errorf("error parsing file [%s]: %s", filePath, err.Error())
-	}
-	return nil
-}
-
-// cliConfSlice contains configs and implements sort interface using
-// "process" type file as the less weight
-type cliConfSlice struct {
-	C []cliConf
-}
-
-func (c *cliConfSlice) Append(e cliConf) {
-
-	c.C = append(c.C, e)
-}
-
-func (c cliConfSlice) Len() int {
-	return len(c.C)
-}
-
-func (c cliConfSlice) Less(i, j int) bool {
-	if c.C[j].Data["type"] == "process" {
-		return true
-	}
-	return false
-}
-
-func (c cliConfSlice) Swap(i, j int) {
-	c.C[i], c.C[j] = c.C[j], c.C[i]
-}
-
-// Sort is required to put processes at the end when executing create cmd
-func (c cliConfSlice) Sort() {
-	sort.Sort(cliConfSlice(c))
-}
-
-// Reverse is required to put processes at first to stop them before delete resources
-func (c cliConfSlice) Reverse() {
-	sort.Sort(sort.Reverse(cliConfSlice(c)))
-}
-
-func (c cliConfSlice) Print() {
-	for _, v := range c.C {
-		fmt.Println(v.FileName)
-	}
-}
-
-// GetCliConfig get config for this CLI app
-func (c cliConfSlice) GetCliConfig(cfg *config) error {
-	var conf cliConf
-	if cfg.RequestFile != "" {
-		err := conf.Load(cfg.RequestFile)
-		if err != nil {
-			return err
-		}
-		c.Append(conf)
-		return nil
-	} else if _config.RequestDir != "" {
-		listing, err := ioutil.ReadDir(_config.RequestDir)
-		if err != nil {
-			return err
-		}
-		for _, f := range listing {
-			folderPath := path.Join(cfg.RequestDir, f.Name())
-			var _conf cliConf // check if this could be outer scoped! (conf)
-			err = _conf.Load(folderPath)
-			if err != nil {
-				return err
-			}
-			c.Append(_conf)
-		}
-	}
-	// Sorted with process to the end by default
-	c.Sort()
-	c.Print()
-	return nil
-}
-
-type roundTripFunc func(cli proto.HubClient, in rawConf, out iocodec.Encoder) error
-
-func roundTrip(sample interface{}, caller string, fn roundTripFunc) error {
+func roundTrip(fn roundTripFunc) error {
 	cfg := _config
 
 	var em iocodec.EncoderMaker
@@ -238,106 +124,16 @@ func roundTrip(sample interface{}, caller string, fn roundTripFunc) error {
 		}
 	}
 
-	if cfg.PrintSampleRequest {
-		return em.NewEncoder(os.Stdout).Encode(sample)
-	}
-
-	var dataSlice cliConfSlice
-
-	// either no request file is not specified or set to std-in
-	if (cfg.RequestFile == "" && cfg.RequestDir == "") || cfg.RequestFile == "-" {
-		// Add empty item to iterate - TODO refactor
-		dataSlice.Append(cliConf{})
-		// or request file is specified
-	} else if cfg.RequestFile != "" {
-
-		var data cliConf
-
-		err := data.Load(cfg.RequestFile)
-		if err != nil {
-			return err
-		}
-
-		dataSlice.Append(data)
-
-		// or request dir is specified
-	} else if cfg.RequestDir != "" {
-		listing, err := ioutil.ReadDir(cfg.RequestDir)
-
-		if err != nil {
-			return err
-		}
-
-		for _, fi := range listing {
-
-			fmt.Println(fi.Name())
-
-			folderPath := path.Join(cfg.RequestDir, fi.Name())
-
-			var data cliConf
-			err = data.Load(folderPath)
-			if err != nil {
-				return err
-			}
-			dataSlice.Append(data)
-		}
-	}
-
 	conn, client, err := dial()
 	if err != nil {
 		return err
 	}
 	defer conn.Close()
-	// sort the config items for both create & delete cases
-	switch caller {
-	case "create":
-		dataSlice.Sort()
-	case "delete":
-		dataSlice.Reverse()
-	}
 
-	for _, d := range dataSlice.C {
-		err := fn(client, d.Raw, em.NewEncoder(os.Stdout))
-
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func decoderFromPath(filePath string) (*os.File, iocodec.Decoder, error) {
-
-	f, err := os.Open(filePath)
+	err = fn(client, nil, em.NewEncoder(os.Stdout))
 	if err != nil {
-		return nil, nil, fmt.Errorf("request file: %v", err)
+		return err
 	}
 
-	ext := filepath.Ext(filePath)
-
-	if len(ext) > 0 && ext[0] == '.' {
-		ext = ext[1:]
-		if ext != "yaml" {
-			return nil, nil, fmt.Errorf("invalid request file format: %q", ext)
-
-		}
-	}
-
-	dm, _ := iocodec.DefaultDecoders["yaml"]
-
-	return f, dm.NewDecoder(f), nil
-}
-
-func yamlDecoder(filePath string, target interface{}) error {
-
-	data, err := ioutil.ReadFile(filePath)
-	if err != nil {
-		return fmt.Errorf("failed to read file [%s]: %s", filePath, err.Error())
-	}
-	err = yaml.Unmarshal(data, target)
-	if err != nil {
-		return fmt.Errorf("error parsing file [%s]: %s", filePath, err.Error())
-	}
 	return nil
 }

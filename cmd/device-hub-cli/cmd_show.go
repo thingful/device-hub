@@ -16,18 +16,15 @@ var showCommand = &cobra.Command{
 	Short: "Display one or many resources",
 	RunE: func(cmd *cobra.Command, args []string) error {
 
-		v := proto.ShowRequest{
-			Filter: strings.Join(args, ","),
-		}
-
-		err := roundTrip(v, "show", func(cli proto.HubClient, in rawConf, out iocodec.Encoder) error {
-			resp, err := cli.Show(context.Background(), &v)
+		err := roundTrip(func(cli proto.HubClient, in rawContent, out iocodec.Encoder) error {
+			req := proto.ShowRequest{
+				Filter: strings.Join(args, ","),
+			}
+			resp, err := cli.Show(context.Background(), &req)
 			if err != nil {
 				return err
 			}
-
 			return out.Encode(resp)
-
 		})
 
 		return err
