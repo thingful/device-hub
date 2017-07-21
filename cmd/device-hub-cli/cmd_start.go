@@ -17,10 +17,15 @@ func startCommand() *cobra.Command {
 		Use:   "start",
 		Short: "Start processing messages on a uri",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			var uri string
+
 			if len(_resources.R) == 0 {
-				return errors.New("no resource has been set")
+				return errors.New("no resources has been set")
 			}
-			err := _resources.R[0].SendCreate(args)
+			if len(args) > 0 {
+				uri = args[0]
+			}
+			err := _resources.R[0].SendCreate(uri)
 			if err != nil {
 				return err
 			}
@@ -46,14 +51,14 @@ var stopCommand = &cobra.Command{
 		}
 
 		err := roundTrip(func(client proto.HubClient, in rawContent, out iocodec.Encoder) error {
-			return stopCall(args[0], client, in, out)
+			return stopCall(args[0], client, out)
 		})
 
 		return err
 	},
 }
 
-func stopCall(uri string, client proto.HubClient, in rawContent, out iocodec.Encoder) error {
+func stopCall(uri string, client proto.HubClient, out iocodec.Encoder) error {
 	req := proto.StopRequest{
 		Uri: uri,
 	}

@@ -68,7 +68,7 @@ func (r *resource) sendCreateReq() error {
 	return err
 }
 
-func (r *resource) sendStartReq(args []string) error {
+func (r *resource) sendStartReq(uri string) error {
 	err := roundTrip(func(client proto.HubClient, in rawContent, out iocodec.Encoder) error {
 		req := proto.StartRequest{
 			Endpoints: []string{},
@@ -84,8 +84,8 @@ func (r *resource) sendStartReq(args []string) error {
 			r.Raw.Decode(&_config.ProcessConf)
 		}
 
-		if len(args) > 0 {
-			req.Profile = args[0]
+		if len(uri) > 0 {
+			req.Profile = uri
 		} else {
 			req.Profile = _config.ProcessConf.ProfileUID
 		}
@@ -95,9 +95,7 @@ func (r *resource) sendStartReq(args []string) error {
 		req.Endpoints = _config.ProcessConf.EndpointUIDs
 
 		// review tags
-		tags := _config.ProcessConf.Tags
-
-		for _, m := range tags {
+		for _, m := range _config.ProcessConf.Tags {
 			bits := strings.Split(m, ":")
 			if len(bits) != 2 {
 				return fmt.Errorf("metadata not colon (:) separated : %s", m)
@@ -114,9 +112,13 @@ func (r *resource) sendStartReq(args []string) error {
 	return err
 }
 
-func (r *resource) SendCreate(args []string) error {
+func (r *resource) SendCreate(args ...string) error {
+	var uri string
 	if r.Data["type"] == "process" {
-		return r.sendStartReq(args)
+		if len(args) > 0 {
+			uri = args[0]
+		}
+		return r.sendStartReq(uri)
 	}
 	return r.sendCreateReq()
 }
@@ -126,7 +128,7 @@ func (r *resource) sendStopReq(uri string) error {
 		if uri == "" {
 			uri = r.Data["uri"].(string)
 		}
-		return stopCall(uri, client, in, out)
+		return stopCall(uri, client, out)
 	})
 	return err
 }

@@ -12,7 +12,7 @@ var createCommand = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 
 		for _, r := range _resources.R {
-			err := r.SendCreate(args)
+			err := r.SendCreate()
 
 			if err != nil {
 				return err
