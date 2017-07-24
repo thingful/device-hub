@@ -11,9 +11,14 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 
 	"github.com/fiorix/protoc-gen-cobra/iocodec"
+	"github.com/thingful/device-hub/describe"
+	"github.com/thingful/device-hub/endpoint"
+	"github.com/thingful/device-hub/listener"
 	"github.com/thingful/device-hub/proto"
+	"github.com/thingful/device-hub/registry"
 	"golang.org/x/oauth2"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -195,6 +200,35 @@ func roundTrip(sample interface{}, fn roundTripFunc) error {
 		}
 	}
 
+	return nil
+}
+
+// describeValidate validate the policy file before sending it over the wire
+func describeValidate(v proto.CreateRequest) (err error) {
+	var params describe.Parameters
+
+	register := registry.Default
+
+	endpoint.Register(register)
+	listener.Register(register)
+
+	switch strings.ToLower(v.Type) {
+
+	case "listener":
+		params, err = register.DescribeListener(v.Kind)
+	case "endpoint":
+		params, err = register.DescribeEndpoint(v.Kind)
+	}
+
+	if err != nil {
+		return err
+	}
+
+	_, err = describe.NewValues(v.Configuration, params)
+
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

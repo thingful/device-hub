@@ -4,15 +4,9 @@ package main
 
 import (
 	"context"
-	"strings"
 
-	"github.com/fiorix/protoc-gen-cobra/iocodec"
 	"github.com/spf13/cobra"
-	"github.com/thingful/device-hub/describe"
-	"github.com/thingful/device-hub/endpoint"
-	"github.com/thingful/device-hub/listener"
 	"github.com/thingful/device-hub/proto"
-	"github.com/thingful/device-hub/registry"
 )
 
 var createCommand = &cobra.Command{
@@ -20,55 +14,35 @@ var createCommand = &cobra.Command{
 	Short: "Create listener, endpoint and profile resources",
 	RunE: func(cmd *cobra.Command, args []string) error {
 
-		/* TODO : add ability to generate examples */
-		sample := proto.CreateRequest{
-			Configuration: map[string]string{},
+		conn, client, err := dial()
+		if err != nil {
+			return err
+		}
+		defer conn.Close()
+
+		for _, r := range _resources.R {
+			req := proto.CreateRequest{}
+			r.Raw.Decode(&req)
+			if err != nil {
+				return err
+			}
+			if r.Data["type"] != "process" {
+				resp, err := client.Create(context.Background(), &req)
+				if err != nil {
+					return err
+				}
+				_encoder.Encode(resp)
+			} else {
+				var conf processConf
+				err := r.Raw.Decode(&conf)
+				if err != nil {
+					return err
+				}
+				startCall(conf, client)
+			}
+
 		}
 
-		err := roundTrip(sample, func(cli proto.HubClient, in iocodec.Decoder, out iocodec.Encoder) error {
-
-			v := proto.CreateRequest{}
-
-			err := in.Decode(&v)
-
-			if err != nil {
-				return err
-			}
-
-			// validate the policy file before sending it over the wire
-			var params describe.Parameters
-
-			register := registry.Default
-
-			endpoint.Register(register)
-			listener.Register(register)
-
-			switch strings.ToLower(v.Type) {
-
-			case "listener":
-				params, err = register.DescribeListener(v.Kind)
-			case "endpoint":
-				params, err = register.DescribeEndpoint(v.Kind)
-			}
-
-			if err != nil {
-				return err
-			}
-
-			_, err = describe.NewValues(v.Configuration, params)
-
-			if err != nil {
-				return err
-			}
-			resp, err := cli.Create(context.Background(), &v)
-
-			if err != nil {
-				return err
-			}
-
-			return out.Encode(resp)
-
-		})
-		return err
+		return nil
 	},
 }
