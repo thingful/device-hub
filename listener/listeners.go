@@ -5,6 +5,7 @@ package listener
 import (
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
@@ -41,6 +42,8 @@ func Register(r *registry.Registry) {
 	r.RegisterListener("mqtt",
 
 		func(config describe.Values) (hub.Listener, error) {
+			mqtt.DEBUG = log.New(os.Stdout, "", 0)
+			mqtt.ERROR = log.New(os.Stdout, "", 0)
 
 			brokerAddress := config.MustString(mqtt_bindingAddress.Name)
 			clientID := fmt.Sprintf("device-hub-%s", hub.SourceVersion)
@@ -64,17 +67,6 @@ func Register(r *registry.Registry) {
 			opts.SetPingTimeout(10 * time.Second)
 			opts.SetAutoReconnect(true)
 
-			// Panic on connection lost until
-			// https://github.com/thingful/device-hub/issues/27
-			// is resolved
-			opts.OnConnectionLost = func(client mqtt.Client, err error) {
-				log.Panic("mqtt broker disconnected", err)
-			}
-
-			opts.OnConnect = func(mqtt.Client) {
-				log.Print("mqtt broker connected")
-			}
-
 			client := mqtt.NewClient(opts)
 
 			// TODO : set sensible wait time
@@ -82,7 +74,29 @@ func Register(r *registry.Registry) {
 				return nil, token.Error()
 			}
 
-			return newMQTTListener(client)
+			listener, err := newMQTTListener(client)
+
+			if err != nil {
+				return nil, err
+			}
+
+			opts.OnConnectionLost = func(client mqtt.Client, err error) {
+
+				log.Println("mqtt broker disconnected", err)
+				log.Println("attempting to reconnect existing subscriptions")
+
+				err2 := listener.RestartSubscriptions()
+
+				if err2 != nil {
+					log.Panicf("error restarting subscriptions - %v", err2)
+				}
+
+			}
+
+			opts.OnConnect = func(mqtt.Client) {
+				log.Print("mqtt broker connected")
+			}
+			return listener, nil
 
 		},
 		describe.Parameters{
