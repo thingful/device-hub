@@ -68,24 +68,19 @@ func (r *resource) sendCreateReq() error {
 	return err
 }
 
-func (r *resource) sendStartReq(uri string) error {
+func (r *resource) sendStartReq(profile string) error {
 	err := roundTrip(func(client proto.HubClient, in rawContent, out iocodec.Encoder) error {
 		req := proto.StartRequest{
 			Endpoints: []string{},
 			Tags:      map[string]string{},
 		}
-
-		if _config.RequestFile == "" {
-			err := r.Raw.Decode(&_config.ProcessConf)
-			if err != nil {
-				return err
-			}
-		} else {
-			r.Raw.Decode(&_config.ProcessConf)
+		err := r.Raw.Decode(&_config.ProcessConf)
+		if err != nil {
+			return err
 		}
 
-		if len(uri) > 0 {
-			req.Profile = uri
+		if len(profile) > 0 {
+			req.Profile = profile
 		} else {
 			req.Profile = _config.ProcessConf.ProfileUID
 		}

@@ -17,15 +17,17 @@ func startCommand() *cobra.Command {
 		Use:   "start",
 		Short: "Start processing messages on a uri",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			var uri string
+			var profile string
 
-			if len(_resources.R) == 0 {
-				return errors.New("no resources has been set")
-			}
 			if len(args) > 0 {
-				uri = args[0]
+				profile = args[0]
 			}
-			err := _resources.R[0].SendCreate(uri)
+			if len(_resources.R) == 0 {
+				_resources.R = append(_resources.R,
+					resource{
+						Data: map[string]interface{}{"type": "process"}})
+			}
+			err := _resources.R[0].SendCreate(profile)
 			if err != nil {
 				return err
 			}
