@@ -50,31 +50,26 @@ func startCall(conf processConf, client proto.HubClient) error {
 		Tags: map[string]string{},
 	}
 
-	if conf.ProfileUID != "" {
-		req.Profile = conf.ProfileUID
-	} else {
+	req.Profile = conf.ProfileUID
+	if req.Profile == "" {
 		req.Profile = _config.ProcessFile.ProfileUID
 	}
-	if conf.ListenerUID != "" {
-		req.Listener = conf.ListenerUID
-	} else {
+	req.Listener = conf.ListenerUID
+	if req.Listener == "" {
 		req.Listener = _config.ProcessFile.ListenerUID
 	}
-	if conf.URI != "" {
-		req.Uri = conf.ProfileUID
-	} else {
+	req.Uri = conf.URI
+	if req.Uri == "" {
 		req.Uri = _config.ProcessFile.URI
 	}
-	if conf.EndpointUIDs != nil {
-		req.Endpoints = conf.EndpointUIDs
-	} else {
-
+	req.Endpoints = conf.EndpointUIDs
+	if len(req.Endpoints) == 0 {
 		req.Endpoints = _config.ProcessFile.EndpointUIDs
 	}
 
 	var tags []string
 
-	if conf.Tags != nil {
+	if len(conf.Tags) != 0 {
 		tags = conf.Tags
 	} else {
 		tags = _config.ProcessFile.Tags
@@ -87,7 +82,7 @@ func startCall(conf processConf, client proto.HubClient) error {
 		}
 		req.Tags[bits[0]] = bits[1]
 	}
-
+	fmt.Println(req)
 	resp, err := client.Start(context.Background(), &req)
 	if err != nil {
 		return err
