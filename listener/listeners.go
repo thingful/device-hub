@@ -68,7 +68,7 @@ func Register(r *registry.Registry) {
 				log.Print("mqtt broker connected")
 			}
 
-			// Now this codeis weird but let me explain...
+			// Now this code is weird but let me explain...
 			// The call to mqtt.NewClient takes a pointer to an mqtt.Options however
 			// dereferences it before capturing a copy of the struct which while
 			// quite neat really is a pain when wiring up the OnConnectionLost callback
