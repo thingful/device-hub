@@ -5,7 +5,6 @@ package listener
 import (
 	"fmt"
 	"log"
-	"os"
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
@@ -42,8 +41,6 @@ func Register(r *registry.Registry) {
 	r.RegisterListener("mqtt",
 
 		func(config describe.Values) (hub.Listener, error) {
-			mqtt.DEBUG = log.New(os.Stdout, "", 0)
-			mqtt.ERROR = log.New(os.Stdout, "", 0)
 
 			brokerAddress := config.MustString(mqtt_bindingAddress.Name)
 			clientID := fmt.Sprintf("device-hub-%s", hub.SourceVersion)
@@ -67,21 +64,21 @@ func Register(r *registry.Registry) {
 			opts.SetPingTimeout(10 * time.Second)
 			opts.SetAutoReconnect(true)
 
-			client := mqtt.NewClient(opts)
-
-			// TODO : set sensible wait time
-			if token := client.Connect(); token.Wait() && token.Error() != nil {
-				return nil, token.Error()
+			opts.OnConnect = func(mqtt.Client) {
+				log.Print("mqtt broker connected")
 			}
 
-			listener, err := newMQTTListener(client)
-
-			if err != nil {
-				return nil, err
-			}
+			// Now this codeis weird but let me explain...
+			// The call to mqtt.NewClient takes a pointer to an mqtt.Options however
+			// dereferences it before capturing a copy of the struct which while
+			// quite neat really is a pain when wiring up the OnConnectionLost callback
+			// that operates on an instance of a mqttlistener
+			// So... we create a reference to an mqttl istener, wire it up then instantiate
+			// it which is weird but saves creating another layer of indirection
+			var listener *mqttlistener
+			var err error
 
 			opts.OnConnectionLost = func(client mqtt.Client, err error) {
-
 				log.Println("mqtt broker disconnected", err)
 				log.Println("attempting to reconnect existing subscriptions")
 
@@ -90,12 +87,21 @@ func Register(r *registry.Registry) {
 				if err2 != nil {
 					log.Panicf("error restarting subscriptions - %v", err2)
 				}
-
 			}
 
-			opts.OnConnect = func(mqtt.Client) {
-				log.Print("mqtt broker connected")
+			client := mqtt.NewClient(opts)
+
+			// TODO : set sensible wait time
+			if token := client.Connect(); token.Wait() && token.Error() != nil {
+				return nil, token.Error()
 			}
+
+			listener, err = newMQTTListener(client)
+
+			if err != nil {
+				return nil, err
+			}
+
 			return listener, nil
 
 		},
