@@ -20,11 +20,7 @@ var RootCmd = &cobra.Command{
 	Use: "device-hub-cli",
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		// Set resources at CLI init
-		err := _resources.SetResources(_config)
-		if err != nil {
-			return err
-		}
-		return nil
+		return _resources.SetResources(_config)
 	},
 }
 
@@ -95,9 +91,9 @@ func init() {
 	RootCmd.AddCommand(describeCommand)
 
 	_config.AddFlags(RootCmd.PersistentFlags())
+
 	// global encoder
-	var em iocodec.EncoderMaker
-	em = iocodec.DefaultEncoders["json"]
+	em := iocodec.DefaultEncoders["json"]
 	_encoder = em.NewEncoder(os.Stdout)
 }
 

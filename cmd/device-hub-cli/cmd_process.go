@@ -28,18 +28,19 @@ func startCommand() *cobra.Command {
 				profile = strings.TrimSpace(args[0])
 			}
 			if _config.RequestFile != "" {
+
 				r := resource{}
 				err = r.Load(_config.RequestFile)
 				if err != nil {
 					return err
 				}
-				r.Raw.Decode(&_config.ProcessFile)
+
+				err := r.Raw.Decode(&_config.ProcessFile)
+				if err != nil {
+					return err
+				}
 			}
-			err = startCall(processConf{ProfileUID: profile}, client)
-			if err != nil {
-				return err
-			}
-			return nil
+			return startCall(processConf{ProfileUID: profile}, client)
 		},
 	}
 
@@ -94,8 +95,8 @@ func startCall(conf processConf, client proto.HubClient) error {
 	if err != nil {
 		return err
 	}
-	_encoder.Encode(resp)
-	return nil
+
+	return _encoder.Encode(resp)
 }
 
 var stopCommand = &cobra.Command{
@@ -116,18 +117,20 @@ var stopCommand = &cobra.Command{
 
 		if _config.RequestFile != "" {
 			r := resource{}
+
 			err = r.Load(_config.RequestFile)
 			if err != nil {
 				return err
 			}
-			r.Raw.Decode(&_config.ProcessFile)
+
+			err = r.Raw.Decode(&_config.ProcessFile)
+			if err != nil {
+				return err
+			}
 			uri = _config.ProcessFile.URI
 		}
-		err = stopCall(uri, client)
-		if err != nil {
-			return err
-		}
-		return nil
+		return stopCall(uri, client)
+
 	},
 }
 

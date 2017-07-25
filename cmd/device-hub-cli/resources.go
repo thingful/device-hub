@@ -39,7 +39,7 @@ func (r *resource) Load(filePath string) (err error) {
 
 	_, r.FileName = filepath.Split(filePath)
 
-	r.Raw.Decode(&r.Data)
+	err = r.Raw.Decode(&r.Data)
 	if err != nil {
 		return fmt.Errorf("error parsing file [%s]: %s", filePath, err.Error())
 	}
@@ -65,10 +65,7 @@ func (r resources) Len() int {
 }
 
 func (r resources) Less(i, j int) bool {
-	if r.R[j].Data["type"] == "process" {
-		return true
-	}
-	return false
+	return r.R[j].Data["type"] == "process"
 }
 
 func (r resources) Swap(i, j int) {
