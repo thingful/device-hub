@@ -19,17 +19,25 @@ func startCommand() *cobra.Command {
 		Use:   "start",
 		Short: "Start processing messages on a uri",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			var profile string
 			conn, client, err := dial()
 			if err != nil {
 				return err
 			}
 			defer conn.Close()
 
-			if len(args) == 0 {
-				return errors.New("specify a profile")
+			if len(args) != 0 {
+				profile = args[0]
 			}
-
-			err = startCall(processConf{ProfileUID: args[0]}, client)
+			if _config.RequestFile != "" {
+				r := resource{}
+				err = r.Load(_config.RequestFile)
+				if err != nil {
+					return err
+				}
+				r.Raw.Decode(&_config.ProcessFile)
+			}
+			err = startCall(processConf{ProfileUID: profile}, client)
 			if err != nil {
 				return err
 			}
@@ -58,6 +66,7 @@ func startCall(conf processConf, client proto.HubClient) error {
 	if req.Listener == "" {
 		req.Listener = _config.ProcessFile.ListenerUID
 	}
+
 	req.Uri = conf.URI
 	if req.Uri == "" {
 		req.Uri = _config.ProcessFile.URI
@@ -82,7 +91,7 @@ func startCall(conf processConf, client proto.HubClient) error {
 		}
 		req.Tags[bits[0]] = bits[1]
 	}
-	fmt.Println(req)
+
 	resp, err := client.Start(context.Background(), &req)
 	if err != nil {
 		return err
