@@ -64,15 +64,29 @@ func Register(r *registry.Registry) {
 			opts.SetPingTimeout(10 * time.Second)
 			opts.SetAutoReconnect(true)
 
-			// Panic on connection lost until
-			// https://github.com/thingful/device-hub/issues/27
-			// is resolved
-			opts.OnConnectionLost = func(client mqtt.Client, err error) {
-				log.Panic("mqtt broker disconnected", err)
-			}
-
 			opts.OnConnect = func(mqtt.Client) {
 				log.Print("mqtt broker connected")
+			}
+
+			// Now this code is weird but let me explain...
+			// The call to mqtt.NewClient takes a pointer to an mqtt.Options however
+			// dereferences it before capturing a copy of the struct which while
+			// quite neat really is a pain when wiring up the OnConnectionLost callback
+			// that operates on an instance of a mqttlistener
+			// So... we create a reference to an mqttl istener, wire it up then instantiate
+			// it which is weird but saves creating another layer of indirection
+			var listener *mqttlistener
+			var err error
+
+			opts.OnConnectionLost = func(client mqtt.Client, err error) {
+				log.Println("mqtt broker disconnected", err)
+				log.Println("attempting to reconnect existing subscriptions")
+
+				err2 := listener.RestartSubscriptions()
+
+				if err2 != nil {
+					log.Panicf("error restarting subscriptions - %v", err2)
+				}
 			}
 
 			client := mqtt.NewClient(opts)
@@ -82,7 +96,13 @@ func Register(r *registry.Registry) {
 				return nil, token.Error()
 			}
 
-			return newMQTTListener(client)
+			listener, err = newMQTTListener(client)
+
+			if err != nil {
+				return nil, err
+			}
+
+			return listener, nil
 
 		},
 		describe.Parameters{
