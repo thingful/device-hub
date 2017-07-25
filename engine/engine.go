@@ -31,7 +31,8 @@ func New(logger utils.Logger) engine {
 }
 
 type engine struct {
-	logger utils.Logger
+	logger   utils.Logger
+	auxFuncs map[string]func(otto.FunctionCall) otto.Value
 }
 
 // Execute takes a script and a message - like a method and function arguments
@@ -102,6 +103,11 @@ func (e engine) run(code, main string, env map[string]interface{}, timeout time.
 		return otto.UndefinedValue()
 	})
 	vm.Run("console.log = __log")
+
+	// Set aux functions
+	for fname, f := range e.auxFuncs {
+		vm.Set(fname, f)
+	}
 
 	defer func() {
 
