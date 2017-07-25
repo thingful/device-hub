@@ -4,11 +4,9 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 
-	"github.com/fiorix/protoc-gen-cobra/iocodec"
 	"github.com/spf13/cobra"
 	"github.com/thingful/device-hub/proto"
 )
@@ -27,7 +25,7 @@ func startCommand() *cobra.Command {
 			defer conn.Close()
 
 			if len(args) != 0 {
-				profile = args[0]
+				profile = strings.TrimSpace(args[0])
 			}
 			if _config.RequestFile != "" {
 				r := resource{}
@@ -104,26 +102,32 @@ var stopCommand = &cobra.Command{
 	Use:   "stop",
 	Short: "Stop processing messages on a uri",
 	RunE: func(cmd *cobra.Command, args []string) error {
+		var uri string
 
-		v := proto.StopRequest{}
+		if len(args) != 0 {
+			uri = strings.TrimSpace(args[0])
+		}
 
-		err := roundTrip(v, func(cli proto.HubClient, in iocodec.Decoder, out iocodec.Encoder) error {
-			if len(args) == 0 {
-				return errors.New("specify a uri to stop")
-			}
+		conn, client, err := dial()
+		if err != nil {
+			return err
+		}
+		defer conn.Close()
 
-			v.Uri = strings.TrimSpace(args[0])
-
-			resp, err := cli.Stop(context.Background(), &v)
-
+		if _config.RequestFile != "" {
+			r := resource{}
+			err = r.Load(_config.RequestFile)
 			if err != nil {
 				return err
 			}
-
-			return out.Encode(resp)
-
-		})
-		return err
+			r.Raw.Decode(&_config.ProcessFile)
+			uri = _config.ProcessFile.URI
+		}
+		err = stopCall(uri, client)
+		if err != nil {
+			return err
+		}
+		return nil
 	},
 }
 
@@ -135,28 +139,27 @@ func stopCall(uri string, client proto.HubClient) error {
 	if err != nil {
 		return err
 	}
-	_encoder.Encode(resp)
-	return nil
+	return _encoder.Encode(resp)
 }
 
 var statusCommand = &cobra.Command{
 	Use:   "status",
 	Short: "List running pipes",
 	RunE: func(cmd *cobra.Command, args []string) error {
+		req := proto.StatusRequest{}
 
-		v := proto.StatusRequest{}
+		conn, client, err := dial()
+		if err != nil {
+			return err
+		}
+		defer conn.Close()
 
-		err := roundTrip(v, func(cli proto.HubClient, in iocodec.Decoder, out iocodec.Encoder) error {
+		resp, err := client.Status(context.Background(), &req)
 
-			resp, err := cli.Status(context.Background(), &v)
+		if err != nil {
+			return err
+		}
 
-			if err != nil {
-				return err
-			}
-
-			return out.Encode(resp)
-
-		})
-		return err
+		return _encoder.Encode(resp)
 	},
 }

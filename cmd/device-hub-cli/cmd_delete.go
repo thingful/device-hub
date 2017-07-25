@@ -5,7 +5,6 @@ package main
 import (
 	"context"
 
-	"github.com/fiorix/protoc-gen-cobra/iocodec"
 	"github.com/spf13/cobra"
 	"github.com/thingful/device-hub/proto"
 )
@@ -15,28 +14,37 @@ var deleteCommand = &cobra.Command{
 	Short: "Delete listener, profile and endpoint resources",
 	RunE: func(cmd *cobra.Command, args []string) error {
 
-		sample := proto.DeleteRequest{}
+		conn, client, err := dial()
+		if err != nil {
+			return err
+		}
+		defer conn.Close()
 
-		err := roundTrip(sample, func(cli proto.HubClient, in iocodec.Decoder, out iocodec.Encoder) error {
-
-			v := proto.DeleteRequest{}
-
-			err := in.Decode(&v)
+		_resources.Reverse()
+		for _, r := range _resources.R {
+			req := proto.DeleteRequest{}
+			err := r.Raw.Decode(&req)
 			if err != nil {
 				return err
 			}
-
-			resp, err := cli.Delete(context.Background(), &v)
-
-			if err != nil {
-				return err
+			if r.Data["type"] != "process" {
+				resp, err := client.Delete(context.Background(), &req)
+				if err != nil {
+					return err
+				}
+				return _encoder.Encode(resp)
+			} else {
+				var conf processConf
+				err := r.Raw.Decode(&conf)
+				if err != nil {
+					return err
+				}
+				stopCall(conf.URI, client)
 			}
 
-			return out.Encode(resp)
+		}
 
-		})
-
-		return err
+		return nil
 
 	},
 }

@@ -22,7 +22,7 @@ var createCommand = &cobra.Command{
 
 		for _, r := range _resources.R {
 			req := proto.CreateRequest{}
-			r.Raw.Decode(&req)
+			err := r.Raw.Decode(&req)
 			if err != nil {
 				return err
 			}
