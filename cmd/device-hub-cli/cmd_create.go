@@ -27,18 +27,33 @@ var createCommand = &cobra.Command{
 				return err
 			}
 			if r.Data["type"] != "process" {
+
+				err := describeValidate(req)
+				if err != nil {
+					return err
+				}
 				resp, err := client.Create(context.Background(), &req)
 				if err != nil {
 					return err
 				}
-				_encoder.Encode(resp)
+
+				err = _encoder.Encode(resp)
+				if err != nil {
+					return err
+				}
+
 			} else {
+
 				var conf processConf
 				err := r.Raw.Decode(&conf)
 				if err != nil {
 					return err
 				}
-				startCall(conf, client)
+
+				err = startCall(conf, client)
+				if err != nil {
+					return err
+				}
 			}
 
 		}

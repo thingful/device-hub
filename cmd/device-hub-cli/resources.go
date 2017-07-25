@@ -46,7 +46,7 @@ func (r *resource) Load(filePath string) (err error) {
 	return nil
 }
 
-// resources store appended files
+// resources store appended resource files
 type resources struct {
 	R []resource
 }
@@ -91,7 +91,7 @@ func (r resources) Print() {
 	}
 }
 
-// SetResources get passed resources
+// SetResources get cli passed resources
 func (r *resources) SetResources(cfg *config) error {
 	var res resource
 	if cfg.RequestFile != "" {
@@ -125,6 +125,7 @@ func (r *resources) SetResources(cfg *config) error {
 	return nil
 }
 
+// processConf holds required data to start a process
 type processConf struct {
 	URI          string   `yaml:"uri"`
 	Type         string   `yaml:"type"`

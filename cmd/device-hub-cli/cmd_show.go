@@ -25,7 +25,6 @@ var showCommand = &cobra.Command{
 		defer conn.Close()
 
 		resp, err := client.Show(context.Background(), &req)
-
 		if err != nil {
 			return err
 		}

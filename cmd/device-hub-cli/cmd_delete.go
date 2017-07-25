@@ -32,14 +32,22 @@ var deleteCommand = &cobra.Command{
 				if err != nil {
 					return err
 				}
-				return _encoder.Encode(resp)
+
+				err = _encoder.Encode(resp)
+				if err != nil {
+					return err
+				}
+
 			} else {
 				var conf processConf
 				err := r.Raw.Decode(&conf)
 				if err != nil {
 					return err
 				}
-				stopCall(conf.URI, client)
+				err = stopCall(conf.URI, client)
+				if err != nil {
+					return err
+				}
 			}
 
 		}
