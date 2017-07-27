@@ -26,13 +26,16 @@ var (
 // New returns a script runner
 func New(logger utils.Logger) engine {
 	return engine{
-		logger: logger,
+		logger:   logger,
+		AuxFuncs: make(map[string]func(otto.FunctionCall) otto.Value),
+		AuxObjs:  make(map[string]interface{}),
 	}
 }
 
 type engine struct {
 	logger   utils.Logger
-	auxFuncs map[string]func(otto.FunctionCall) otto.Value
+	AuxFuncs map[string]func(otto.FunctionCall) otto.Value
+	AuxObjs  map[string]interface{}
 }
 
 // Execute takes a script and a message - like a method and function arguments
@@ -104,9 +107,20 @@ func (e engine) run(code, main string, env map[string]interface{}, timeout time.
 	})
 	vm.Run("console.log = __log")
 
+	// Set aux objects
+	for oName, o := range e.AuxObjs {
+		if v, err := vm.ToValue(o); err == nil {
+			err = vm.Set(oName, v)
+		}
+		if err != nil {
+			return
+		}
+	}
 	// Set aux functions
-	for fname, f := range e.auxFuncs {
-		vm.Set(fname, f)
+	for fname, f := range e.AuxFuncs {
+		if err = vm.Set(fname, f); err != nil {
+			return
+		}
 	}
 
 	defer func() {
