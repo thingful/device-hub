@@ -9,9 +9,6 @@ import (
 	"time"
 )
 
-// GeoLocation holds the geographic location
-var GeoLocation position
-
 type coordinates struct {
 	Latitude         float64 // specified in decimal degrees
 	Longitude        float64 // specified in decimal degrees
@@ -27,9 +24,8 @@ type position struct {
 	Timestamp int64 // represents the time in ms when the position was acquired
 }
 
-func (p *position) SetGeoLocation(lng, lat, acc float64) {
+func (p *position) setLocation(lat, lng float64) {
 	p.Timestamp = time.Now().UnixNano() / 1000000
 	p.Coords.Latitude = lat
 	p.Coords.Longitude = lng
-	p.Coords.Accuracy = acc
 }

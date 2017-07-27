@@ -147,6 +147,12 @@ func (e engine) run(code, main string, env map[string]interface{}, timeout time.
 	return vm.Run(fmt.Sprintf("%s;\n %s", code, main))
 }
 
+func (e engine) SetGeoLocation(lat, lng float64) {
+	pos := new(position)
+	pos.setLocation(lat, lng)
+	e.AuxObjs["geolocation"] = pos
+}
+
 func prepareCSV(input hub.Message) (map[string]interface{}, error) {
 
 	r := csv.NewReader(strings.NewReader(string(input.Payload)))
