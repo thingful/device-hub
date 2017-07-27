@@ -25,6 +25,7 @@ type Manager struct {
 	sync.RWMutex
 	register *registry.Registry
 	logger   utils.Logger
+	options  map[string]interface{}
 }
 
 // pipe holds runtime state information including various counters
@@ -69,7 +70,8 @@ type PipePredicate func(*Pipe) bool
 func NewEndpointManager(ctx context.Context,
 	repository *store.Repository,
 	registry *registry.Registry,
-	logger utils.Logger) (*Manager, error) {
+	logger utils.Logger,
+	options map[string]interface{}) (*Manager, error) {
 
 	// load any existing pipes from the database to
 	// serve as the initial running state
@@ -90,6 +92,7 @@ func NewEndpointManager(ctx context.Context,
 		ctx:        ctx,
 		register:   registry,
 		logger:     logger,
+		options:    options,
 	}, nil
 }
 
@@ -134,7 +137,7 @@ func (m *Manager) Start() error {
 
 			pp := m.pipes[n]
 
-			go loop(ctx, pp, listener, endpoints, channel, m.logger, p.Tags)
+			go loop(ctx, pp, listener, endpoints, channel, m.logger, p.Tags, m.options)
 			pp.cancel = cancel
 			pp.State = proto.Pipe_RUNNING
 			pp.Started = time.Now().UTC()

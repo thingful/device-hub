@@ -57,13 +57,25 @@ var serverCommand = &cobra.Command{
 
 		repository := store.NewRepository(dataImpl, register)
 
+		options := make(map[string]interface{})
+
+		if _config.GeoEnabled {
+			options["geolocation"] = true
+			options["lat"] = _config.GeoLat
+			options["lng"] = _config.GeoLng
+		} else {
+			options["geolocation"] = false
+		}
+
 		manager, err := runtime.NewEndpointManager(ctx,
 			repository,
 			register,
 			utils.NewLogger(hub.DaemonVersionString(),
 				_config.Syslog,
 				_config.LogFile,
-				_config.LogPath))
+				_config.LogPath),
+			options,
+		)
 
 		if err != nil {
 			return err

@@ -19,9 +19,14 @@ func loop(ctx context.Context,
 	endpoints map[string]hub.Endpoint,
 	channel hub.Channel,
 	logger utils.Logger,
-	tags map[string]string) {
+	tags map[string]string,
+	options map[string]interface{}) {
 
 	scripter := engine.New(logger)
+	if options["geolocation"].(bool) {
+		scripter.SetGeoLocation(options["lat"].(float64), options["lng"].(float64))
+	}
+
 	// ensure the map for the Statistics.Sent is set up correctly
 	for k, _ := range endpoints {
 		p.Statistics.Sent[k] = &proto.Counters{}
