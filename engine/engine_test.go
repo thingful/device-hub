@@ -5,7 +5,6 @@ package engine
 import (
 	"bytes"
 	"encoding/binary"
-	"fmt"
 	"testing"
 	"time"
 
@@ -103,37 +102,6 @@ func TestJSONDecodeValid(t *testing.T) {
 
 	assert.NotNil(t, resultAsMap["a"])
 	assert.Equal(t, resultAsMap["a"], float64(1))
-}
-
-func TestEngineAuxFunction_(t *testing.T) {
-
-	t.Parallel()
-
-	script := Script{
-		Main:    "xxx",
-		Runtime: Javascript,
-		Input:   JSON,
-		Contents: `function xxx (input) {
-				return test(input.a)
-			}`,
-	}
-
-	json := "{ \"a\" : 1}"
-	input := hub.Message{Payload: []byte(json), Metadata: map[string]interface{}{}}
-
-	e := New(utils.NewNoOpLogger())
-
-	e.AuxFuncs["test"] = func(call otto.FunctionCall) otto.Value {
-		i := call.Argument(0)
-		val, _ := otto.ToValue(i)
-
-		return val
-	}
-	result, err := e.Execute(script, input)
-
-	assert.Nil(t, err)
-
-	fmt.Println(result.Output)
 }
 
 func TestEngineAuxFunction(t *testing.T) {
