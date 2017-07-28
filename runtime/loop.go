@@ -20,11 +20,11 @@ func loop(ctx context.Context,
 	channel hub.Channel,
 	logger utils.Logger,
 	tags map[string]string,
-	options map[string]interface{}) {
+	options Options) {
 
 	scripter := engine.New(logger)
-	if options["geolocation"].(bool) {
-		scripter.SetGeoLocation(options["lat"].(float64), options["lng"].(float64))
+	if options.GeoEnabled {
+		scripter.SetGeoLocation(options.GeoLat, options.GeoLng)
 	}
 
 	// ensure the map for the Statistics.Sent is set up correctly

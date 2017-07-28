@@ -41,8 +41,8 @@ func TestLoopCancelledAndPipeStoppedOnContextDone(t *testing.T) {
 
 	wg.Add(1)
 
-	options := make(map[string]interface{})
-	options["geolocation"] = false
+	options := Options{}
+	options.GeoEnabled = false
 
 	go loop(ctx, pipe, nil, map[string]hub.Endpoint{}, mock, utils.NewNoOpLogger(), map[string]string{}, options)
 	closer()
@@ -76,8 +76,8 @@ func TestStatisticsOnChannelError(t *testing.T) {
 
 	pipe := newRuntimePipe(store.Pipe{})
 
-	options := make(map[string]interface{})
-	options["geolocation"] = false
+	options := Options{}
+	options.GeoEnabled = false
 
 	go loop(ctx, pipe, nil, map[string]hub.Endpoint{}, mock, utils.NewNoOpLogger(), map[string]string{}, options)
 
@@ -133,8 +133,8 @@ func TestStatisticsOnChannelOut(t *testing.T) {
 		},
 	}
 
-	options := make(map[string]interface{})
-	options["geolocation"] = false
+	options := Options{}
+	options.GeoEnabled = false
 
 	go loop(ctx, pipe, nil, endpoints, mock, utils.NewNoOpLogger(), map[string]string{}, options)
 

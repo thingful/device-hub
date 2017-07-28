@@ -17,6 +17,12 @@ import (
 	"github.com/thingful/device-hub/utils"
 )
 
+type Options struct {
+	GeoEnabled bool
+	GeoLat     float64
+	GeoLng     float64
+}
+
 // Manager holds the running instances of all the pipes
 type Manager struct {
 	Repository *store.Repository
@@ -25,7 +31,7 @@ type Manager struct {
 	sync.RWMutex
 	register *registry.Registry
 	logger   utils.Logger
-	options  map[string]interface{}
+	options  Options
 }
 
 // pipe holds runtime state information including various counters
@@ -71,7 +77,7 @@ func NewEndpointManager(ctx context.Context,
 	repository *store.Repository,
 	registry *registry.Registry,
 	logger utils.Logger,
-	options map[string]interface{}) (*Manager, error) {
+	options Options) (*Manager, error) {
 
 	// load any existing pipes from the database to
 	// serve as the initial running state
