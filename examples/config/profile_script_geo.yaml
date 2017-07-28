@@ -22,5 +22,5 @@ configuration:
   script-contents: >
       function xxx ( input )
       {
-        return Number(geolocation.Coords.Latitude).toString() + ',' +  Number(geolocation.Coords.Longitude).toString()
+        return geolocation.Coords.Latitude + ',' +  geolocation.Coords.Longitude
       }
