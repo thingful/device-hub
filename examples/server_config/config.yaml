@@ -9,3 +9,6 @@ data_impl: boltdb
 log_file: true
 log_path: custom_log.log
 sys_log: false
+geo_enabled: true
+geo_lat: 54.416333
+geo_lng: -4.36552

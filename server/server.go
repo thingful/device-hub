@@ -30,6 +30,9 @@ type Options struct {
 	LogFile           bool
 	LogPath           string
 	Syslog            bool
+	GeoEnabled        bool
+	GeoLat            float64
+	GeoLng            float64
 }
 
 func Serve(options Options, manager *runtime.Manager) error {

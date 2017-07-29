@@ -26,12 +26,16 @@ var (
 // New returns a script runner
 func New(logger utils.Logger) engine {
 	return engine{
-		logger: logger,
+		logger:   logger,
+		AuxFuncs: make(map[string]func(otto.FunctionCall) otto.Value),
+		AuxObjs:  make(map[string]interface{}),
 	}
 }
 
 type engine struct {
-	logger utils.Logger
+	logger   utils.Logger
+	AuxFuncs map[string]func(otto.FunctionCall) otto.Value
+	AuxObjs  map[string]interface{}
 }
 
 // Execute takes a script and a message - like a method and function arguments
@@ -103,6 +107,22 @@ func (e engine) run(code, main string, env map[string]interface{}, timeout time.
 	})
 	vm.Run("console.log = __log")
 
+	// Set aux objects
+	for oName, o := range e.AuxObjs {
+		if v, err := vm.ToValue(o); err == nil {
+			err = vm.Set(oName, v)
+		}
+		if err != nil {
+			return
+		}
+	}
+	// Set aux functions
+	for fname, f := range e.AuxFuncs {
+		if err = vm.Set(fname, f); err != nil {
+			return
+		}
+	}
+
 	defer func() {
 
 		if caught := recover(); caught != nil {
@@ -125,6 +145,12 @@ func (e engine) run(code, main string, env map[string]interface{}, timeout time.
 	}()
 
 	return vm.Run(fmt.Sprintf("%s;\n %s", code, main))
+}
+
+func (e engine) SetGeoLocation(lat, lng float64) {
+	pos := new(position)
+	pos.setLocation(lat, lng)
+	e.AuxObjs["geolocation"] = pos
 }
 
 func prepareCSV(input hub.Message) (map[string]interface{}, error) {

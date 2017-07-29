@@ -57,6 +57,18 @@ CLI Global Flags
   Description:    enable log to local SYSLOG
   Default:        false
 
+- Flag:           --geo-enabled
+  Description:    enable pass fixed geolocation coordinates to JS engine 
+  Default:        false
+
+- Flag:           --geo-lat
+  Description:    geographic latitude in decimal degrees (i.e: 54.416333)
+  Default:        0
+
+  - Flag:           --geo-lng
+  Description:    geographic longitude in decimal degrees (i.e: -4.36552)
+  Default:        0
+
 ```
 CLI Global TLS Security Flags
 =============================

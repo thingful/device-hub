@@ -41,7 +41,10 @@ func TestLoopCancelledAndPipeStoppedOnContextDone(t *testing.T) {
 
 	wg.Add(1)
 
-	go loop(ctx, pipe, nil, map[string]hub.Endpoint{}, mock, utils.NewNoOpLogger(), map[string]string{})
+	options := Options{}
+	options.GeoEnabled = false
+
+	go loop(ctx, pipe, nil, map[string]hub.Endpoint{}, mock, utils.NewNoOpLogger(), map[string]string{}, options)
 	closer()
 
 	wg.Wait()
@@ -73,7 +76,10 @@ func TestStatisticsOnChannelError(t *testing.T) {
 
 	pipe := newRuntimePipe(store.Pipe{})
 
-	go loop(ctx, pipe, nil, map[string]hub.Endpoint{}, mock, utils.NewNoOpLogger(), map[string]string{})
+	options := Options{}
+	options.GeoEnabled = false
+
+	go loop(ctx, pipe, nil, map[string]hub.Endpoint{}, mock, utils.NewNoOpLogger(), map[string]string{}, options)
 
 	errorChannel <- errors.New("boo!")
 
@@ -127,7 +133,10 @@ func TestStatisticsOnChannelOut(t *testing.T) {
 		},
 	}
 
-	go loop(ctx, pipe, nil, endpoints, mock, utils.NewNoOpLogger(), map[string]string{})
+	options := Options{}
+	options.GeoEnabled = false
+
+	go loop(ctx, pipe, nil, endpoints, mock, utils.NewNoOpLogger(), map[string]string{}, options)
 
 	message := hub.Message{
 		Payload:  []byte("hello"),

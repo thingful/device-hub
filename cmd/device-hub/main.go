@@ -36,19 +36,22 @@ const _ = grpc.SupportPackageIsVersion4
 var _config = newConfig()
 
 type config struct {
-	Binding    string `envconfig:"BINDING" default:":50051" yaml:"binding"`
-	TLS        bool   `envconfig:"TLS" yaml:"tls"`
-	ServerName string `envconfig:"TLS_SERVER_NAME" yaml:"tls_server_name"`
-	CACertFile string `envconfig:"TLS_CA_CERT_FILE" yaml:"tls_ca_cert_file"`
-	CertFile   string `envconfig:"TLS_CERT_FILE" yaml:"tls_cert_file"`
-	KeyFile    string `envconfig:"TLS_KEY_FILE" yaml:"tls_key_file"`
-	DataDir    string `envconfig:"DATA_DIR" default:"." yaml:"data_dir"`
-	DataImpl   string `envconfig:"DATA_IMPL" default:"boltdb" yaml:"data_impl"`
-	LogFile    bool   `envconfig:"LOG_FILE" yaml:"log_file"`
-	LogPath    string `envconfig:"LOG_PATH" default:"./device-hub.log" yaml:"log_path"`
-	Syslog     bool   `envconfig:"LOG_SYSLOG" yaml:"sys_log"`
-	ConfigFile bool   `envconfig:"CONFIG_FILE" yaml:"-"`
-	ConfigPath string `envconfig:"CONFIG_PATH" default:"./config.yaml" yaml:"-"`
+	Binding    string  `envconfig:"BINDING" default:":50051" yaml:"binding"`
+	TLS        bool    `envconfig:"TLS" yaml:"tls"`
+	ServerName string  `envconfig:"TLS_SERVER_NAME" yaml:"tls_server_name"`
+	CACertFile string  `envconfig:"TLS_CA_CERT_FILE" yaml:"tls_ca_cert_file"`
+	CertFile   string  `envconfig:"TLS_CERT_FILE" yaml:"tls_cert_file"`
+	KeyFile    string  `envconfig:"TLS_KEY_FILE" yaml:"tls_key_file"`
+	DataDir    string  `envconfig:"DATA_DIR" default:"." yaml:"data_dir"`
+	DataImpl   string  `envconfig:"DATA_IMPL" default:"boltdb" yaml:"data_impl"`
+	LogFile    bool    `envconfig:"LOG_FILE" yaml:"log_file"`
+	LogPath    string  `envconfig:"LOG_PATH" default:"./device-hub.log" yaml:"log_path"`
+	Syslog     bool    `envconfig:"LOG_SYSLOG" yaml:"sys_log"`
+	ConfigFile bool    `envconfig:"CONFIG_FILE" yaml:"-"`
+	ConfigPath string  `envconfig:"CONFIG_PATH" default:"./config.yaml" yaml:"-"`
+	GeoEnabled bool    `envconfig:"GEO_ENABLED" yaml:"geo_enabled"`
+	GeoLat     float64 `envconfig:"GEO_LAT" yaml:"geo_lat"`
+	GeoLng     float64 `envconfig:"GEO_LNG" yaml:"geo_lng"`
 }
 
 func newConfig() *config {
@@ -70,6 +73,9 @@ func (o *config) AddFlags(fs *pflag.FlagSet) {
 	fs.BoolVar(&o.Syslog, "log-syslog", o.Syslog, "enable log to local SYSLOG")
 	fs.BoolVarP(&o.ConfigFile, "config-file", "c", o.ConfigFile, "enable config file overriding flags and env vars")
 	fs.StringVar(&o.ConfigPath, "config-path", o.ConfigPath, "path to config file, defaults to ./config.yaml")
+	fs.BoolVar(&o.GeoEnabled, "geo-enabled", o.GeoEnabled, "enable geo location")
+	fs.Float64Var(&o.GeoLat, "geo-lat", o.GeoLat, "device-hub geo latitude")
+	fs.Float64Var(&o.GeoLng, "geo-lng", o.GeoLng, "device-hub geo longitude")
 	fs.Parse(os.Args)
 }
 
