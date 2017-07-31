@@ -38,6 +38,7 @@ Other measures that would normally be taken to secure a server should still be i
 Message Integrity
 ===============
 Every Message contains a metadata field with the payload's hash string(SHA2-256) to verify the message integrity. 
+```
 {
     "payload": "eyJteS12YWx1ZSI6IGZhbHNlfQ==",
     "output": "54.416333,54.416333",
@@ -57,3 +58,4 @@ Every Message contains a metadata field with the payload's hash string(SHA2-256)
         "sha256:sum": "96172efad6f5d1c1647ffe867e5b4302fd54e3b2593177dd22db126466b603e1"
     }
 }
+```
