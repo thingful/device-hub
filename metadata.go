@@ -7,6 +7,8 @@ const (
 
 	MESSAGE_ID = "message:id"
 
+	SHA256_SUM = "sha256:sum"
+
 	ENGINE_TIMESTAMP_START_KEY = "engine:started-at"
 	ENGINE_TIMESTAMP_END_KEY   = "engine:ended-at"
 	ENGINE_OK_KEY              = "engine:ok"
