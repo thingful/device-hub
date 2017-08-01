@@ -17,7 +17,7 @@ func TestMQTT_MultipleEndpoints(t *testing.T) {
 	environment := testing_helper.MustUp()
 	defer environment.Down()
 
-	l, err := newMQTTListener(environment.MQTTClient)
+	l, err := newMQTTListener(environment.MQTTClientOptions)
 	assert.Nil(t, err)
 
 	channel1, err := l.NewChannel("/a")
@@ -34,5 +34,29 @@ func TestMQTT_MultipleEndpoints(t *testing.T) {
 
 	message2 := <-channel2.Out()
 	assert.Equal(t, message2.Payload, []byte("hello"))
+
+}
+
+func TestMQTT_ClientClosesConnectionIfNoChannel(t *testing.T) {
+
+	t.Parallel()
+
+	environment := testing_helper.MustUp()
+	defer environment.Down()
+
+	l, err := newMQTTListener(environment.MQTTClientOptions)
+	assert.Nil(t, err)
+
+	channel1, err := l.NewChannel("/a")
+	assert.Nil(t, err)
+
+	// client shoulf be connected
+	assert.True(t, l.client.IsConnected())
+
+	err = channel1.Close()
+	assert.Nil(t, err)
+
+	// client not connected
+	assert.False(t, l.client.IsConnected())
 
 }
