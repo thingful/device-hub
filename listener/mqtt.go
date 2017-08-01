@@ -47,9 +47,10 @@ type mqttlistener struct {
 	// is not too keen on being stopped and started
 	options *mqtt.ClientOptions
 
-	// connection_lock and connected track the 'genesis' connection
+	// connection_lock tracks the 'genesis' connection
 	connection_lock sync.RWMutex
-	client          mqtt.Client
+
+	client mqtt.Client
 
 	// subscriptions are tracked so that we can resurrect state
 	// on disconnections
@@ -102,7 +103,8 @@ func (m *mqttlistener) Close() error {
 	return nil
 }
 
-// restartSubscriptions is called to on reconnection
+// restartSubscriptions is called to on reconnection and attempts to reinstate the
+// exists subscriptions
 func (m *mqttlistener) restartSubscriptions() error {
 
 	m.subscription_lock.Lock()
