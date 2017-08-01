@@ -37,7 +37,7 @@ func TestMQTT_MultipleEndpoints(t *testing.T) {
 
 }
 
-func TestMQTT_ClientClosesConnectionIfNoChannel(t *testing.T) {
+func TestMQTT_ClientNilsClientIfNoChannel(t *testing.T) {
 
 	t.Parallel()
 
@@ -50,13 +50,14 @@ func TestMQTT_ClientClosesConnectionIfNoChannel(t *testing.T) {
 	channel1, err := l.NewChannel("/a")
 	assert.Nil(t, err)
 
-	// client shoulf be connected
+	// client should be connected
+	assert.NotNil(t, l.client)
 	assert.True(t, l.client.IsConnected())
 
 	err = channel1.Close()
 	assert.Nil(t, err)
 
-	// client not connected
-	assert.False(t, l.client.IsConnected())
+	// client destroyed
+	assert.Nil(t, l.client)
 
 }

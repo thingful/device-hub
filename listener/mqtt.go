@@ -30,7 +30,6 @@ func newMQTTListener(options *mqtt.ClientOptions) (*mqttlistener, error) {
 
 	options.OnConnectionLost = func(client mqtt.Client, err error) {
 		log.Println("mqtt broker disconnected", err)
-		log.Println("attempting to reconnect existing subscriptions")
 
 		err2 := listener.restartSubscriptions()
 
@@ -95,7 +94,6 @@ func (m *mqttlistener) NewChannel(topic string) (hub.Channel, error) {
 	}}
 
 	m.subscriptions[topic] = channel
-
 	return channel, nil
 }
 
@@ -112,6 +110,7 @@ func (m *mqttlistener) restartSubscriptions() error {
 
 	for topic, s := range m.subscriptions {
 
+		log.Println("attempting to reconnect existing subscription - ", topic)
 		handler := func(client mqtt.Client, msg mqtt.Message) {
 			input := newHubMessage(msg.Payload(), "MQTT", msg.Topic())
 			s.out <- input
@@ -153,7 +152,6 @@ func (m *mqttlistener) closeDownChannel(topic string) error {
 
 		m.client.Disconnect(mqttClientDisconnectTimeoutInMs)
 		m.client = nil
-
 	}
 
 	return nil
