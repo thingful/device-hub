@@ -60,8 +60,6 @@ type mqttlistener struct {
 
 func (m *mqttlistener) NewChannel(topic string) (hub.Channel, error) {
 
-	log.Println("new", topic)
-
 	if topic == "" {
 		return nil, errors.New("mqtt topic is empty string")
 	}
@@ -80,8 +78,6 @@ func (m *mqttlistener) NewChannel(topic string) (hub.Channel, error) {
 		return nil, err
 	}
 
-	log.Println("xxx")
-
 	errors := make(chan error)
 	out := make(chan hub.Message)
 
@@ -90,20 +86,15 @@ func (m *mqttlistener) NewChannel(topic string) (hub.Channel, error) {
 		out <- input
 	}
 
-	log.Println("subscribe", m.client.IsConnected())
-
 	if token := m.client.Subscribe(topic, 0, handler); token.Wait() && token.Error() != nil {
 		return nil, token.Error()
 	}
-	log.Println("after subscribe", m.client.IsConnected())
 
 	channel := defaultChannel{out: out, errors: errors, close: func() error {
 		return m.closeDownChannel(topic)
 	}}
 
 	m.subscriptions[topic] = channel
-
-	log.Println(m.subscriptions)
 
 	return channel, nil
 }
@@ -138,7 +129,6 @@ func (m *mqttlistener) restartSubscriptions() error {
 // closing the connection if no more subscriptions
 func (m *mqttlistener) closeDownChannel(topic string) error {
 
-	log.Println("closed", topic)
 	// tear down mqtt subscription
 	token := m.client.Unsubscribe(topic)
 	token.Wait()
