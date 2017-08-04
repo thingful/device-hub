@@ -4,29 +4,58 @@ package listener
 
 import (
 	"errors"
+	"log"
 	"sync"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	hub "github.com/thingful/device-hub"
 )
 
-func newMQTTListener(client mqtt.Client) (*mqttlistener, error) {
+const (
+	// mqttClientDisconnectTimeoutInMs is the disconnect
+	// wait time to allow other operations to succeed
+	mqttClientDisconnectTimeoutInMs = 1000
+)
 
-	if !client.IsConnected() {
-		return nil, errors.New("mqtt client is not connected")
+func newMQTTListener(options *mqtt.ClientOptions) (*mqttlistener, error) {
+
+	listener := &mqttlistener{
+		options:       options,
+		subscriptions: map[string]defaultChannel{},
 	}
 
-	return &mqttlistener{
-		client:        client,
-		subscriptions: map[string]defaultChannel{},
-	}, nil
+	options.OnConnect = func(mqtt.Client) {
+		log.Print("mqtt broker connected")
+	}
+
+	options.OnConnectionLost = func(client mqtt.Client, err error) {
+		log.Println("mqtt broker disconnected", err)
+
+		err2 := listener.restartSubscriptions()
+
+		if err2 != nil {
+			log.Panicf("error restarting subscriptions - %v", err2)
+		}
+	}
+
+	return listener, nil
 }
 
 type mqttlistener struct {
+
+	// keep a copy of of the mqtt.ClientOptions as the mqtt.Client
+	// is not too keen on being stopped and started
+	options *mqtt.ClientOptions
+
+	// connection_lock tracks the 'genesis' connection
+	connection_lock sync.RWMutex
+
 	client mqtt.Client
 
-	lock          sync.RWMutex
-	subscriptions map[string]defaultChannel
+	// subscriptions are tracked so that we can resurrect state
+	// on disconnections
+	subscription_lock sync.RWMutex
+	subscriptions     map[string]defaultChannel
 }
 
 func (m *mqttlistener) NewChannel(topic string) (hub.Channel, error) {
@@ -35,13 +64,18 @@ func (m *mqttlistener) NewChannel(topic string) (hub.Channel, error) {
 		return nil, errors.New("mqtt topic is empty string")
 	}
 
-	m.lock.Lock()
-	defer m.lock.Unlock()
+	m.subscription_lock.Lock()
+	defer m.subscription_lock.Unlock()
 
 	_, found := m.subscriptions[topic]
 
 	if found {
 		return nil, errors.New("unable to start subscription for existing topic")
+	}
+
+	// ensure we have a 'genisis' connection
+	if err := m.ensureGenisisConnectionMade(); err != nil {
+		return nil, err
 	}
 
 	errors := make(chan error)
@@ -57,29 +91,28 @@ func (m *mqttlistener) NewChannel(topic string) (hub.Channel, error) {
 	}
 
 	channel := defaultChannel{out: out, errors: errors, close: func() error {
-		token := m.client.Unsubscribe(topic)
-		token.Wait()
-		return token.Error()
+		return m.closeDownChannel(topic)
 	}}
 
 	m.subscriptions[topic] = channel
-
 	return channel, nil
 }
 
 func (m *mqttlistener) Close() error {
-	// TODO : set a sensible timeout
-	m.client.Disconnect(1000)
+	m.client.Disconnect(mqttClientDisconnectTimeoutInMs)
 	return nil
 }
 
-func (m *mqttlistener) RestartSubscriptions() error {
+// restartSubscriptions is called to on reconnection and attempts to reinstate the
+// exists subscriptions
+func (m *mqttlistener) restartSubscriptions() error {
 
-	m.lock.Lock()
-	defer m.lock.Unlock()
+	m.subscription_lock.Lock()
+	defer m.subscription_lock.Unlock()
 
 	for topic, s := range m.subscriptions {
 
+		log.Println("attempting to reconnect existing subscription - ", topic)
 		handler := func(client mqtt.Client, msg mqtt.Message) {
 			input := newHubMessage(msg.Payload(), "MQTT", msg.Topic())
 			s.out <- input
@@ -91,4 +124,61 @@ func (m *mqttlistener) RestartSubscriptions() error {
 	}
 
 	return nil
+}
+
+// closeDownChannel removes the mqtt subscription,
+// closing the connection if no more subscriptions
+func (m *mqttlistener) closeDownChannel(topic string) error {
+
+	// tear down mqtt subscription
+	token := m.client.Unsubscribe(topic)
+	token.Wait()
+
+	err := token.Error()
+
+	if err != nil {
+		return err
+	}
+
+	// clean up subscriptions
+	m.subscription_lock.Lock()
+	defer m.subscription_lock.Unlock()
+
+	delete(m.subscriptions, topic)
+
+	// if no subscriptions left disconnect the client
+	if len(m.subscriptions) == 0 {
+
+		m.connection_lock.Lock()
+		defer m.connection_lock.Unlock()
+
+		m.client.Disconnect(mqttClientDisconnectTimeoutInMs)
+		m.client = nil
+	}
+
+	return nil
+
+}
+
+// ensureGenisisConnectionMade will connect the mqtt client on the first channel added.
+// Once connected the mqtt.Client is clever enough to reconnect and the RestartSubscriptions
+// method will be called on reconnects to resurrect the subscriptions
+func (m *mqttlistener) ensureGenisisConnectionMade() error {
+
+	m.connection_lock.Lock()
+	defer m.connection_lock.Unlock()
+
+	if m.client != nil {
+		return nil
+	}
+
+	m.client = mqtt.NewClient(m.options)
+
+	// TODO : set sensible wait time
+	if token := m.client.Connect(); token.Wait() && token.Error() != nil {
+		return token.Error()
+	}
+
+	return nil
+
 }

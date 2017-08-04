@@ -11,8 +11,9 @@ import (
 )
 
 type testingEnvironment struct {
-	MQTTClient mqtt.Client
-	compose    *compose.Compose
+	MQTTClientOptions *mqtt.ClientOptions
+	MQTTClient        mqtt.Client
+	compose           *compose.Compose
 }
 
 func MustUp() *testingEnvironment {
@@ -56,8 +57,9 @@ services:
 	})
 
 	return &testingEnvironment{
-		compose:    c,
-		MQTTClient: client,
+		compose:           c,
+		MQTTClientOptions: mqtt.NewClientOptions().AddBroker(brokerAddress),
+		MQTTClient:        client,
 	}, nil
 
 }
