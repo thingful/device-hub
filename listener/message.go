@@ -3,12 +3,8 @@
 package listener
 
 import (
-	"encoding/hex"
-	"log"
 	"os"
 	"time"
-
-	"crypto/sha256"
 
 	"github.com/rs/xid"
 
@@ -21,17 +17,11 @@ func newHubMessage(payload []byte, protocol, uri string) hub.Message {
 	if err != nil {
 		host = "UNKNOWN"
 	}
-	hasher := sha256.New()
-	if _, err := hasher.Write(payload); err != nil {
-		log.Printf("failed to write to hash in message: %s", err.Error())
-	}
-
-	hash := hex.EncodeToString(hasher.Sum(nil))
 
 	m := hub.Message{
 		Payload: payload,
 		Metadata: map[string]interface{}{
-			hub.SHA256_SUM:         hash,
+			hub.SHA256_SUM:         "",
 			hub.PIPE_URI_NAME_KEY:  uri,
 			hub.PIPE_PROTOCOL_KEY:  protocol,
 			hub.PIPE_TIMESTAMP_KEY: time.Now().UTC(),
