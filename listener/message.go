@@ -21,7 +21,7 @@ func newHubMessage(payload []byte, protocol, uri string) hub.Message {
 	m := hub.Message{
 		Payload: payload,
 		Metadata: map[string]interface{}{
-			hub.SHA256_SUM:         "",
+			hub.SHA256_SUM:         "not calculated",
 			hub.PIPE_URI_NAME_KEY:  uri,
 			hub.PIPE_PROTOCOL_KEY:  protocol,
 			hub.PIPE_TIMESTAMP_KEY: time.Now().UTC(),
