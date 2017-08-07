@@ -4,6 +4,9 @@ package runtime
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
 	"time"
 
 	hub "github.com/thingful/device-hub"
@@ -82,6 +85,15 @@ func loop(ctx context.Context,
 			output.Tags = tags
 
 			output.Schema = p.Profile.Schema
+
+			// Hashing the message, if an error occurs SHA256_SUM will be ""
+			if m, err := json.Marshal(output); err == nil {
+				hasher := sha256.New()
+				if _, err := hasher.Write(m); err == nil {
+					hash := hex.EncodeToString(hasher.Sum(nil))
+					output.Metadata[hub.SHA256_SUM] = hash
+				}
+			}
 
 			for k, _ := range endpoints {
 
