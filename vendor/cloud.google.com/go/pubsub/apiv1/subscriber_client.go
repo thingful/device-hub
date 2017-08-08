@@ -60,10 +60,7 @@ type SubscriberCallOptions struct {
 func defaultSubscriberClientOptions() []option.ClientOption {
 	return []option.ClientOption{
 		option.WithEndpoint("pubsub.googleapis.com:443"),
-		option.WithScopes(
-			"https://www.googleapis.com/auth/cloud-platform",
-			"https://www.googleapis.com/auth/pubsub",
-		),
+		option.WithScopes(DefaultAuthScopes()...),
 	}
 }
 
@@ -73,28 +70,6 @@ func defaultSubscriberCallOptions() *SubscriberCallOptions {
 			gax.WithRetry(func() gax.Retryer {
 				return gax.OnCodes([]codes.Code{
 					codes.DeadlineExceeded,
-					codes.Unavailable,
-				}, gax.Backoff{
-					Initial:    100 * time.Millisecond,
-					Max:        60000 * time.Millisecond,
-					Multiplier: 1.3,
-				})
-			}),
-		},
-		{"default", "non_idempotent"}: {
-			gax.WithRetry(func() gax.Retryer {
-				return gax.OnCodes([]codes.Code{
-					codes.Unavailable,
-				}, gax.Backoff{
-					Initial:    100 * time.Millisecond,
-					Max:        60000 * time.Millisecond,
-					Multiplier: 1.3,
-				})
-			}),
-		},
-		{"messaging", "non_idempotent"}: {
-			gax.WithRetry(func() gax.Retryer {
-				return gax.OnCodes([]codes.Code{
 					codes.Unavailable,
 				}, gax.Backoff{
 					Initial:    100 * time.Millisecond,
@@ -149,7 +124,7 @@ type SubscriberClient struct {
 	CallOptions *SubscriberCallOptions
 
 	// The metadata to be sent with each request.
-	xGoogHeader string
+	xGoogHeader []string
 }
 
 // NewSubscriberClient creates a new subscriber client.
@@ -188,7 +163,7 @@ func (c *SubscriberClient) Close() error {
 func (c *SubscriberClient) SetGoogleClientInfo(keyval ...string) {
 	kv := append([]string{"gl-go", version.Go()}, keyval...)
 	kv = append(kv, "gapic", version.Repo, "gax", gax.Version, "grpc", grpc.Version)
-	c.xGoogHeader = gax.XGoogHeader(kv...)
+	c.xGoogHeader = []string{gax.XGoogHeader(kv...)}
 }
 
 // SubscriberProjectPath returns the path for the project resource.

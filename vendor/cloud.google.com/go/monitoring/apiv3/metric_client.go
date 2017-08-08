@@ -54,12 +54,7 @@ type MetricCallOptions struct {
 func defaultMetricClientOptions() []option.ClientOption {
 	return []option.ClientOption{
 		option.WithEndpoint("monitoring.googleapis.com:443"),
-		option.WithScopes(
-			"https://www.googleapis.com/auth/cloud-platform",
-			"https://www.googleapis.com/auth/monitoring",
-			"https://www.googleapis.com/auth/monitoring.read",
-			"https://www.googleapis.com/auth/monitoring.write",
-		),
+		option.WithScopes(DefaultAuthScopes()...),
 	}
 }
 
@@ -69,17 +64,6 @@ func defaultMetricCallOptions() *MetricCallOptions {
 			gax.WithRetry(func() gax.Retryer {
 				return gax.OnCodes([]codes.Code{
 					codes.DeadlineExceeded,
-					codes.Unavailable,
-				}, gax.Backoff{
-					Initial:    100 * time.Millisecond,
-					Max:        60000 * time.Millisecond,
-					Multiplier: 1.3,
-				})
-			}),
-		},
-		{"default", "non_idempotent"}: {
-			gax.WithRetry(func() gax.Retryer {
-				return gax.OnCodes([]codes.Code{
 					codes.Unavailable,
 				}, gax.Backoff{
 					Initial:    100 * time.Millisecond,
@@ -113,7 +97,7 @@ type MetricClient struct {
 	CallOptions *MetricCallOptions
 
 	// The metadata to be sent with each request.
-	xGoogHeader string
+	xGoogHeader []string
 }
 
 // NewMetricClient creates a new metric service client.
@@ -152,7 +136,7 @@ func (c *MetricClient) Close() error {
 func (c *MetricClient) SetGoogleClientInfo(keyval ...string) {
 	kv := append([]string{"gl-go", version.Go()}, keyval...)
 	kv = append(kv, "gapic", version.Repo, "gax", gax.Version, "grpc", grpc.Version)
-	c.xGoogHeader = gax.XGoogHeader(kv...)
+	c.xGoogHeader = []string{gax.XGoogHeader(kv...)}
 }
 
 // MetricProjectPath returns the path for the project resource.

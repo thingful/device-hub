@@ -309,9 +309,15 @@ func TestClientIntegration(t *testing.T) {
 			want:   "jadams-gwashington-1,jadams-gwashington-1,tjefferson-gwashington-1,tjefferson-gwashington-1",
 		},
 		{
-			desc:   "read with a RowRangeList and no filter",
-			rr:     RowRangeList{NewRange("gargamel", "hubbard"), InfiniteRange("wmckinley"),},
-			want:   "gwashington-jadams-1,wmckinley-tjefferson-1",
+			desc: "read with a RowRangeList and no filter",
+			rr:   RowRangeList{NewRange("gargamel", "hubbard"), InfiniteRange("wmckinley")},
+			want: "gwashington-jadams-1,wmckinley-tjefferson-1",
+		},
+		{
+			desc:   "chain that excludes rows and matches nothing, in a condition",
+			rr:     RowRange{},
+			filter: ConditionFilter(ChainFilters(ColumnFilter(".*j.*"), ColumnFilter(".*mckinley.*")), StripValueFilter(), nil),
+			want:   "",
 		},
 	}
 	for _, tc := range readTests {
@@ -454,6 +460,7 @@ func TestClientIntegration(t *testing.T) {
 		// Timestamps are used in thousands because the server
 		// only permits that granularity.
 		mut.Set("ts", "col", Timestamp(i*1000), []byte(fmt.Sprintf("val-%d", i)))
+		mut.Set("ts", "col2", Timestamp(i*1000), []byte(fmt.Sprintf("val-%d", i)))
 	}
 	if err := tbl.Apply(ctx, "testrow", mut); err != nil {
 		t.Fatalf("Mutating row: %v", err)
@@ -468,6 +475,10 @@ func TestClientIntegration(t *testing.T) {
 		{Row: "testrow", Column: "ts:col", Timestamp: 2000, Value: []byte("val-2")},
 		{Row: "testrow", Column: "ts:col", Timestamp: 1000, Value: []byte("val-1")},
 		{Row: "testrow", Column: "ts:col", Timestamp: 0, Value: []byte("val-0")},
+		{Row: "testrow", Column: "ts:col2", Timestamp: 3000, Value: []byte("val-3")},
+		{Row: "testrow", Column: "ts:col2", Timestamp: 2000, Value: []byte("val-2")},
+		{Row: "testrow", Column: "ts:col2", Timestamp: 1000, Value: []byte("val-1")},
+		{Row: "testrow", Column: "ts:col2", Timestamp: 0, Value: []byte("val-0")},
 	}}
 	if !reflect.DeepEqual(r, wantRow) {
 		t.Errorf("Cell with multiple versions,\n got %v\nwant %v", r, wantRow)
@@ -480,9 +491,38 @@ func TestClientIntegration(t *testing.T) {
 	wantRow = Row{"ts": []ReadItem{
 		{Row: "testrow", Column: "ts:col", Timestamp: 3000, Value: []byte("val-3")},
 		{Row: "testrow", Column: "ts:col", Timestamp: 2000, Value: []byte("val-2")},
+		{Row: "testrow", Column: "ts:col2", Timestamp: 3000, Value: []byte("val-3")},
+		{Row: "testrow", Column: "ts:col2", Timestamp: 2000, Value: []byte("val-2")},
 	}}
 	if !reflect.DeepEqual(r, wantRow) {
 		t.Errorf("Cell with multiple versions and LatestNFilter(2),\n got %v\nwant %v", r, wantRow)
+	}
+	// Check cell offset / limit
+	r, err = tbl.ReadRow(ctx, "testrow", RowFilter(CellsPerRowLimitFilter(3)))
+	if err != nil {
+		t.Fatalf("Reading row: %v", err)
+	}
+	wantRow = Row{"ts": []ReadItem{
+		{Row: "testrow", Column: "ts:col", Timestamp: 3000, Value: []byte("val-3")},
+		{Row: "testrow", Column: "ts:col", Timestamp: 2000, Value: []byte("val-2")},
+		{Row: "testrow", Column: "ts:col", Timestamp: 1000, Value: []byte("val-1")},
+	}}
+	if !reflect.DeepEqual(r, wantRow) {
+		t.Errorf("Cell with multiple versions and CellsPerRowLimitFilter(3),\n got %v\nwant %v", r, wantRow)
+	}
+	r, err = tbl.ReadRow(ctx, "testrow", RowFilter(CellsPerRowOffsetFilter(3)))
+	if err != nil {
+		t.Fatalf("Reading row: %v", err)
+	}
+	wantRow = Row{"ts": []ReadItem{
+		{Row: "testrow", Column: "ts:col", Timestamp: 0, Value: []byte("val-0")},
+		{Row: "testrow", Column: "ts:col2", Timestamp: 3000, Value: []byte("val-3")},
+		{Row: "testrow", Column: "ts:col2", Timestamp: 2000, Value: []byte("val-2")},
+		{Row: "testrow", Column: "ts:col2", Timestamp: 1000, Value: []byte("val-1")},
+		{Row: "testrow", Column: "ts:col2", Timestamp: 0, Value: []byte("val-0")},
+	}}
+	if !reflect.DeepEqual(r, wantRow) {
+		t.Errorf("Cell with multiple versions and CellsPerRowOffsetFilter(3),\n got %v\nwant %v", r, wantRow)
 	}
 	// Check timestamp range filtering (with truncation)
 	r, err = tbl.ReadRow(ctx, "testrow", RowFilter(TimestampRangeFilterMicros(1001, 3000)))
@@ -492,6 +532,8 @@ func TestClientIntegration(t *testing.T) {
 	wantRow = Row{"ts": []ReadItem{
 		{Row: "testrow", Column: "ts:col", Timestamp: 2000, Value: []byte("val-2")},
 		{Row: "testrow", Column: "ts:col", Timestamp: 1000, Value: []byte("val-1")},
+		{Row: "testrow", Column: "ts:col2", Timestamp: 2000, Value: []byte("val-2")},
+		{Row: "testrow", Column: "ts:col2", Timestamp: 1000, Value: []byte("val-1")},
 	}}
 	if !reflect.DeepEqual(r, wantRow) {
 		t.Errorf("Cell with multiple versions and TimestampRangeFilter(1000, 3000),\n got %v\nwant %v", r, wantRow)
@@ -504,6 +546,9 @@ func TestClientIntegration(t *testing.T) {
 		{Row: "testrow", Column: "ts:col", Timestamp: 3000, Value: []byte("val-3")},
 		{Row: "testrow", Column: "ts:col", Timestamp: 2000, Value: []byte("val-2")},
 		{Row: "testrow", Column: "ts:col", Timestamp: 1000, Value: []byte("val-1")},
+		{Row: "testrow", Column: "ts:col2", Timestamp: 3000, Value: []byte("val-3")},
+		{Row: "testrow", Column: "ts:col2", Timestamp: 2000, Value: []byte("val-2")},
+		{Row: "testrow", Column: "ts:col2", Timestamp: 1000, Value: []byte("val-1")},
 	}}
 	if !reflect.DeepEqual(r, wantRow) {
 		t.Errorf("Cell with multiple versions and TimestampRangeFilter(1000, 0),\n got %v\nwant %v", r, wantRow)
@@ -553,6 +598,8 @@ func TestClientIntegration(t *testing.T) {
 	wantRow = Row{"ts": []ReadItem{
 		{Row: "testrow", Column: "ts:col", Timestamp: 3000, Value: []byte("val-3")},
 		{Row: "testrow", Column: "ts:col", Timestamp: 1000, Value: []byte("val-1")},
+		{Row: "testrow", Column: "ts:col2", Timestamp: 3000, Value: []byte("val-3")},
+		{Row: "testrow", Column: "ts:col2", Timestamp: 2000, Value: []byte("val-2")},
 	}}
 	if !reflect.DeepEqual(r, wantRow) {
 		t.Errorf("Cell with multiple versions and LatestNFilter(2), after deleting timestamp 2000,\n got %v\nwant %v", r, wantRow)

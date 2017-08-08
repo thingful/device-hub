@@ -1,12 +1,12 @@
-# Google Cloud for Go
+# Google Cloud Client Libraries for Go
 
 [![GoDoc](https://godoc.org/cloud.google.com/go?status.svg)](https://godoc.org/cloud.google.com/go)
+
+Go packages for [Google Cloud Platform](https://cloud.google.com) services.
 
 ``` go
 import "cloud.google.com/go"
 ```
-
-Go packages for Google Cloud Platform services.
 
 To install the packages on your system,
 
@@ -14,8 +14,8 @@ To install the packages on your system,
 $ go get -u cloud.google.com/go/...
 ```
 
-**NOTE:** These packages are under development, and may occasionally make
-backwards-incompatible changes.
+**NOTE:** Some of these packages are under development, and may occasionally
+make backwards-incompatible changes.
 
 **NOTE:** Github repo is a mirror of [https://code.googlesource.com/gocloud](https://code.googlesource.com/gocloud).
 
@@ -33,145 +33,39 @@ backwards-incompatible changes.
 
 ## News
 
-_March 17, 2017_
+_July 31, 2017_
 
-Breaking Pubsub changes.
-* Publish is now asynchronous
-([announcement](https://groups.google.com/d/topic/google-api-go-announce/aaqRDIQ3rvU/discussion)).
-* Subscription.Pull replaced by Subscription.Receive, which takes a callback ([announcement](https://groups.google.com/d/topic/google-api-go-announce/8pt6oetAdKc/discussion)).
-* Message.Done replaced with Message.Ack and Message.Nack.
+*v0.11.0*
+
+- Clients for spanner, pubsub and video are now in beta.
+
+- New client for DLP.
+
+- spanner: performance and testing improvements.
+
+- storage: requester-pays buckets are supported.
+
+- storage, profiler, bigtable, bigquery: bug fixes and other minor improvements.
+
+- pubsub: bug fixes and other minor improvements
+
+_June 17, 2017_
 
 
-_February 14, 2017_
+*v0.10.0*
 
-Release of a client library for Spanner. See
-the
-[blog post](https://cloudplatform.googleblog.com/2017/02/introducing-Cloud-Spanner-a-global-database-service-for-mission-critical-applications.html).
+- pubsub: Subscription.ModifyPushConfig replaced with Subscription.Update.
 
-Note that although the Spanner service is beta, the Go client library is alpha.
+- pubsub: Subscription.Receive now runs concurrently for higher throughput.
 
-_December 12, 2016_
+- vision: cloud.google.com/go/vision is deprecated. Use
+cloud.google.com/go/vision/apiv1 instead.
 
-Beta release of BigQuery, DataStore, Logging and Storage. See the
-[blog post](https://cloudplatform.googleblog.com/2016/12/announcing-new-google-cloud-client.html).
+- translation: now stable.
 
-Also, BigQuery now supports structs. Read a row directly into a struct with
-`RowIterator.Next`, and upload a row directly from a struct with `Uploader.Put`.
-You can also use field tags. See the [package documentation][cloud-bigquery-ref]
-for details.
+- trace: several changes to the surface. See the link below.
 
-_December 5, 2016_
-
-More changes to BigQuery:
-
-* The `ValueList` type was removed. It is no longer necessary. Instead of
-   ```go
-   var v ValueList
-   ... it.Next(&v) ..
-   ```
-   use
-
-   ```go
-   var v []Value
-   ... it.Next(&v) ...
-   ```
-
-* Previously, repeatedly calling `RowIterator.Next` on the same `[]Value` or
-  `ValueList` would append to the slice. Now each call resets the size to zero first.
-
-* Schema inference will infer the SQL type BYTES for a struct field of
-  type []byte. Previously it inferred STRING.
-
-* The types `uint`, `uint64` and `uintptr` are no longer supported in schema
-  inference. BigQuery's integer type is INT64, and those types may hold values
-  that are not correctly represented in a 64-bit signed integer.
-
-* The SQL types DATE, TIME and DATETIME are now supported. They correspond to
-  the `Date`, `Time` and `DateTime` types in the new `cloud.google.com/go/civil`
-  package.
-
-_November 17, 2016_
-
-Change to BigQuery: values from INTEGER columns will now be returned as int64,
-not int. This will avoid errors arising from large values on 32-bit systems.
-
-_November 8, 2016_
-
-New datastore feature: datastore now encodes your nested Go structs as Entity values,
-instead of a flattened list of the embedded struct's fields.
-This means that you may now have twice-nested slices, eg.
-```go
-type State struct {
-  Cities  []struct{
-    Populations []int
-  }
-}
-```
-
-See [the announcement](https://groups.google.com/forum/#!topic/google-api-go-announce/79jtrdeuJAg) for
-more details.
-
-_November 8, 2016_
-
-Breaking changes to datastore: contexts no longer hold namespaces; instead you
-must set a key's namespace explicitly. Also, key functions have been changed
-and renamed.
-
-* The WithNamespace function has been removed. To specify a namespace in a Query, use the Query.Namespace method:
-  ```go
-  q := datastore.NewQuery("Kind").Namespace("ns")
-  ```
-
-* All the fields of Key are exported. That means you can construct any Key with a struct literal:
-  ```go
-  k := &Key{Kind: "Kind",  ID: 37, Namespace: "ns"}
-  ```
-
-* As a result of the above, the Key methods Kind, ID, d.Name, Parent, SetParent and Namespace have been removed.
-
-* `NewIncompleteKey` has been removed, replaced by `IncompleteKey`. Replace
-  ```go
-  NewIncompleteKey(ctx, kind, parent)
-  ```
-  with
-  ```go
-  IncompleteKey(kind, parent)
-  ```
-  and if you do use namespaces, make sure you set the namespace on the returned key.
-
-* `NewKey` has been removed, replaced by `NameKey` and `IDKey`. Replace
-  ```go
-  NewKey(ctx, kind, name, 0, parent)
-  NewKey(ctx, kind, "", id, parent)
-  ```
-  with
-  ```go
-  NameKey(kind, name, parent)
-  IDKey(kind, id, parent)
-  ```
-  and if you do use namespaces, make sure you set the namespace on the returned key.
-
-* The `Done` variable has been removed. Replace `datastore.Done` with `iterator.Done`, from the package `google.golang.org/api/iterator`.
-
-* The `Client.Close` method will have a return type of error. It will return the result of closing the underlying gRPC connection.
-
-See [the announcement](https://groups.google.com/forum/#!topic/google-api-go-announce/hqXtM_4Ix-0) for
-more details.
-
-_October 27, 2016_
-
-Breaking change to bigquery: `NewGCSReference` is now a function,
-not a method on `Client`.
-
-New bigquery feature: `Table.LoaderFrom` now accepts a `ReaderSource`, enabling
-loading data into a table from a file or any `io.Reader`.
-
-_October 21, 2016_
-
-Breaking change to pubsub: removed `pubsub.Done`.
-
-Use `iterator.Done` instead, where `iterator` is the package
-`google.golang.org/api/iterator`.
+[Code changes required from v0.9.0.](https://github.com/GoogleCloudPlatform/google-cloud-go/blob/master/MIGRATION.md)
 
 
 [Older news](https://github.com/GoogleCloudPlatform/google-cloud-go/blob/master/old-news.md)
@@ -185,12 +79,16 @@ Google API                       | Status       | Package
 [Bigtable][cloud-bigtable]       | beta         | [`cloud.google.com/go/bigtable`][cloud-bigtable-ref]
 [BigQuery][cloud-bigquery]       | beta         | [`cloud.google.com/go/bigquery`][cloud-bigquery-ref]
 [Logging][cloud-logging]         | stable       | [`cloud.google.com/go/logging`][cloud-logging-ref]
-[Pub/Sub][cloud-pubsub]          | alpha        | [`cloud.google.com/go/pubsub`][cloud-pubsub-ref]
-[Vision][cloud-vision]           | beta         | [`cloud.google.com/go/vision`][cloud-vision-ref]
-[Language][cloud-language]       | alpha        | [`cloud.google.com/go/language/apiv1`][cloud-language-ref]
-[Speech][cloud-speech]           | alpha        | [`cloud.google.com/go/speech/apiv1`][cloud-speech-ref]
-[Spanner][cloud-spanner]         | alpha        | [`cloud.google.com/go/spanner`][cloud-spanner-ref]
-[Translation][cloud-translation] | beta         | [`cloud.google.com/go/translate`][cloud-translation-ref]
+[Monitoring][cloud-monitoring]   | alpha        | [`cloud.google.com/go/monitoring/apiv3`][cloud-monitoring-ref]
+[Pub/Sub][cloud-pubsub]          | beta         | [`cloud.google.com/go/pubsub`][cloud-pubsub-ref]
+[Vision][cloud-vision]           | beta         | [`cloud.google.com/go/vision/apiv1`][cloud-vision-ref]
+[Language][cloud-language]       | beta         | [`cloud.google.com/go/language/apiv1`][cloud-language-ref]
+[Speech][cloud-speech]           | beta         | [`cloud.google.com/go/speech/apiv1`][cloud-speech-ref]
+[Spanner][cloud-spanner]         | beta         | [`cloud.google.com/go/spanner`][cloud-spanner-ref]
+[Translation][cloud-translation] | stable       | [`cloud.google.com/go/translate`][cloud-translation-ref]
+[Trace][cloud-trace]             | alpha        | [`cloud.google.com/go/trace`][cloud-trace-ref]
+[Video Intelligence][cloud-video]| beta         | [`cloud.google.com/go/videointelligence/apiv1beta1`][cloud-video-ref]
+[ErrorReporting][cloud-errors]   | alpha        | [`cloud.google.com/go/errors`][cloud-errors-ref]
 
 
 > **Alpha status**: the API is still being actively developed. As a
@@ -531,8 +429,11 @@ for more information.
 [cloud-logging-docs]: https://cloud.google.com/logging/docs
 [cloud-logging-ref]: https://godoc.org/cloud.google.com/go/logging
 
-[cloud-vision]: https://cloud.google.com/vision/
-[cloud-vision-ref]: https://godoc.org/cloud.google.com/go/vision
+[cloud-monitoring]: https://cloud.google.com/monitoring/
+[cloud-monitoring-ref]: https://godoc.org/cloud.google.com/go/monitoring/apiv3
+
+[cloud-vision]: https://cloud.google.com/vision
+[cloud-vision-ref]: https://godoc.org/cloud.google.com/go/vision/apiv1
 
 [cloud-language]: https://cloud.google.com/natural-language
 [cloud-language-ref]: https://godoc.org/cloud.google.com/go/language/apiv1
@@ -546,5 +447,14 @@ for more information.
 
 [cloud-translation]: https://cloud.google.com/translation
 [cloud-translation-ref]: https://godoc.org/cloud.google.com/go/translation
+
+[cloud-trace]: https://cloud.google.com/trace/
+[cloud-trace-ref]: https://godoc.org/cloud.google.com/go/trace
+
+[cloud-video]: https://cloud.google.com/video-intelligence/
+[cloud-video-ref]: https://godoc.org/cloud.google.com/go/videointelligence/apiv1beta1
+
+[cloud-errors]: https://cloud.google.com/error-reporting/
+[cloud-errors-ref]: https://godoc.org/cloud.google.com/go/errors
 
 [default-creds]: https://developers.google.com/identity/protocols/application-default-credentials
