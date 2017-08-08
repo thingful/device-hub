@@ -15,6 +15,10 @@
 package bigquery
 
 import (
+	"errors"
+	"math/rand"
+	"os"
+	"sync"
 	"time"
 
 	"cloud.google.com/go/internal"
@@ -29,26 +33,23 @@ type Job struct {
 	projectID string
 	jobID     string
 
-	isQuery bool
+	isQuery          bool
+	destinationTable *bq.TableReference // table to read query results from
 }
 
 // JobFromID creates a Job which refers to an existing BigQuery job. The job
 // need not have been created by this package. For example, the job may have
 // been created in the BigQuery console.
 func (c *Client) JobFromID(ctx context.Context, id string) (*Job, error) {
-	jobType, err := c.service.getJobType(ctx, c.projectID, id)
+	job, err := c.service.getJob(ctx, c.projectID, id)
 	if err != nil {
 		return nil, err
 	}
-
-	return &Job{
-		c:         c,
-		projectID: c.projectID,
-		jobID:     id,
-		isQuery:   jobType == queryJobType,
-	}, nil
+	job.c = c
+	return job, nil
 }
 
+// ID returns the job's ID.
 func (j *Job) ID() string {
 	return j.jobID
 }
@@ -80,15 +81,33 @@ type JobStatus struct {
 // projectID must be non-empty.
 func setJobRef(job *bq.Job, jobID, projectID string) {
 	if jobID == "" {
-		return
+		// Generate an ID on the client so that insertJob can be idempotent.
+		jobID = randomJobID()
 	}
 	// We don't check whether projectID is empty; the server will return an
 	// error when it encounters the resulting JobReference.
-
 	job.JobReference = &bq.JobReference{
 		JobId:     jobID,
 		ProjectId: projectID,
 	}
+}
+
+const alphanum = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+
+var (
+	rngMu sync.Mutex
+	rng   = rand.New(rand.NewSource(time.Now().UnixNano() ^ int64(os.Getpid())))
+)
+
+func randomJobID() string {
+	// As of August 2017, the BigQuery service uses 27 alphanumeric characters.
+	var b [27]byte
+	rngMu.Lock()
+	for i := 0; i < len(b); i++ {
+		b[i] = alphanum[rng.Intn(len(alphanum))]
+	}
+	rngMu.Unlock()
+	return string(b[:])
 }
 
 // Done reports whether the job has completed.
@@ -132,6 +151,19 @@ func (j *Job) Cancel(ctx context.Context) error {
 // Wait returns nil if the status was retrieved successfully, even if
 // status.Err() != nil. So callers must check both errors. See the example.
 func (j *Job) Wait(ctx context.Context) (*JobStatus, error) {
+	if j.isQuery {
+		// We can avoid polling for query jobs.
+		if _, err := j.c.service.waitForQuery(ctx, j.projectID, j.jobID); err != nil {
+			return nil, err
+		}
+		// Note: extra RPC even if you just want to wait for the query to finish.
+		js, err := j.Status(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return js, nil
+	}
+	// Non-query jobs must poll.
 	var js *JobStatus
 	err := internal.Retry(ctx, gax.Backoff{}, func() (stop bool, err error) {
 		js, err = j.Status(ctx)
@@ -147,6 +179,35 @@ func (j *Job) Wait(ctx context.Context) (*JobStatus, error) {
 		return nil, err
 	}
 	return js, nil
+}
+
+// Read fetches the results of a query job.
+// If j is not a query job, Read returns an error.
+func (j *Job) Read(ctx context.Context) (*RowIterator, error) {
+	if !j.isQuery {
+		return nil, errors.New("bigquery: cannot read from a non-query job")
+	}
+	var projectID string
+	if j.destinationTable != nil {
+		projectID = j.destinationTable.ProjectId
+	} else {
+		projectID = j.c.projectID
+	}
+
+	schema, err := j.c.service.waitForQuery(ctx, projectID, j.jobID)
+	if err != nil {
+		return nil, err
+	}
+	// The destination table should only be nil if there was a query error.
+	if j.destinationTable == nil {
+		return nil, errors.New("bigquery: query job missing destination table")
+	}
+	return newRowIterator(ctx, j.c.service, &readTableConf{
+		projectID: j.destinationTable.ProjectId,
+		datasetID: j.destinationTable.DatasetId,
+		tableID:   j.destinationTable.TableId,
+		schema:    schema,
+	}), nil
 }
 
 // JobStatistics contains statistics about a job.

@@ -9,6 +9,8 @@ import:
   version: ^1.0.0
 - package: github.com/speps/go-hashids
   version: 2aa1a76a4e7c76dbe7d39f40661ab0261d70153a
+- package: github.com/davecgh/go-spew/spew
+  version: adab96458c51a58dc1783b3335dcce5461522e75
 testImport:
 - package: github.com/stretchr/testify
   version: ^1.1.4
