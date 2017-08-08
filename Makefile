@@ -28,8 +28,8 @@ check-license: ## check the license header in every code file
 .PHONY: check-license
 
 check-vendor-licenses: ## check if licenses of project dependencies meet project requirements 
-	@goliscan check --direct-only
-	@goliscan check --indirect-only
+	@goliscan check --direct-only -strict
+	@goliscan check --indirect-only -strict
 .PHONY: check-vendor-licenses
 
 test: ## run tests
