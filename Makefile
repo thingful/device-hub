@@ -68,7 +68,7 @@ proto: ## regenerate protobuf files
 .PHONY: proto
 
 proto-verify: proto ## verify proto binding has been generated
-	git diff --exit-code > /dev/null
+	git diff --exit-code
 
 docker_up: ## run dependencies as docker containers
 	docker-compose up -d
