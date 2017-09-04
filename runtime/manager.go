@@ -314,6 +314,7 @@ func profileFromEntity(entity *proto.Entity) (*store.Profile, error) {
 }
 
 func (m *Manager) addPipe(pipe *Pipe) error {
+
 	m.Lock()
 
 	_, alreadyExists := m.pipes[pipe.Uri]
@@ -326,5 +327,15 @@ func (m *Manager) addPipe(pipe *Pipe) error {
 	m.pipes[pipe.Uri] = pipe
 
 	m.Unlock()
-	return m.Start()
+	err := m.Start()
+
+	if err != nil {
+		// if there is an error remove from the inmemory list of pipes
+		m.Lock()
+		delete(m.pipes, pipe.Uri)
+		m.Unlock()
+	}
+
+	return err
+
 }
