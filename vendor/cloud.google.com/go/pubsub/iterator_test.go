@@ -123,8 +123,9 @@ func TestAfterAbortReturnsNoMoreThanOneMessage(t *testing.T) {
 	// Each test case is excercised by making two concurrent blocking calls on a
 	// messageIterator, and then aborting the iterator.
 	// The result should be one call to Next returning a message, and the other returning an error.
-	t.Skip(`This test has subtle timing dependencies, making it flaky.
-It is not worth fixing because iterators will be removed shortly.`)
+	if useStreamingPull {
+		t.Skip("iterator tests are for polling pull only")
+	}
 	type testCase struct {
 		abort func(*messageIterator, context.CancelFunc)
 		// want is the error that should be returned from one Next invocation.

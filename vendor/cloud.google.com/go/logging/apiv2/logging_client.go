@@ -49,7 +49,13 @@ type CallOptions struct {
 func defaultClientOptions() []option.ClientOption {
 	return []option.ClientOption{
 		option.WithEndpoint("logging.googleapis.com:443"),
-		option.WithScopes(DefaultAuthScopes()...),
+		option.WithScopes(
+			"https://www.googleapis.com/auth/cloud-platform",
+			"https://www.googleapis.com/auth/cloud-platform.read-only",
+			"https://www.googleapis.com/auth/logging.admin",
+			"https://www.googleapis.com/auth/logging.read",
+			"https://www.googleapis.com/auth/logging.write",
+		),
 	}
 }
 
@@ -59,7 +65,17 @@ func defaultCallOptions() *CallOptions {
 			gax.WithRetry(func() gax.Retryer {
 				return gax.OnCodes([]codes.Code{
 					codes.DeadlineExceeded,
-					codes.Internal,
+					codes.Unavailable,
+				}, gax.Backoff{
+					Initial:    100 * time.Millisecond,
+					Max:        1000 * time.Millisecond,
+					Multiplier: 1.2,
+				})
+			}),
+		},
+		{"default", "non_idempotent"}: {
+			gax.WithRetry(func() gax.Retryer {
+				return gax.OnCodes([]codes.Code{
 					codes.Unavailable,
 				}, gax.Backoff{
 					Initial:    100 * time.Millisecond,
@@ -72,7 +88,6 @@ func defaultCallOptions() *CallOptions {
 			gax.WithRetry(func() gax.Retryer {
 				return gax.OnCodes([]codes.Code{
 					codes.DeadlineExceeded,
-					codes.Internal,
 					codes.Unavailable,
 				}, gax.Backoff{
 					Initial:    100 * time.Millisecond,
@@ -103,7 +118,7 @@ type Client struct {
 	CallOptions *CallOptions
 
 	// The metadata to be sent with each request.
-	xGoogHeader []string
+	xGoogHeader string
 }
 
 // NewClient creates a new logging service v2 client.
@@ -141,11 +156,11 @@ func (c *Client) Close() error {
 func (c *Client) SetGoogleClientInfo(keyval ...string) {
 	kv := append([]string{"gl-go", version.Go()}, keyval...)
 	kv = append(kv, "gapic", version.Repo, "gax", gax.Version, "grpc", grpc.Version)
-	c.xGoogHeader = []string{gax.XGoogHeader(kv...)}
+	c.xGoogHeader = gax.XGoogHeader(kv...)
 }
 
-// ProjectPath returns the path for the project resource.
-func ProjectPath(project string) string {
+// LoggingProjectPath returns the path for the project resource.
+func LoggingProjectPath(project string) string {
 	path, err := loggingProjectPathTemplate.Render(map[string]string{
 		"project": project,
 	})
@@ -155,8 +170,8 @@ func ProjectPath(project string) string {
 	return path
 }
 
-// LogPath returns the path for the log resource.
-func LogPath(project, log string) string {
+// LoggingLogPath returns the path for the log resource.
+func LoggingLogPath(project, log string) string {
 	path, err := loggingLogPathTemplate.Render(map[string]string{
 		"project": project,
 		"log":     log,

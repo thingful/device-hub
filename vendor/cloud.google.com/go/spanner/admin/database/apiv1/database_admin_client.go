@@ -22,7 +22,6 @@ import (
 
 	"cloud.google.com/go/internal/version"
 	"cloud.google.com/go/longrunning"
-	lroauto "cloud.google.com/go/longrunning/autogen"
 	gax "github.com/googleapis/gax-go"
 	"golang.org/x/net/context"
 	"google.golang.org/api/iterator"
@@ -56,7 +55,10 @@ type DatabaseAdminCallOptions struct {
 func defaultDatabaseAdminClientOptions() []option.ClientOption {
 	return []option.ClientOption{
 		option.WithEndpoint("spanner.googleapis.com:443"),
-		option.WithScopes(DefaultAuthScopes()...),
+		option.WithScopes(
+			"https://www.googleapis.com/auth/cloud-platform",
+			"https://www.googleapis.com/auth/spanner.admin",
+		),
 	}
 }
 
@@ -66,6 +68,17 @@ func defaultDatabaseAdminCallOptions() *DatabaseAdminCallOptions {
 			gax.WithRetry(func() gax.Retryer {
 				return gax.OnCodes([]codes.Code{
 					codes.DeadlineExceeded,
+					codes.Unavailable,
+				}, gax.Backoff{
+					Initial:    1000 * time.Millisecond,
+					Max:        32000 * time.Millisecond,
+					Multiplier: 1.3,
+				})
+			}),
+		},
+		{"default", "non_idempotent"}: {
+			gax.WithRetry(func() gax.Retryer {
+				return gax.OnCodes([]codes.Code{
 					codes.Unavailable,
 				}, gax.Backoff{
 					Initial:    1000 * time.Millisecond,
@@ -96,16 +109,11 @@ type DatabaseAdminClient struct {
 	// The gRPC API client.
 	databaseAdminClient databasepb.DatabaseAdminClient
 
-	// LROClient is used internally to handle longrunning operations.
-	// It is exposed so that its CallOptions can be modified if required.
-	// Users should not Close this client.
-	LROClient *lroauto.OperationsClient
-
 	// The call options for this service.
 	CallOptions *DatabaseAdminCallOptions
 
 	// The metadata to be sent with each request.
-	xGoogHeader []string
+	xGoogHeader string
 }
 
 // NewDatabaseAdminClient creates a new database admin client.
@@ -127,17 +135,6 @@ func NewDatabaseAdminClient(ctx context.Context, opts ...option.ClientOption) (*
 		databaseAdminClient: databasepb.NewDatabaseAdminClient(conn),
 	}
 	c.SetGoogleClientInfo()
-
-	c.LROClient, err = lroauto.NewOperationsClient(ctx, option.WithGRPCConn(conn))
-	if err != nil {
-		// This error "should not happen", since we are just reusing old connection
-		// and never actually need to dial.
-		// If this does happen, we could leak conn. However, we cannot close conn:
-		// If the user invoked the function with option.WithGRPCConn,
-		// we would close a connection that's still in use.
-		// TODO(pongad): investigate error conditions.
-		return nil, err
-	}
 	return c, nil
 }
 
@@ -158,7 +155,7 @@ func (c *DatabaseAdminClient) Close() error {
 func (c *DatabaseAdminClient) SetGoogleClientInfo(keyval ...string) {
 	kv := append([]string{"gl-go", version.Go()}, keyval...)
 	kv = append(kv, "gapic", version.Repo, "gax", gax.Version, "grpc", grpc.Version)
-	c.xGoogHeader = []string{gax.XGoogHeader(kv...)}
+	c.xGoogHeader = gax.XGoogHeader(kv...)
 }
 
 // DatabaseAdminInstancePath returns the path for the instance resource.
@@ -242,7 +239,8 @@ func (c *DatabaseAdminClient) CreateDatabase(ctx context.Context, req *databasep
 		return nil, err
 	}
 	return &CreateDatabaseOperation{
-		lro: longrunning.InternalNewOperation(c.LROClient, resp),
+		lro:         longrunning.InternalNewOperation(c.Connection(), resp),
+		xGoogHeader: c.xGoogHeader,
 	}, nil
 }
 
@@ -282,7 +280,8 @@ func (c *DatabaseAdminClient) UpdateDatabaseDdl(ctx context.Context, req *databa
 		return nil, err
 	}
 	return &UpdateDatabaseDdlOperation{
-		lro: longrunning.InternalNewOperation(c.LROClient, resp),
+		lro:         longrunning.InternalNewOperation(c.Connection(), resp),
+		xGoogHeader: c.xGoogHeader,
 	}, nil
 }
 
@@ -422,22 +421,27 @@ func (it *DatabaseIterator) takeBuf() interface{} {
 // CreateDatabaseOperation manages a long-running operation from CreateDatabase.
 type CreateDatabaseOperation struct {
 	lro *longrunning.Operation
+
+	// The metadata to be sent with each request.
+	xGoogHeader string
 }
 
 // CreateDatabaseOperation returns a new CreateDatabaseOperation from a given name.
 // The name must be that of a previously created CreateDatabaseOperation, possibly from a different process.
 func (c *DatabaseAdminClient) CreateDatabaseOperation(name string) *CreateDatabaseOperation {
 	return &CreateDatabaseOperation{
-		lro: longrunning.InternalNewOperation(c.LROClient, &longrunningpb.Operation{Name: name}),
+		lro:         longrunning.InternalNewOperation(c.Connection(), &longrunningpb.Operation{Name: name}),
+		xGoogHeader: c.xGoogHeader,
 	}
 }
 
 // Wait blocks until the long-running operation is completed, returning the response and any errors encountered.
 //
 // See documentation of Poll for error-handling information.
-func (op *CreateDatabaseOperation) Wait(ctx context.Context, opts ...gax.CallOption) (*databasepb.Database, error) {
+func (op *CreateDatabaseOperation) Wait(ctx context.Context) (*databasepb.Database, error) {
 	var resp databasepb.Database
-	if err := op.lro.Wait(ctx, &resp, opts...); err != nil {
+	ctx = insertXGoog(ctx, op.xGoogHeader)
+	if err := op.lro.Wait(ctx, &resp); err != nil {
 		return nil, err
 	}
 	return &resp, nil
@@ -452,9 +456,10 @@ func (op *CreateDatabaseOperation) Wait(ctx context.Context, opts ...gax.CallOpt
 // If Poll succeeds and the operation has completed successfully,
 // op.Done will return true, and the response of the operation is returned.
 // If Poll succeeds and the operation has not completed, the returned response and error are both nil.
-func (op *CreateDatabaseOperation) Poll(ctx context.Context, opts ...gax.CallOption) (*databasepb.Database, error) {
+func (op *CreateDatabaseOperation) Poll(ctx context.Context) (*databasepb.Database, error) {
 	var resp databasepb.Database
-	if err := op.lro.Poll(ctx, &resp, opts...); err != nil {
+	ctx = insertXGoog(ctx, op.xGoogHeader)
+	if err := op.lro.Poll(ctx, &resp); err != nil {
 		return nil, err
 	}
 	if !op.Done() {
@@ -488,24 +493,29 @@ func (op *CreateDatabaseOperation) Name() string {
 	return op.lro.Name()
 }
 
-// UpdateDatabaseDdlOperation manages a long-running operation from UpdateDatabaseDdl.
+// UpdateDatabaseDdlOperation manages a long-running operation with no result.
 type UpdateDatabaseDdlOperation struct {
 	lro *longrunning.Operation
+
+	// The metadata to be sent with each request.
+	xGoogHeader string
 }
 
 // UpdateDatabaseDdlOperation returns a new UpdateDatabaseDdlOperation from a given name.
 // The name must be that of a previously created UpdateDatabaseDdlOperation, possibly from a different process.
 func (c *DatabaseAdminClient) UpdateDatabaseDdlOperation(name string) *UpdateDatabaseDdlOperation {
 	return &UpdateDatabaseDdlOperation{
-		lro: longrunning.InternalNewOperation(c.LROClient, &longrunningpb.Operation{Name: name}),
+		lro:         longrunning.InternalNewOperation(c.Connection(), &longrunningpb.Operation{Name: name}),
+		xGoogHeader: c.xGoogHeader,
 	}
 }
 
 // Wait blocks until the long-running operation is completed, returning any error encountered.
 //
 // See documentation of Poll for error-handling information.
-func (op *UpdateDatabaseDdlOperation) Wait(ctx context.Context, opts ...gax.CallOption) error {
-	return op.lro.Wait(ctx, nil, opts...)
+func (op *UpdateDatabaseDdlOperation) Wait(ctx context.Context) error {
+	ctx = insertXGoog(ctx, op.xGoogHeader)
+	return op.lro.Wait(ctx, nil)
 }
 
 // Poll fetches the latest state of the long-running operation.
@@ -515,8 +525,9 @@ func (op *UpdateDatabaseDdlOperation) Wait(ctx context.Context, opts ...gax.Call
 // If Poll fails, the error is returned and op is unmodified. If Poll succeeds and
 // the operation has completed with failure, the error is returned and op.Done will return true.
 // If Poll succeeds and the operation has completed successfully, op.Done will return true.
-func (op *UpdateDatabaseDdlOperation) Poll(ctx context.Context, opts ...gax.CallOption) error {
-	return op.lro.Poll(ctx, nil, opts...)
+func (op *UpdateDatabaseDdlOperation) Poll(ctx context.Context) error {
+	ctx = insertXGoog(ctx, op.xGoogHeader)
+	return op.lro.Poll(ctx, nil)
 }
 
 // Metadata returns metadata associated with the long-running operation.

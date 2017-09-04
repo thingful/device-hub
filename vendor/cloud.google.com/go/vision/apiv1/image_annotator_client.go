@@ -37,7 +37,9 @@ type ImageAnnotatorCallOptions struct {
 func defaultImageAnnotatorClientOptions() []option.ClientOption {
 	return []option.ClientOption{
 		option.WithEndpoint("vision.googleapis.com:443"),
-		option.WithScopes(DefaultAuthScopes()...),
+		option.WithScopes(
+			"https://www.googleapis.com/auth/cloud-platform",
+		),
 	}
 }
 
@@ -73,7 +75,7 @@ type ImageAnnotatorClient struct {
 	CallOptions *ImageAnnotatorCallOptions
 
 	// The metadata to be sent with each request.
-	xGoogHeader []string
+	xGoogHeader string
 }
 
 // NewImageAnnotatorClient creates a new image annotator client.
@@ -113,7 +115,7 @@ func (c *ImageAnnotatorClient) Close() error {
 func (c *ImageAnnotatorClient) SetGoogleClientInfo(keyval ...string) {
 	kv := append([]string{"gl-go", version.Go()}, keyval...)
 	kv = append(kv, "gapic", version.Repo, "gax", gax.Version, "grpc", grpc.Version)
-	c.xGoogHeader = []string{gax.XGoogHeader(kv...)}
+	c.xGoogHeader = gax.XGoogHeader(kv...)
 }
 
 // BatchAnnotateImages run image detection and annotation for a batch of images.

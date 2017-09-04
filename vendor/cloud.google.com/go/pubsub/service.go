@@ -16,8 +16,8 @@ package pubsub
 
 import (
 	"fmt"
+	"io"
 	"math"
-	"strings"
 	"sync"
 	"time"
 
@@ -26,14 +26,11 @@ import (
 	"cloud.google.com/go/iam"
 	"cloud.google.com/go/internal/version"
 	vkit "cloud.google.com/go/pubsub/apiv1"
-	durpb "github.com/golang/protobuf/ptypes/duration"
-	gax "github.com/googleapis/gax-go"
 	"golang.org/x/net/context"
 	"google.golang.org/api/option"
 	pb "google.golang.org/genproto/googleapis/pubsub/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 type nextStringFunc func() (string, error)
@@ -44,12 +41,12 @@ type nextSnapshotFunc func() (*snapshotConfig, error)
 // The single implementation, *apiService, contains all the knowledge
 // of the generated PubSub API (except for that present in legacy code).
 type service interface {
-	createSubscription(ctx context.Context, subName string, cfg SubscriptionConfig) error
-	getSubscriptionConfig(ctx context.Context, subName string) (SubscriptionConfig, string, error)
+	createSubscription(ctx context.Context, topicName, subName string, ackDeadline time.Duration, pushConfig *PushConfig) error
+	getSubscriptionConfig(ctx context.Context, subName string) (*SubscriptionConfig, string, error)
 	listProjectSubscriptions(ctx context.Context, projName string) nextStringFunc
 	deleteSubscription(ctx context.Context, name string) error
 	subscriptionExists(ctx context.Context, name string) (bool, error)
-	modifyPushConfig(ctx context.Context, subName string, conf PushConfig) error
+	modifyPushConfig(ctx context.Context, subName string, conf *PushConfig) error
 
 	createTopic(ctx context.Context, name string) error
 	deleteTopic(ctx context.Context, name string) error
@@ -112,50 +109,34 @@ func (s *apiService) close() error {
 	return err
 }
 
-func (s *apiService) createSubscription(ctx context.Context, subName string, cfg SubscriptionConfig) error {
+func (s *apiService) createSubscription(ctx context.Context, topicName, subName string, ackDeadline time.Duration, pushConfig *PushConfig) error {
 	var rawPushConfig *pb.PushConfig
-	if cfg.PushConfig.Endpoint != "" || len(cfg.PushConfig.Attributes) != 0 {
+	if pushConfig != nil {
 		rawPushConfig = &pb.PushConfig{
-			Attributes:   cfg.PushConfig.Attributes,
-			PushEndpoint: cfg.PushConfig.Endpoint,
+			Attributes:   pushConfig.Attributes,
+			PushEndpoint: pushConfig.Endpoint,
 		}
 	}
-	var retentionDuration *durpb.Duration
-	if cfg.retentionDuration != 0 {
-		retentionDuration = ptypes.DurationProto(cfg.retentionDuration)
-	}
-
 	_, err := s.subc.CreateSubscription(ctx, &pb.Subscription{
-		Name:                     subName,
-		Topic:                    cfg.Topic.name,
-		PushConfig:               rawPushConfig,
-		AckDeadlineSeconds:       trunc32(int64(cfg.AckDeadline.Seconds())),
-		RetainAckedMessages:      cfg.retainAckedMessages,
-		MessageRetentionDuration: retentionDuration,
+		Name:               subName,
+		Topic:              topicName,
+		PushConfig:         rawPushConfig,
+		AckDeadlineSeconds: trunc32(int64(ackDeadline.Seconds())),
 	})
 	return err
 }
 
-func (s *apiService) getSubscriptionConfig(ctx context.Context, subName string) (SubscriptionConfig, string, error) {
+func (s *apiService) getSubscriptionConfig(ctx context.Context, subName string) (*SubscriptionConfig, string, error) {
 	rawSub, err := s.subc.GetSubscription(ctx, &pb.GetSubscriptionRequest{Subscription: subName})
 	if err != nil {
-		return SubscriptionConfig{}, "", err
+		return nil, "", err
 	}
-	var rd time.Duration
-	// TODO(pongad): Remove nil-check after white list is removed.
-	if rawSub.MessageRetentionDuration != nil {
-		if rd, err = ptypes.Duration(rawSub.MessageRetentionDuration); err != nil {
-			return SubscriptionConfig{}, "", err
-		}
-	}
-	sub := SubscriptionConfig{
+	sub := &SubscriptionConfig{
 		AckDeadline: time.Second * time.Duration(rawSub.AckDeadlineSeconds),
 		PushConfig: PushConfig{
 			Endpoint:   rawSub.PushConfig.PushEndpoint,
 			Attributes: rawSub.PushConfig.Attributes,
 		},
-		retainAckedMessages: rawSub.RetainAckedMessages,
-		retentionDuration:   rd,
 	}
 	return sub, rawSub.Topic, nil
 }
@@ -257,7 +238,6 @@ const (
 	maxPayload       = 512 * 1024
 	reqFixedOverhead = 100
 	overheadPerID    = 3
-	maxSendRecvBytes = 20 * 1024 * 1024 // 20M
 )
 
 // splitAckIDs splits ids into two slices, the first of which contains at most maxPayload bytes of ackID data.
@@ -283,7 +263,7 @@ func (s *apiService) fetchMessages(ctx context.Context, subName string, maxMessa
 	resp, err := s.subc.Pull(ctx, &pb.PullRequest{
 		Subscription: subName,
 		MaxMessages:  maxMessages,
-	}, gax.WithGRPCOptions(grpc.MaxCallRecvMsgSize(maxSendRecvBytes)))
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -313,14 +293,14 @@ func (s *apiService) publishMessages(ctx context.Context, topicName string, msgs
 	resp, err := s.pubc.Publish(ctx, &pb.PublishRequest{
 		Topic:    topicName,
 		Messages: rawMsgs,
-	}, gax.WithGRPCOptions(grpc.MaxCallSendMsgSize(maxSendRecvBytes)))
+	})
 	if err != nil {
 		return nil, err
 	}
 	return resp.MessageIds, nil
 }
 
-func (s *apiService) modifyPushConfig(ctx context.Context, subName string, conf PushConfig) error {
+func (s *apiService) modifyPushConfig(ctx context.Context, subName string, conf *PushConfig) error {
 	return s.subc.ModifyPushConfig(ctx, &pb.ModifyPushConfigRequest{
 		Subscription: subName,
 		PushConfig: &pb.PushConfig{
@@ -384,16 +364,16 @@ func (p *streamingPuller) openLocked() {
 		return
 	}
 	// No opens in flight; start one.
-	// Keep the lock held, to avoid a race where we
-	// close the old stream while opening a new one.
 	p.inFlight = true
-	spc, err := p.subc.StreamingPull(p.ctx, gax.WithGRPCOptions(grpc.MaxCallRecvMsgSize(maxSendRecvBytes)))
+	p.c.L.Unlock()
+	spc, err := p.subc.StreamingPull(p.ctx)
 	if err == nil {
 		err = spc.Send(&pb.StreamingPullRequest{
 			Subscription:             p.subName,
 			StreamAckDeadlineSeconds: p.ackDeadlineSecs,
 		})
 	}
+	p.c.L.Lock()
 	p.spc = spc
 	p.err = err
 	p.inFlight = false
@@ -407,14 +387,9 @@ func (p *streamingPuller) call(f func(pb.Subscriber_StreamingPullClient) error) 
 	for p.inFlight {
 		p.c.Wait()
 	}
+	// TODO(jba): better retry strategy.
 	var err error
-	var bo gax.Backoff
-	for {
-		select {
-		case <-p.ctx.Done():
-			p.err = p.ctx.Err()
-		default:
-		}
+	for i := 0; i < 3; i++ {
 		if p.err != nil {
 			return p.err
 		}
@@ -426,33 +401,19 @@ func (p *streamingPuller) call(f func(pb.Subscriber_StreamingPullClient) error) 
 		p.c.L.Unlock()
 		err = f(spc)
 		p.c.L.Lock()
-		if !p.closed && err != nil && isRetryable(err) {
-			// Sleep with exponential backoff. Normally we wouldn't hold the lock while sleeping,
-			// but here it can't do any harm, since the stream is broken anyway.
-			gax.Sleep(p.ctx, bo.Pause())
+		if !p.closed && (err == io.EOF || grpc.Code(err) == codes.Unavailable) {
+			time.Sleep(500 * time.Millisecond)
 			p.openLocked()
 			continue
 		}
-		// Not an error, or not a retryable error; stop retrying.
+		// Not a retry-able error; fail permanently.
+		// TODO(jba): for some errors, should we retry f (the Send or Recv)
+		// but not re-open the stream?
 		p.err = err
 		return err
 	}
-}
-
-// Logic from https://github.com/GoogleCloudPlatform/google-cloud-java/blob/master/google-cloud-pubsub/src/main/java/com/google/cloud/pubsub/v1/StatusUtil.java.
-func isRetryable(err error) bool {
-	s, ok := status.FromError(err)
-	if !ok { // includes io.EOF, normal stream close, which causes us to reopen
-		return true
-	}
-	switch s.Code() {
-	case codes.DeadlineExceeded, codes.Internal, codes.Canceled, codes.ResourceExhausted:
-		return true
-	case codes.Unavailable:
-		return !strings.Contains(s.Message(), "Server shutdownNow invoked")
-	default:
-		return false
-	}
+	p.err = fmt.Errorf("retry exceeded; last error was %v", err)
+	return p.err
 }
 
 func (p *streamingPuller) fetchMessages() ([]*Message, error) {
@@ -488,8 +449,8 @@ func (p *streamingPuller) send(req *pb.StreamingPullRequest) error {
 func (p *streamingPuller) closeSend() {
 	p.mu.Lock()
 	p.closed = true
-	p.spc.CloseSend()
 	p.mu.Unlock()
+	p.spc.CloseSend()
 }
 
 // Split req into a prefix that is smaller than maxSize, and a remainder.
@@ -563,7 +524,7 @@ func (s *apiService) listProjectSnapshots(ctx context.Context, projName string) 
 }
 
 func (s *apiService) toSnapshotConfig(snap *pb.Snapshot) (*snapshotConfig, error) {
-	exp, err := ptypes.Timestamp(snap.ExpireTime)
+	exp, err := ptypes.Timestamp(snap.ExpirationTime)
 	if err != nil {
 		return nil, err
 	}

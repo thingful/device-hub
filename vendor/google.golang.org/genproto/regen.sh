@@ -52,7 +52,7 @@ if [ -z "$PROTOBUF" ]; then
   # The protoc include directory is actually the "src" directory of the repo.
   protodir="$proto_repo_dir/src"
 else
-  protodir="$PROTOBUF/src"
+  protodir="$PROTOBUF"
 fi
 
 if [ -z "$GOOGLEAPIS" ]; then
@@ -75,3 +75,4 @@ echo 1>&2 "Checking that the libraries build..."
 go build -v ./...
 
 echo 1>&2 "All done!"
+

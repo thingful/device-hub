@@ -59,7 +59,10 @@ type IamCallOptions struct {
 func defaultIamClientOptions() []option.ClientOption {
 	return []option.ClientOption{
 		option.WithEndpoint("iam.googleapis.com:443"),
-		option.WithScopes(DefaultAuthScopes()...),
+		option.WithScopes(
+			"https://www.googleapis.com/auth/cloud-platform",
+			"https://www.googleapis.com/auth/iam",
+		),
 	}
 }
 
@@ -69,6 +72,17 @@ func defaultIamCallOptions() *IamCallOptions {
 			gax.WithRetry(func() gax.Retryer {
 				return gax.OnCodes([]codes.Code{
 					codes.DeadlineExceeded,
+					codes.Unavailable,
+				}, gax.Backoff{
+					Initial:    100 * time.Millisecond,
+					Max:        60000 * time.Millisecond,
+					Multiplier: 1.3,
+				})
+			}),
+		},
+		{"default", "non_idempotent"}: {
+			gax.WithRetry(func() gax.Retryer {
+				return gax.OnCodes([]codes.Code{
 					codes.Unavailable,
 				}, gax.Backoff{
 					Initial:    100 * time.Millisecond,
@@ -108,7 +122,7 @@ type IamClient struct {
 	CallOptions *IamCallOptions
 
 	// The metadata to be sent with each request.
-	xGoogHeader []string
+	xGoogHeader string
 }
 
 // NewIamClient creates a new iam client.
@@ -161,7 +175,7 @@ func (c *IamClient) Close() error {
 func (c *IamClient) SetGoogleClientInfo(keyval ...string) {
 	kv := append([]string{"gl-go", version.Go()}, keyval...)
 	kv = append(kv, "gapic", version.Repo, "gax", gax.Version, "grpc", grpc.Version)
-	c.xGoogHeader = []string{gax.XGoogHeader(kv...)}
+	c.xGoogHeader = gax.XGoogHeader(kv...)
 }
 
 // IamProjectPath returns the path for the project resource.

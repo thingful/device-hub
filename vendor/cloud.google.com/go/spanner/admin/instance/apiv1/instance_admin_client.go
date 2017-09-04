@@ -22,7 +22,6 @@ import (
 
 	"cloud.google.com/go/internal/version"
 	"cloud.google.com/go/longrunning"
-	lroauto "cloud.google.com/go/longrunning/autogen"
 	gax "github.com/googleapis/gax-go"
 	"golang.org/x/net/context"
 	"google.golang.org/api/iterator"
@@ -58,7 +57,10 @@ type InstanceAdminCallOptions struct {
 func defaultInstanceAdminClientOptions() []option.ClientOption {
 	return []option.ClientOption{
 		option.WithEndpoint("spanner.googleapis.com:443"),
-		option.WithScopes(DefaultAuthScopes()...),
+		option.WithScopes(
+			"https://www.googleapis.com/auth/cloud-platform",
+			"https://www.googleapis.com/auth/spanner.admin",
+		),
 	}
 }
 
@@ -68,6 +70,17 @@ func defaultInstanceAdminCallOptions() *InstanceAdminCallOptions {
 			gax.WithRetry(func() gax.Retryer {
 				return gax.OnCodes([]codes.Code{
 					codes.DeadlineExceeded,
+					codes.Unavailable,
+				}, gax.Backoff{
+					Initial:    1000 * time.Millisecond,
+					Max:        32000 * time.Millisecond,
+					Multiplier: 1.3,
+				})
+			}),
+		},
+		{"default", "non_idempotent"}: {
+			gax.WithRetry(func() gax.Retryer {
+				return gax.OnCodes([]codes.Code{
 					codes.Unavailable,
 				}, gax.Backoff{
 					Initial:    1000 * time.Millisecond,
@@ -99,16 +112,11 @@ type InstanceAdminClient struct {
 	// The gRPC API client.
 	instanceAdminClient instancepb.InstanceAdminClient
 
-	// LROClient is used internally to handle longrunning operations.
-	// It is exposed so that its CallOptions can be modified if required.
-	// Users should not Close this client.
-	LROClient *lroauto.OperationsClient
-
 	// The call options for this service.
 	CallOptions *InstanceAdminCallOptions
 
 	// The metadata to be sent with each request.
-	xGoogHeader []string
+	xGoogHeader string
 }
 
 // NewInstanceAdminClient creates a new instance admin client.
@@ -146,17 +154,6 @@ func NewInstanceAdminClient(ctx context.Context, opts ...option.ClientOption) (*
 		instanceAdminClient: instancepb.NewInstanceAdminClient(conn),
 	}
 	c.SetGoogleClientInfo()
-
-	c.LROClient, err = lroauto.NewOperationsClient(ctx, option.WithGRPCConn(conn))
-	if err != nil {
-		// This error "should not happen", since we are just reusing old connection
-		// and never actually need to dial.
-		// If this does happen, we could leak conn. However, we cannot close conn:
-		// If the user invoked the function with option.WithGRPCConn,
-		// we would close a connection that's still in use.
-		// TODO(pongad): investigate error conditions.
-		return nil, err
-	}
 	return c, nil
 }
 
@@ -177,7 +174,7 @@ func (c *InstanceAdminClient) Close() error {
 func (c *InstanceAdminClient) SetGoogleClientInfo(keyval ...string) {
 	kv := append([]string{"gl-go", version.Go()}, keyval...)
 	kv = append(kv, "gapic", version.Repo, "gax", gax.Version, "grpc", grpc.Version)
-	c.xGoogHeader = []string{gax.XGoogHeader(kv...)}
+	c.xGoogHeader = gax.XGoogHeader(kv...)
 }
 
 // InstanceAdminProjectPath returns the path for the project resource.
@@ -364,7 +361,8 @@ func (c *InstanceAdminClient) CreateInstance(ctx context.Context, req *instancep
 		return nil, err
 	}
 	return &CreateInstanceOperation{
-		lro: longrunning.InternalNewOperation(c.LROClient, resp),
+		lro:         longrunning.InternalNewOperation(c.Connection(), resp),
+		xGoogHeader: c.xGoogHeader,
 	}, nil
 }
 
@@ -421,7 +419,8 @@ func (c *InstanceAdminClient) UpdateInstance(ctx context.Context, req *instancep
 		return nil, err
 	}
 	return &UpdateInstanceOperation{
-		lro: longrunning.InternalNewOperation(c.LROClient, resp),
+		lro:         longrunning.InternalNewOperation(c.Connection(), resp),
+		xGoogHeader: c.xGoogHeader,
 	}, nil
 }
 
@@ -595,22 +594,27 @@ func (it *InstanceIterator) takeBuf() interface{} {
 // CreateInstanceOperation manages a long-running operation from CreateInstance.
 type CreateInstanceOperation struct {
 	lro *longrunning.Operation
+
+	// The metadata to be sent with each request.
+	xGoogHeader string
 }
 
 // CreateInstanceOperation returns a new CreateInstanceOperation from a given name.
 // The name must be that of a previously created CreateInstanceOperation, possibly from a different process.
 func (c *InstanceAdminClient) CreateInstanceOperation(name string) *CreateInstanceOperation {
 	return &CreateInstanceOperation{
-		lro: longrunning.InternalNewOperation(c.LROClient, &longrunningpb.Operation{Name: name}),
+		lro:         longrunning.InternalNewOperation(c.Connection(), &longrunningpb.Operation{Name: name}),
+		xGoogHeader: c.xGoogHeader,
 	}
 }
 
 // Wait blocks until the long-running operation is completed, returning the response and any errors encountered.
 //
 // See documentation of Poll for error-handling information.
-func (op *CreateInstanceOperation) Wait(ctx context.Context, opts ...gax.CallOption) (*instancepb.Instance, error) {
+func (op *CreateInstanceOperation) Wait(ctx context.Context) (*instancepb.Instance, error) {
 	var resp instancepb.Instance
-	if err := op.lro.Wait(ctx, &resp, opts...); err != nil {
+	ctx = insertXGoog(ctx, op.xGoogHeader)
+	if err := op.lro.Wait(ctx, &resp); err != nil {
 		return nil, err
 	}
 	return &resp, nil
@@ -625,9 +629,10 @@ func (op *CreateInstanceOperation) Wait(ctx context.Context, opts ...gax.CallOpt
 // If Poll succeeds and the operation has completed successfully,
 // op.Done will return true, and the response of the operation is returned.
 // If Poll succeeds and the operation has not completed, the returned response and error are both nil.
-func (op *CreateInstanceOperation) Poll(ctx context.Context, opts ...gax.CallOption) (*instancepb.Instance, error) {
+func (op *CreateInstanceOperation) Poll(ctx context.Context) (*instancepb.Instance, error) {
 	var resp instancepb.Instance
-	if err := op.lro.Poll(ctx, &resp, opts...); err != nil {
+	ctx = insertXGoog(ctx, op.xGoogHeader)
+	if err := op.lro.Poll(ctx, &resp); err != nil {
 		return nil, err
 	}
 	if !op.Done() {
@@ -664,22 +669,27 @@ func (op *CreateInstanceOperation) Name() string {
 // UpdateInstanceOperation manages a long-running operation from UpdateInstance.
 type UpdateInstanceOperation struct {
 	lro *longrunning.Operation
+
+	// The metadata to be sent with each request.
+	xGoogHeader string
 }
 
 // UpdateInstanceOperation returns a new UpdateInstanceOperation from a given name.
 // The name must be that of a previously created UpdateInstanceOperation, possibly from a different process.
 func (c *InstanceAdminClient) UpdateInstanceOperation(name string) *UpdateInstanceOperation {
 	return &UpdateInstanceOperation{
-		lro: longrunning.InternalNewOperation(c.LROClient, &longrunningpb.Operation{Name: name}),
+		lro:         longrunning.InternalNewOperation(c.Connection(), &longrunningpb.Operation{Name: name}),
+		xGoogHeader: c.xGoogHeader,
 	}
 }
 
 // Wait blocks until the long-running operation is completed, returning the response and any errors encountered.
 //
 // See documentation of Poll for error-handling information.
-func (op *UpdateInstanceOperation) Wait(ctx context.Context, opts ...gax.CallOption) (*instancepb.Instance, error) {
+func (op *UpdateInstanceOperation) Wait(ctx context.Context) (*instancepb.Instance, error) {
 	var resp instancepb.Instance
-	if err := op.lro.Wait(ctx, &resp, opts...); err != nil {
+	ctx = insertXGoog(ctx, op.xGoogHeader)
+	if err := op.lro.Wait(ctx, &resp); err != nil {
 		return nil, err
 	}
 	return &resp, nil
@@ -694,9 +704,10 @@ func (op *UpdateInstanceOperation) Wait(ctx context.Context, opts ...gax.CallOpt
 // If Poll succeeds and the operation has completed successfully,
 // op.Done will return true, and the response of the operation is returned.
 // If Poll succeeds and the operation has not completed, the returned response and error are both nil.
-func (op *UpdateInstanceOperation) Poll(ctx context.Context, opts ...gax.CallOption) (*instancepb.Instance, error) {
+func (op *UpdateInstanceOperation) Poll(ctx context.Context) (*instancepb.Instance, error) {
 	var resp instancepb.Instance
-	if err := op.lro.Poll(ctx, &resp, opts...); err != nil {
+	ctx = insertXGoog(ctx, op.xGoogHeader)
+	if err := op.lro.Poll(ctx, &resp); err != nil {
 		return nil, err
 	}
 	if !op.Done() {

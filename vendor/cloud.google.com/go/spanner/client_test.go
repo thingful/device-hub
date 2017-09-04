@@ -23,7 +23,7 @@ import (
 
 // Test validDatabaseName()
 func TestValidDatabaseName(t *testing.T) {
-	validDbURI := "projects/spanner-cloud-test/instances/foo/databases/foodb"
+	validDbUri := "projects/spanner-cloud-test/instances/foo/databases/foodb"
 	invalidDbUris := []string{
 		// Completely wrong DB URI.
 		"foobarDB",
@@ -32,19 +32,12 @@ func TestValidDatabaseName(t *testing.T) {
 		// No instance ID.
 		"projects/spanner-cloud-test/instances//databases/foodb",
 	}
-	if err := validDatabaseName(validDbURI); err != nil {
-		t.Errorf("validateDatabaseName(%q) = %v, want nil", validDbURI, err)
+	if err := validDatabaseName(validDbUri); err != nil {
+		t.Errorf("validateDatabaseName(%q) = %v, want nil", validDbUri, err)
 	}
 	for _, d := range invalidDbUris {
 		if err, wantErr := validDatabaseName(d), "should conform to pattern"; !strings.Contains(err.Error(), wantErr) {
-			t.Errorf("validateDatabaseName(%q) = %q, want error pattern %q", validDbURI, err, wantErr)
+			t.Errorf("validateDatabaseName(%q) = %q, want error pattern %q", validDbUri, err, wantErr)
 		}
 	}
-}
-
-func TestReadOnlyTransactionClose(t *testing.T) {
-	// Closing a ReadOnlyTransaction shouldn't panic.
-	c := &Client{}
-	tx := c.ReadOnlyTransaction()
-	tx.Close()
 }

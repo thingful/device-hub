@@ -23,7 +23,7 @@ import (
 
 	"cloud.google.com/go/iam"
 	"golang.org/x/net/context"
-	"golang.org/x/sync/errgroup"
+	"golang.org/x/sync/semaphore"
 	"google.golang.org/api/iterator"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -112,16 +112,6 @@ type SubscriptionConfig struct {
 	// obtained via Subscription.Receive need not be acknowledged within this
 	// deadline, as the deadline will be automatically extended.
 	AckDeadline time.Duration
-
-	// Whether to retain acknowledged messages. If true, acknowledged messages
-	// will not be expunged until they fall out of the RetentionDuration window.
-	retainAckedMessages bool
-
-	// How long to retain messages in backlog, from the time of publish. If RetainAckedMessages is true,
-	// this duration affects the retention of acknowledged messages,
-	// otherwise only unacknowledged messages are retained.
-	// Defaults to 7 days. Cannot be longer than 7 days or shorter than 10 minutes.
-	retentionDuration time.Duration
 }
 
 // ReceiveSettings configure the Receive method.
@@ -136,23 +126,16 @@ type ReceiveSettings struct {
 	MaxExtension time.Duration
 
 	// MaxOutstandingMessages is the maximum number of unprocessed messages
-	// (unacknowledged but not yet expired). If MaxOutstandingMessages is 0, it
-	// will be treated as if it were DefaultReceiveSettings.MaxOutstandingMessages.
-	// If the value is negative, then there will be no limit on the number of
-	// unprocessed messages.
+	// (unacknowledged but not yet expired). If MaxOutstandingMessages is less
+	// than 1, it will be treated as if it were
+	// DefaultReceiveSettings.MaxOutstandingMessages.
 	MaxOutstandingMessages int
 
 	// MaxOutstandingBytes is the maximum size of unprocessed messages
-	// (unacknowledged but not yet expired). If MaxOutstandingBytes is 0, it will
-	// be treated as if it were DefaultReceiveSettings.MaxOutstandingBytes. If
-	// the value is negative, then there will be no limit on the number of bytes
-	// for unprocessed messages.
+	// (unacknowledged but not yet expired). If MaxOutstandingBytes is less
+	// than 1, it will be treated as if it were
+	// DefaultReceiveSettings.MaxOutstandingBytes.
 	MaxOutstandingBytes int
-
-	// NumGoroutines is the number of goroutines Receive will spawn to pull
-	// messages concurrently. If NumGoroutines is less than 1, it will be treated
-	// as if it were DefaultReceiveSettings.NumGoroutines.
-	NumGoroutines int
 }
 
 // DefaultReceiveSettings holds the default values for ReceiveSettings.
@@ -160,7 +143,6 @@ var DefaultReceiveSettings = ReceiveSettings{
 	MaxExtension:           10 * time.Minute,
 	MaxOutstandingMessages: 1000,
 	MaxOutstandingBytes:    1e9, // 1G
-	NumGoroutines:          1,
 }
 
 // Delete deletes the subscription.
@@ -174,78 +156,16 @@ func (s *Subscription) Exists(ctx context.Context) (bool, error) {
 }
 
 // Config fetches the current configuration for the subscription.
-func (s *Subscription) Config(ctx context.Context) (SubscriptionConfig, error) {
+func (s *Subscription) Config(ctx context.Context) (*SubscriptionConfig, error) {
 	conf, topicName, err := s.s.getSubscriptionConfig(ctx, s.name)
 	if err != nil {
-		return SubscriptionConfig{}, err
+		return nil, err
 	}
 	conf.Topic = &Topic{
 		s:    s.s,
 		name: topicName,
 	}
 	return conf, nil
-}
-
-// SubscriptionConfigToUpdate describes how to update a subscription.
-type SubscriptionConfigToUpdate struct {
-	// If non-nil, the push config is changed.
-	PushConfig *PushConfig
-}
-
-// Update changes an existing subscription according to the fields set in cfg.
-// It returns the new SubscriptionConfig.
-//
-// Update returns an error if no fields were modified.
-func (s *Subscription) Update(ctx context.Context, cfg SubscriptionConfigToUpdate) (SubscriptionConfig, error) {
-	if cfg.PushConfig == nil {
-		return SubscriptionConfig{}, errors.New("pubsub: UpdateSubscription call with nothing to update")
-	}
-	if err := s.s.modifyPushConfig(ctx, s.name, *cfg.PushConfig); err != nil {
-		return SubscriptionConfig{}, err
-	}
-	return s.Config(ctx)
-}
-
-func (s *Subscription) IAM() *iam.Handle {
-	return s.s.iamHandle(s.name)
-}
-
-// CreateSubscription creates a new subscription on a topic.
-//
-// id is the name of the subscription to create. It must start with a letter,
-// and contain only letters ([A-Za-z]), numbers ([0-9]), dashes (-),
-// underscores (_), periods (.), tildes (~), plus (+) or percent signs (%). It
-// must be between 3 and 255 characters in length, and must not start with
-// "goog".
-//
-// cfg.Topic is the topic from which the subscription should receive messages. It
-// need not belong to the same project as the subscription. This field is required.
-//
-// cfg.AckDeadline is the maximum time after a subscriber receives a message before
-// the subscriber should acknowledge the message. It must be between 10 and 600
-// seconds (inclusive), and is rounded down to the nearest second. If the
-// provided ackDeadline is 0, then the default value of 10 seconds is used.
-// Note: messages which are obtained via Subscription.Receive need not be
-// acknowledged within this deadline, as the deadline will be automatically
-// extended.
-//
-// cfg.PushConfig may be set to configure this subscription for push delivery.
-//
-// If the subscription already exists an error will be returned.
-func (c *Client) CreateSubscription(ctx context.Context, id string, cfg SubscriptionConfig) (*Subscription, error) {
-	if cfg.Topic == nil {
-		return nil, errors.New("pubsub: require non-nil Topic")
-	}
-	if cfg.AckDeadline == 0 {
-		cfg.AckDeadline = 10 * time.Second
-	}
-	if d := cfg.AckDeadline; d < 10*time.Second || d > 600*time.Second {
-		return nil, fmt.Errorf("ack deadline must be between 10 and 600 seconds; got: %v", d)
-	}
-
-	sub := c.Subscription(id)
-	err := c.s.createSubscription(ctx, sub.name, cfg)
-	return sub, err
 }
 
 var errReceiveInProgress = errors.New("pubsub: Receive already in progress for this subscription")
@@ -261,7 +181,7 @@ var errReceiveInProgress = errors.New("pubsub: Receive already in progress for t
 //
 // If the service returns a non-retryable error, Receive returns that error after
 // all of the outstanding calls to f have returned. If ctx is done, Receive
-// returns nil after all of the outstanding calls to f have returned and
+// returns either nil after all of the outstanding calls to f have returned and
 // all messages have been acknowledged or have expired.
 //
 // Receive calls f concurrently from multiple goroutines. It is encouraged to
@@ -294,11 +214,11 @@ func (s *Subscription) Receive(ctx context.Context, f func(context.Context, *Mes
 		return err
 	}
 	maxCount := s.ReceiveSettings.MaxOutstandingMessages
-	if maxCount == 0 {
+	if maxCount < 1 {
 		maxCount = DefaultReceiveSettings.MaxOutstandingMessages
 	}
 	maxBytes := s.ReceiveSettings.MaxOutstandingBytes
-	if maxBytes == 0 {
+	if maxBytes < 1 {
 		maxBytes = DefaultReceiveSettings.MaxOutstandingBytes
 	}
 	maxExt := s.ReceiveSettings.MaxExtension
@@ -307,10 +227,6 @@ func (s *Subscription) Receive(ctx context.Context, f func(context.Context, *Mes
 	} else if maxExt < 0 {
 		// If MaxExtension is negative, disable automatic extension.
 		maxExt = 0
-	}
-	numGoroutines := s.ReceiveSettings.NumGoroutines
-	if numGoroutines < 1 {
-		numGoroutines = DefaultReceiveSettings.NumGoroutines
 	}
 	// TODO(jba): add tests that verify that ReceiveSettings are correctly processed.
 	po := &pullOptions{
@@ -322,16 +238,13 @@ func (s *Subscription) Receive(ctx context.Context, f func(context.Context, *Mes
 
 	// Wait for all goroutines started by Receive to return, so instead of an
 	// obscure goroutine leak we have an obvious blocked call to Receive.
-	group, gctx := errgroup.WithContext(ctx)
-	for i := 0; i < numGoroutines; i++ {
-		group.Go(func() error {
-			return s.receive(gctx, po, fc, f)
-		})
-	}
-	return group.Wait()
+	var wg sync.WaitGroup
+	defer wg.Wait()
+
+	return s.receive(ctx, &wg, po, fc, f)
 }
 
-func (s *Subscription) receive(ctx context.Context, po *pullOptions, fc *flowController, f func(context.Context, *Message)) error {
+func (s *Subscription) receive(ctx context.Context, wg *sync.WaitGroup, po *pullOptions, fc *flowController, f func(context.Context, *Message)) error {
 	// Cancel a sub-context when we return, to kick the context-aware callbacks
 	// and the goroutine below.
 	ctx2, cancel := context.WithCancel(ctx)
@@ -342,21 +255,12 @@ func (s *Subscription) receive(ctx context.Context, po *pullOptions, fc *flowCon
 	// that context would immediately stop the iterator without waiting for unacked
 	// messages.
 	iter := newMessageIterator(context.Background(), s.s, s.name, po)
-
-	// We cannot use errgroup from Receive here. Receive might already be calling group.Wait,
-	// and group.Wait cannot be called concurrently with group.Go. We give each receive() its
-	// own WaitGroup instead.
-	// Since wg.Add is only called from the main goroutine, wg.Wait is guaranteed
-	// to be called after all Adds.
-	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
 		<-ctx2.Done()
 		iter.Stop()
 		wg.Done()
 	}()
-	defer wg.Wait()
-
 	defer cancel()
 	for {
 		msg, err := iter.Next()
@@ -374,10 +278,10 @@ func (s *Subscription) receive(ctx context.Context, po *pullOptions, fc *flowCon
 		}
 		wg.Add(1)
 		go func() {
+			defer wg.Done()
 			// TODO(jba): call release when the message is available for GC.
 			// This considers the message to be released when
 			// f is finished, but f may ack early or not at all.
-			defer wg.Done()
 			defer fc.release(len(msg.Data))
 			f(ctx2, msg)
 		}()
@@ -391,4 +295,95 @@ type pullOptions struct {
 	// ackDeadline is the default ack deadline for the subscription. Not
 	// configurable.
 	ackDeadline time.Duration
+}
+
+// ModifyPushConfig updates the endpoint URL and other attributes of a push subscription.
+func (s *Subscription) ModifyPushConfig(ctx context.Context, conf *PushConfig) error {
+	if conf == nil {
+		return errors.New("must supply non-nil PushConfig")
+	}
+
+	return s.s.modifyPushConfig(ctx, s.name, conf)
+}
+
+func (s *Subscription) IAM() *iam.Handle {
+	return s.s.iamHandle(s.name)
+}
+
+// CreateSubscription creates a new subscription on a topic.
+//
+// name is the name of the subscription to create. It must start with a letter,
+// and contain only letters ([A-Za-z]), numbers ([0-9]), dashes (-),
+// underscores (_), periods (.), tildes (~), plus (+) or percent signs (%). It
+// must be between 3 and 255 characters in length, and must not start with
+// "goog".
+//
+// topic is the topic from which the subscription should receive messages. It
+// need not belong to the same project as the subscription.
+//
+// ackDeadline is the maximum time after a subscriber receives a message before
+// the subscriber should acknowledge the message. It must be between 10 and 600
+// seconds (inclusive), and is rounded down to the nearest second. If the
+// provided ackDeadline is 0, then the default value of 10 seconds is used.
+// Note: messages which are obtained via Subscription.Receive need not be
+// acknowledged within this deadline, as the deadline will be automatically
+// extended.
+//
+// pushConfig may be set to configure this subscription for push delivery.
+//
+// If the subscription already exists an error will be returned.
+func (c *Client) CreateSubscription(ctx context.Context, id string, topic *Topic, ackDeadline time.Duration, pushConfig *PushConfig) (*Subscription, error) {
+	if ackDeadline == 0 {
+		ackDeadline = 10 * time.Second
+	}
+	if d := ackDeadline.Seconds(); d < 10 || d > 600 {
+		return nil, fmt.Errorf("ack deadline must be between 10 and 600 seconds; got: %v", d)
+	}
+
+	sub := c.Subscription(id)
+	err := c.s.createSubscription(ctx, topic.name, sub.name, ackDeadline, pushConfig)
+	return sub, err
+}
+
+// flowController implements flow control for Subscriber.Receive.
+type flowController struct {
+	maxSize           int                 // max total size of messages
+	semCount, semSize *semaphore.Weighted // enforces max number and size of messages
+}
+
+func newFlowController(maxCount, maxSize int) *flowController {
+	return &flowController{
+		maxSize:  maxSize,
+		semCount: semaphore.NewWeighted(int64(maxCount)),
+		semSize:  semaphore.NewWeighted(int64(maxSize)),
+	}
+}
+
+// acquire blocks until one message of size bytes can proceed or ctx is done.
+// It returns nil in the first case, or ctx.Err() in the second.
+//
+// acquire allows large messages to proceed by treating a size greater than maxSize
+// as if it were equal to maxSize.
+func (f *flowController) acquire(ctx context.Context, size int) error {
+	if err := f.semCount.Acquire(ctx, 1); err != nil {
+		return err
+	}
+	if err := f.semSize.Acquire(ctx, f.bound(size)); err != nil {
+		f.semCount.Release(1)
+		return err
+	}
+	return nil
+}
+
+// release notes that one message of size bytes is no longer outstanding.
+func (f *flowController) release(size int) {
+	f.semCount.Release(1)
+	f.semSize.Release(f.bound(size))
+}
+
+func (f *flowController) bound(size int) int64 {
+	if size > f.maxSize {
+		return int64(f.maxSize)
+	}
+	return int64(size)
 }

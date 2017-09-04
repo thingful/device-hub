@@ -23,12 +23,10 @@ import (
 
 import (
 	"flag"
-	"fmt"
 	"io"
 	"log"
 	"net"
 	"os"
-	"strings"
 	"testing"
 
 	"github.com/golang/protobuf/proto"
@@ -38,8 +36,6 @@ import (
 	status "google.golang.org/genproto/googleapis/rpc/status"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/metadata"
-	gstatus "google.golang.org/grpc/status"
 )
 
 var _ = io.EOF
@@ -61,11 +57,7 @@ type mockTraceServer struct {
 	resps []proto.Message
 }
 
-func (s *mockTraceServer) ListTraces(ctx context.Context, req *cloudtracepb.ListTracesRequest) (*cloudtracepb.ListTracesResponse, error) {
-	md, _ := metadata.FromIncomingContext(ctx)
-	if xg := md["x-goog-api-client"]; len(xg) == 0 || !strings.Contains(xg[0], "gl-go/") {
-		return nil, fmt.Errorf("x-goog-api-client = %v, expected gl-go key", xg)
-	}
+func (s *mockTraceServer) ListTraces(_ context.Context, req *cloudtracepb.ListTracesRequest) (*cloudtracepb.ListTracesResponse, error) {
 	s.reqs = append(s.reqs, req)
 	if s.err != nil {
 		return nil, s.err
@@ -73,11 +65,7 @@ func (s *mockTraceServer) ListTraces(ctx context.Context, req *cloudtracepb.List
 	return s.resps[0].(*cloudtracepb.ListTracesResponse), nil
 }
 
-func (s *mockTraceServer) GetTrace(ctx context.Context, req *cloudtracepb.GetTraceRequest) (*cloudtracepb.Trace, error) {
-	md, _ := metadata.FromIncomingContext(ctx)
-	if xg := md["x-goog-api-client"]; len(xg) == 0 || !strings.Contains(xg[0], "gl-go/") {
-		return nil, fmt.Errorf("x-goog-api-client = %v, expected gl-go key", xg)
-	}
+func (s *mockTraceServer) GetTrace(_ context.Context, req *cloudtracepb.GetTraceRequest) (*cloudtracepb.Trace, error) {
 	s.reqs = append(s.reqs, req)
 	if s.err != nil {
 		return nil, s.err
@@ -85,11 +73,7 @@ func (s *mockTraceServer) GetTrace(ctx context.Context, req *cloudtracepb.GetTra
 	return s.resps[0].(*cloudtracepb.Trace), nil
 }
 
-func (s *mockTraceServer) PatchTraces(ctx context.Context, req *cloudtracepb.PatchTracesRequest) (*emptypb.Empty, error) {
-	md, _ := metadata.FromIncomingContext(ctx)
-	if xg := md["x-goog-api-client"]; len(xg) == 0 || !strings.Contains(xg[0], "gl-go/") {
-		return nil, fmt.Errorf("x-goog-api-client = %v, expected gl-go key", xg)
-	}
+func (s *mockTraceServer) PatchTraces(_ context.Context, req *cloudtracepb.PatchTracesRequest) (*emptypb.Empty, error) {
 	s.reqs = append(s.reqs, req)
 	if s.err != nil {
 		return nil, s.err
@@ -160,7 +144,7 @@ func TestTraceServicePatchTraces(t *testing.T) {
 
 func TestTraceServicePatchTracesError(t *testing.T) {
 	errCode := codes.PermissionDenied
-	mockTrace.err = gstatus.Error(errCode, "test error")
+	mockTrace.err = grpc.Errorf(errCode, "test error")
 
 	var projectId string = "projectId-1969970175"
 	var traces *cloudtracepb.Traces = &cloudtracepb.Traces{}
@@ -176,9 +160,7 @@ func TestTraceServicePatchTracesError(t *testing.T) {
 
 	err = c.PatchTraces(context.Background(), request)
 
-	if st, ok := gstatus.FromError(err); !ok {
-		t.Errorf("got error %v, expected grpc error", err)
-	} else if c := st.Code(); c != errCode {
+	if c := grpc.Code(err); c != errCode {
 		t.Errorf("got error code %q, want %q", c, errCode)
 	}
 }
@@ -224,7 +206,7 @@ func TestTraceServiceGetTrace(t *testing.T) {
 
 func TestTraceServiceGetTraceError(t *testing.T) {
 	errCode := codes.PermissionDenied
-	mockTrace.err = gstatus.Error(errCode, "test error")
+	mockTrace.err = grpc.Errorf(errCode, "test error")
 
 	var projectId string = "projectId-1969970175"
 	var traceId string = "traceId1270300245"
@@ -240,9 +222,7 @@ func TestTraceServiceGetTraceError(t *testing.T) {
 
 	resp, err := c.GetTrace(context.Background(), request)
 
-	if st, ok := gstatus.FromError(err); !ok {
-		t.Errorf("got error %v, expected grpc error", err)
-	} else if c := st.Code(); c != errCode {
+	if c := grpc.Code(err); c != errCode {
 		t.Errorf("got error code %q, want %q", c, errCode)
 	}
 	_ = resp
@@ -298,7 +278,7 @@ func TestTraceServiceListTraces(t *testing.T) {
 
 func TestTraceServiceListTracesError(t *testing.T) {
 	errCode := codes.PermissionDenied
-	mockTrace.err = gstatus.Error(errCode, "test error")
+	mockTrace.err = grpc.Errorf(errCode, "test error")
 
 	var projectId string = "projectId-1969970175"
 	var request = &cloudtracepb.ListTracesRequest{
@@ -312,9 +292,7 @@ func TestTraceServiceListTracesError(t *testing.T) {
 
 	resp, err := c.ListTraces(context.Background(), request).Next()
 
-	if st, ok := gstatus.FromError(err); !ok {
-		t.Errorf("got error %v, expected grpc error", err)
-	} else if c := st.Code(); c != errCode {
+	if c := grpc.Code(err); c != errCode {
 		t.Errorf("got error code %q, want %q", c, errCode)
 	}
 	_ = resp

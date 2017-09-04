@@ -14,6 +14,8 @@
 
 // Package translate is a client for the Google Translation API.
 // See https://cloud.google.com/translation for details.
+//
+// This package is experimental and subject to change without notice.
 package translate
 
 import (
@@ -21,7 +23,7 @@ import (
 	"net/http"
 
 	"google.golang.org/api/option"
-	htransport "google.golang.org/api/transport/http"
+	"google.golang.org/api/transport"
 
 	"cloud.google.com/go/internal/version"
 	raw "cloud.google.com/go/translate/internal/translate/v2"
@@ -52,7 +54,7 @@ func NewClient(ctx context.Context, opts ...option.ClientOption) (*Client, error
 		option.WithUserAgent(userAgent),
 	}
 	o = append(o, opts...)
-	httpClient, endpoint, err := htransport.NewClient(ctx, o...)
+	httpClient, endpoint, err := transport.NewHTTPClient(ctx, o...)
 	if err != nil {
 		return nil, fmt.Errorf("dialing: %v", err)
 	}

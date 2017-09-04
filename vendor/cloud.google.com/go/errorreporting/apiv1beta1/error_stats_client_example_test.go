@@ -19,7 +19,6 @@ package errorreporting_test
 import (
 	"cloud.google.com/go/errorreporting/apiv1beta1"
 	"golang.org/x/net/context"
-	"google.golang.org/api/iterator"
 	clouderrorreportingpb "google.golang.org/genproto/googleapis/devtools/clouderrorreporting/v1beta1"
 )
 
@@ -46,11 +45,9 @@ func ExampleErrorStatsClient_ListGroupStats() {
 	it := c.ListGroupStats(ctx, req)
 	for {
 		resp, err := it.Next()
-		if err == iterator.Done {
-			break
-		}
 		if err != nil {
 			// TODO: Handle error.
+			break
 		}
 		// TODO: Use resp.
 		_ = resp
@@ -70,11 +67,9 @@ func ExampleErrorStatsClient_ListEvents() {
 	it := c.ListEvents(ctx, req)
 	for {
 		resp, err := it.Next()
-		if err == iterator.Done {
-			break
-		}
 		if err != nil {
 			// TODO: Handle error.
+			break
 		}
 		// TODO: Use resp.
 		_ = resp

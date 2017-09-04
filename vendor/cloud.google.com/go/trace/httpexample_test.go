@@ -26,14 +26,9 @@ import (
 var traceClient *trace.Client
 
 func ExampleHTTPClient_Do() {
-	client := http.Client{
-		Transport: &trace.Transport{},
-	}
-	span := traceClient.NewSpan("/foo") // traceClient is a *trace.Client
+	client := traceClient.NewHTTPClient(nil) // traceClient is a *Client
 
 	req, _ := http.NewRequest("GET", "https://metadata/users", nil)
-	req = req.WithContext(trace.NewContext(req.Context(), span))
-
 	if _, err := client.Do(req); err != nil {
 		log.Fatal(err)
 	}
@@ -41,9 +36,7 @@ func ExampleHTTPClient_Do() {
 
 func ExampleClient_HTTPHandler() {
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		client := http.Client{
-			Transport: &trace.Transport{},
-		}
+		client := traceClient.NewHTTPClient(nil)
 
 		req, _ := http.NewRequest("GET", "https://metadata/users", nil)
 		req = req.WithContext(r.Context())
@@ -53,5 +46,5 @@ func ExampleClient_HTTPHandler() {
 			log.Fatal(err)
 		}
 	})
-	http.Handle("/foo", traceClient.HTTPHandler(handler)) // traceClient is a *trace.Client
+	http.Handle("/foo", traceClient.HTTPHandler(handler)) // traceClient is a *Client
 }

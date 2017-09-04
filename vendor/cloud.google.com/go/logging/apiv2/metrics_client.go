@@ -48,7 +48,13 @@ type MetricsCallOptions struct {
 func defaultMetricsClientOptions() []option.ClientOption {
 	return []option.ClientOption{
 		option.WithEndpoint("logging.googleapis.com:443"),
-		option.WithScopes(DefaultAuthScopes()...),
+		option.WithScopes(
+			"https://www.googleapis.com/auth/cloud-platform",
+			"https://www.googleapis.com/auth/cloud-platform.read-only",
+			"https://www.googleapis.com/auth/logging.admin",
+			"https://www.googleapis.com/auth/logging.read",
+			"https://www.googleapis.com/auth/logging.write",
+		),
 	}
 }
 
@@ -58,7 +64,17 @@ func defaultMetricsCallOptions() *MetricsCallOptions {
 			gax.WithRetry(func() gax.Retryer {
 				return gax.OnCodes([]codes.Code{
 					codes.DeadlineExceeded,
-					codes.Internal,
+					codes.Unavailable,
+				}, gax.Backoff{
+					Initial:    100 * time.Millisecond,
+					Max:        1000 * time.Millisecond,
+					Multiplier: 1.2,
+				})
+			}),
+		},
+		{"default", "non_idempotent"}: {
+			gax.WithRetry(func() gax.Retryer {
+				return gax.OnCodes([]codes.Code{
 					codes.Unavailable,
 				}, gax.Backoff{
 					Initial:    100 * time.Millisecond,
@@ -89,7 +105,7 @@ type MetricsClient struct {
 	CallOptions *MetricsCallOptions
 
 	// The metadata to be sent with each request.
-	xGoogHeader []string
+	xGoogHeader string
 }
 
 // NewMetricsClient creates a new metrics service v2 client.
@@ -127,7 +143,7 @@ func (c *MetricsClient) Close() error {
 func (c *MetricsClient) SetGoogleClientInfo(keyval ...string) {
 	kv := append([]string{"gl-go", version.Go()}, keyval...)
 	kv = append(kv, "gapic", version.Repo, "gax", gax.Version, "grpc", grpc.Version)
-	c.xGoogHeader = []string{gax.XGoogHeader(kv...)}
+	c.xGoogHeader = gax.XGoogHeader(kv...)
 }
 
 // MetricsProjectPath returns the path for the project resource.

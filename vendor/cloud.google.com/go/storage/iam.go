@@ -15,6 +15,8 @@
 package storage
 
 import (
+	"errors"
+
 	"cloud.google.com/go/iam"
 	"golang.org/x/net/context"
 	raw "google.golang.org/api/storage/v1"
@@ -56,19 +58,8 @@ func (c *iamClient) Set(ctx context.Context, resource string, p *iampb.Policy) e
 	})
 }
 
-func (c *iamClient) Test(ctx context.Context, resource string, perms []string) ([]string, error) {
-	req := c.raw.Buckets.TestIamPermissions(resource, perms)
-	setClientHeader(req.Header())
-	var res *raw.TestIamPermissionsResponse
-	var err error
-	err = runWithRetry(ctx, func() error {
-		res, err = req.Context(ctx).Do()
-		return err
-	})
-	if err != nil {
-		return nil, err
-	}
-	return res.Permissions, nil
+func (c *iamClient) Test(context.Context, string, []string) ([]string, error) {
+	return nil, errors.New("TestPermissions is unimplemented")
 }
 
 func iamToStoragePolicy(ip *iampb.Policy) *raw.Policy {

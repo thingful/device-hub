@@ -17,7 +17,6 @@ limitations under the License.
 package spanner
 
 import (
-	"errors"
 	"fmt"
 
 	proto3 "github.com/golang/protobuf/ptypes/struct"
@@ -55,16 +54,11 @@ func errBindParam(k string, v interface{}, err error) error {
 	}
 	se, ok := toSpannerError(err).(*Error)
 	if !ok {
-		return spannerErrorf(codes.InvalidArgument, "failed to bind query parameter(name: %q, value: %v), error = <%v>", k, v, err)
+		return spannerErrorf(codes.InvalidArgument, "failed to bind query parameter(name: %q, value: %q), error = <%v>", k, v, err)
 	}
-	se.decorate(fmt.Sprintf("failed to bind query parameter(name: %q, value: %v)", k, v))
+	se.decorate(fmt.Sprintf("failed to bind query parameter(name: %q, value: %q)", k, v))
 	return se
 }
-
-var (
-	errNilParam = errors.New("use T(nil), not nil")
-	errNoType   = errors.New("no type information")
-)
 
 // bindParams binds parameters in a Statement to a sppb.ExecuteSqlRequest.
 func (s *Statement) bindParams(r *sppb.ExecuteSqlRequest) error {
@@ -73,15 +67,9 @@ func (s *Statement) bindParams(r *sppb.ExecuteSqlRequest) error {
 	}
 	r.ParamTypes = map[string]*sppb.Type{}
 	for k, v := range s.Params {
-		if v == nil {
-			return errBindParam(k, v, errNilParam)
-		}
 		val, t, err := encodeValue(v)
 		if err != nil {
 			return errBindParam(k, v, err)
-		}
-		if t == nil { // should not happen, because of nil check above
-			return errBindParam(k, v, errNoType)
 		}
 		r.Params.Fields[k] = val
 		r.ParamTypes[k] = t
