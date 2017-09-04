@@ -16,8 +16,10 @@ all: linux-arm linux-i386 linux-amd64 darwin-amd64 ## build executables for the 
 
 .PHONY: all
 
-get-build-deps: ## install build dependencies 
+get-build-deps: ## install build dependencies
 	go get github.com/chespinoza/goliscan
+	go get google.golang.org/grpc
+	go get github.com/golang/protobuf/protoc-gen-go
 	go get github.com/gogo/protobuf/protoc-gen-gofast
 
 .PHONY: get-build-deps
