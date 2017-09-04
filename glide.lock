@@ -1,16 +1,16 @@
 hash: 749f8674f93eb4186e87b85af936335eca5eb7361d29702b436d1cae558b2a0c
-updated: 2017-06-26T00:26:42.975837309-04:00
+updated: 2017-09-04T11:45:24.344187743+01:00
 imports:
 - name: cloud.google.com/go
   version: ed63fb27efcf32e25fe7837e4662457d3da4c4f2
   subpackages:
   - compute/metadata
 - name: github.com/asaskevich/govalidator
-  version: 4918b99a7cb949bb295f3c7bbaf24b577d806e35
+  version: aa5cce4a76edb1a5acecab1870c17abbffb5419e
 - name: github.com/boltdb/bolt
-  version: 583e8937c61f1af6513608ccc75c97b6abdf4ff9
+  version: e9cf4fae01b5a8ff89d0ec6b32f0d9c9f79aefdd
 - name: github.com/eclipse/paho.mqtt.golang
-  version: 45f9b18f4864c81d49c3ed01e5faec9eeb05de31
+  version: 69afaac643519c4a3d3e7877e3b8ad5b48b15568
   subpackages:
   - packets
 - name: github.com/fiorix/protoc-gen-cobra
@@ -22,7 +22,10 @@ imports:
   subpackages:
   - proto
   - protoc-gen-go/descriptor
+  - ptypes
   - ptypes/any
+  - ptypes/duration
+  - ptypes/timestamp
 - name: github.com/inconshreveable/mousetrap
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/kelseyhightower/envconfig
@@ -45,7 +48,7 @@ imports:
 - name: github.com/rs/xid
   version: 02dd45c33376f85d1064355dc790dcc4850596b1
 - name: github.com/sirupsen/logrus
-  version: 202f25545ea4cf9b191ff7f846df5d87c9382c2b
+  version: f006c2ac4710855cf0f916dd6b77acf6b048dc6e
   subpackages:
   - hooks/syslog
 - name: github.com/speps/go-hashids
@@ -56,8 +59,12 @@ imports:
   version: 5deb57bbca49eb370538fc295ba4b2988f9f5e09
 - name: github.com/spf13/pflag
   version: e453343e6260b4a3a89f1f0e10a2fbb07f8d9750
+- name: golang.org/x/crypto
+  version: 81e90905daefcd6fd217b62423c0908922eadb30
+  subpackages:
+  - ssh/terminal
 - name: golang.org/x/net
-  version: d1e1b351919c6738fdeb9893d5c998b161464f0c
+  version: f5079bd7f6f74e23c4d65efa0f4ce14cbd6a3c0f
   subpackages:
   - context
   - context/ctxhttp
@@ -79,8 +86,9 @@ imports:
   version: dbc2be9168a660ef302e04b6ff6406de6f967473
   subpackages:
   - unix
+  - windows
 - name: golang.org/x/text
-  version: f4b4367115ec2de254587813edaa901bc1c723a8
+  version: 3bd178b88a8180be2df394a1fbb81313916f0e7b
   subpackages:
   - secure/bidirule
   - transform
@@ -103,12 +111,13 @@ imports:
   subpackages:
   - googleapis/rpc/status
 - name: google.golang.org/grpc
-  version: b15215fb911b24a5d61d57feec4233d610530464
+  version: f92cdcd7dcdc69e81b2d7b338479a19a8723cfa3
   subpackages:
   - codes
+  - connectivity
   - credentials
   - credentials/oauth
-  - grpclb/grpc_lb_v1
+  - grpclb/grpc_lb_v1/messages
   - grpclog
   - internal
   - keepalive
