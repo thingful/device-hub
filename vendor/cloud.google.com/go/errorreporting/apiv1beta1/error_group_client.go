@@ -42,7 +42,9 @@ type ErrorGroupCallOptions struct {
 func defaultErrorGroupClientOptions() []option.ClientOption {
 	return []option.ClientOption{
 		option.WithEndpoint("clouderrorreporting.googleapis.com:443"),
-		option.WithScopes(DefaultAuthScopes()...),
+		option.WithScopes(
+			"https://www.googleapis.com/auth/cloud-platform",
+		),
 	}
 }
 
@@ -79,7 +81,7 @@ type ErrorGroupClient struct {
 	CallOptions *ErrorGroupCallOptions
 
 	// The metadata to be sent with each request.
-	xGoogHeader []string
+	xGoogHeader string
 }
 
 // NewErrorGroupClient creates a new error group service client.
@@ -117,7 +119,7 @@ func (c *ErrorGroupClient) Close() error {
 func (c *ErrorGroupClient) SetGoogleClientInfo(keyval ...string) {
 	kv := append([]string{"gl-go", version.Go()}, keyval...)
 	kv = append(kv, "gapic", version.Repo, "gax", gax.Version, "grpc", grpc.Version)
-	c.xGoogHeader = []string{gax.XGoogHeader(kv...)}
+	c.xGoogHeader = gax.XGoogHeader(kv...)
 }
 
 // ErrorGroupGroupPath returns the path for the group resource.

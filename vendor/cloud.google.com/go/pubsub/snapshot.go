@@ -30,16 +30,6 @@ type snapshot struct {
 	name string
 }
 
-// ID returns the unique identifier of the snapshot within its project.
-func (s *snapshot) ID() string {
-	slash := strings.LastIndex(s.name, "/")
-	if slash == -1 {
-		// name is not a fully-qualified name.
-		panic("bad snapshot name")
-	}
-	return s.name[slash+1:]
-}
-
 // SnapshotConfig contains the details of a Snapshot.
 type snapshotConfig struct {
 	*snapshot

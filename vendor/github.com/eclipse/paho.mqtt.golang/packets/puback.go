@@ -13,9 +13,8 @@ type PubackPacket struct {
 }
 
 func (pa *PubackPacket) String() string {
-	str := fmt.Sprintf("%s", pa.FixedHeader)
-	str += " "
-	str += fmt.Sprintf("MessageID: %d", pa.MessageID)
+	str := fmt.Sprintf("%s\n", pa.FixedHeader)
+	str += fmt.Sprintf("messageID: %d", pa.MessageID)
 	return str
 }
 

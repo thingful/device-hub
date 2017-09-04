@@ -19,7 +19,6 @@ package monitoring_test
 import (
 	"cloud.google.com/go/monitoring/apiv3"
 	"golang.org/x/net/context"
-	"google.golang.org/api/iterator"
 	monitoringpb "google.golang.org/genproto/googleapis/monitoring/v3"
 )
 
@@ -46,11 +45,9 @@ func ExampleMetricClient_ListMonitoredResourceDescriptors() {
 	it := c.ListMonitoredResourceDescriptors(ctx, req)
 	for {
 		resp, err := it.Next()
-		if err == iterator.Done {
-			break
-		}
 		if err != nil {
 			// TODO: Handle error.
+			break
 		}
 		// TODO: Use resp.
 		_ = resp
@@ -88,11 +85,9 @@ func ExampleMetricClient_ListMetricDescriptors() {
 	it := c.ListMetricDescriptors(ctx, req)
 	for {
 		resp, err := it.Next()
-		if err == iterator.Done {
-			break
-		}
 		if err != nil {
 			// TODO: Handle error.
+			break
 		}
 		// TODO: Use resp.
 		_ = resp
@@ -164,11 +159,9 @@ func ExampleMetricClient_ListTimeSeries() {
 	it := c.ListTimeSeries(ctx, req)
 	for {
 		resp, err := it.Next()
-		if err == iterator.Done {
-			break
-		}
 		if err != nil {
 			// TODO: Handle error.
+			break
 		}
 		// TODO: Use resp.
 		_ = resp

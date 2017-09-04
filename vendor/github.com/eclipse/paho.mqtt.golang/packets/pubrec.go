@@ -13,8 +13,7 @@ type PubrecPacket struct {
 }
 
 func (pr *PubrecPacket) String() string {
-	str := fmt.Sprintf("%s", pr.FixedHeader)
-	str += " "
+	str := fmt.Sprintf("%s\n", pr.FixedHeader)
 	str += fmt.Sprintf("MessageID: %d", pr.MessageID)
 	return str
 }

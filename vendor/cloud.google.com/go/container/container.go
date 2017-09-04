@@ -12,9 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package container contains a deprecated Google Container Engine client.
+// Package container contains a Google Container Engine client.
 //
-// Deprecated: Use google.golang.org/api/container instead.
+// For more information about the API,
+// see https://cloud.google.com/container-engine/docs
+//
+// Authentication
+//
+// See examples of authorization and authentication at
+// https://godoc.org/cloud.google.com/go#pkg-examples.
 package container // import "cloud.google.com/go/container"
 
 import (
@@ -25,7 +31,7 @@ import (
 	"golang.org/x/net/context"
 	raw "google.golang.org/api/container/v1"
 	"google.golang.org/api/option"
-	htransport "google.golang.org/api/transport/http"
+	"google.golang.org/api/transport"
 )
 
 type Type string
@@ -64,7 +70,7 @@ func NewClient(ctx context.Context, projectID string, opts ...option.ClientOptio
 		option.WithUserAgent(userAgent),
 	}
 	o = append(o, opts...)
-	httpClient, endpoint, err := htransport.NewClient(ctx, o...)
+	httpClient, endpoint, err := transport.NewHTTPClient(ctx, o...)
 	if err != nil {
 		return nil, fmt.Errorf("dialing: %v", err)
 	}
@@ -147,7 +153,7 @@ func resourceFromRaw(c *raw.Cluster) *Resource {
 		Description:       c.Description,
 		Zone:              c.Zone,
 		Status:            Status(c.Status),
-		Num:               c.CurrentNodeCount,
+		Num:               c.InitialNodeCount,
 		APIVersion:        c.InitialClusterVersion,
 		Endpoint:          c.Endpoint,
 		Username:          c.MasterAuth.Username,

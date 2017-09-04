@@ -15,7 +15,7 @@
 // AUTO-GENERATED CODE. DO NOT EDIT.
 
 // Package admin is an experimental, auto-generated package for the
-// Google Identity and Access Management (IAM) API.
+// admin API.
 //
 // Manages identity and access control for Google Cloud Platform resources,
 // including the creation of service accounts, which you can use to
@@ -27,18 +27,9 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-func insertXGoog(ctx context.Context, val []string) context.Context {
-	md, _ := metadata.FromOutgoingContext(ctx)
+func insertXGoog(ctx context.Context, val string) context.Context {
+	md, _ := metadata.FromContext(ctx)
 	md = md.Copy()
-	md["x-goog-api-client"] = val
-	return metadata.NewOutgoingContext(ctx, md)
-}
-
-// DefaultAuthScopes reports the authentication scopes required
-// by this package.
-func DefaultAuthScopes() []string {
-	return []string{
-		"https://www.googleapis.com/auth/cloud-platform",
-		"https://www.googleapis.com/auth/iam",
-	}
+	md["x-goog-api-client"] = []string{val}
+	return metadata.NewContext(ctx, md)
 }

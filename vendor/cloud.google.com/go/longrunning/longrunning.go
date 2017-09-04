@@ -32,7 +32,6 @@ import (
 
 	"golang.org/x/net/context"
 
-	autogen "cloud.google.com/go/longrunning/autogen"
 	pb "google.golang.org/genproto/googleapis/longrunning"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -43,23 +42,17 @@ var ErrNoMetadata = errors.New("operation contains no metadata")
 
 // Operation represents the result of an API call that may not be ready yet.
 type Operation struct {
-	c     operationsClient
+	c     pb.OperationsClient
 	proto *pb.Operation
-}
-
-type operationsClient interface {
-	GetOperation(context.Context, *pb.GetOperationRequest, ...gax.CallOption) (*pb.Operation, error)
-	CancelOperation(context.Context, *pb.CancelOperationRequest, ...gax.CallOption) error
-	DeleteOperation(context.Context, *pb.DeleteOperationRequest, ...gax.CallOption) error
 }
 
 // InternalNewOperation is for use by the google Cloud Libraries only.
 //
 // InternalNewOperation returns an long-running operation, abstracting the raw pb.Operation.
 // The conn parameter refers to a server that proto was received from.
-func InternalNewOperation(inner *autogen.OperationsClient, proto *pb.Operation) *Operation {
+func InternalNewOperation(conn *grpc.ClientConn, proto *pb.Operation) *Operation {
 	return &Operation{
-		c:     inner,
+		c:     pb.NewOperationsClient(conn),
 		proto: proto,
 	}
 }
@@ -93,9 +86,9 @@ func (op *Operation) Metadata(meta proto.Message) error {
 // If Poll succeeds and the operation has completed successfully,
 // op.Done will return true; if resp != nil, the response of the operation
 // is stored in resp.
-func (op *Operation) Poll(ctx context.Context, resp proto.Message, opts ...gax.CallOption) error {
+func (op *Operation) Poll(ctx context.Context, resp proto.Message) error {
 	if !op.Done() {
-		p, err := op.c.GetOperation(ctx, &pb.GetOperationRequest{Name: op.Name()}, opts...)
+		p, err := op.c.GetOperation(ctx, &pb.GetOperationRequest{Name: op.Name()})
 		if err != nil {
 			return err
 		}
@@ -119,37 +112,24 @@ func (op *Operation) Poll(ctx context.Context, resp proto.Message, opts ...gax.C
 	}
 }
 
-// DefaultWaitInterval is the polling interval used by Operation.Wait.
-const DefaultWaitInterval = 60 * time.Second
-
-// Wait is equivalent to WaitWithInterval using DefaultWaitInterval.
-func (op *Operation) Wait(ctx context.Context, resp proto.Message, opts ...gax.CallOption) error {
-	return op.WaitWithInterval(ctx, resp, DefaultWaitInterval, opts...)
-}
-
-// WaitWithInterval blocks until the operation is completed.
+// Wait blocks until the operation is completed.
 // If resp != nil, Wait stores the response in resp.
-// WaitWithInterval polls every interval, except initially
-// when it polls using exponential backoff.
 //
 // See documentation of Poll for error-handling information.
-func (op *Operation) WaitWithInterval(ctx context.Context, resp proto.Message, interval time.Duration, opts ...gax.CallOption) error {
+func (op *Operation) Wait(ctx context.Context, resp proto.Message) error {
 	bo := gax.Backoff{
-		Initial: 1 * time.Second,
-		Max:     interval,
+		Initial: 100 * time.Millisecond,
+		Max:     10 * time.Second,
 	}
-	if bo.Max < bo.Initial {
-		bo.Max = bo.Initial
-	}
-	return op.wait(ctx, resp, &bo, gax.Sleep, opts...)
+	return op.wait(ctx, resp, &bo, gax.Sleep)
 }
 
 type sleeper func(context.Context, time.Duration) error
 
 // wait implements Wait, taking exponentialBackoff and sleeper arguments for testing.
-func (op *Operation) wait(ctx context.Context, resp proto.Message, bo *gax.Backoff, sl sleeper, opts ...gax.CallOption) error {
+func (op *Operation) wait(ctx context.Context, resp proto.Message, bo *gax.Backoff, sl sleeper) error {
 	for {
-		if err := op.Poll(ctx, resp, opts...); err != nil {
+		if err := op.Poll(ctx, resp); err != nil {
 			return err
 		}
 		if op.Done() {
@@ -169,13 +149,15 @@ func (op *Operation) wait(ctx context.Context, resp proto.Message, bo *gax.Backo
 // operation completed despite cancellation. On successful cancellation,
 // the operation is not deleted; instead, op.Poll returns an error
 // with code Canceled.
-func (op *Operation) Cancel(ctx context.Context, opts ...gax.CallOption) error {
-	return op.c.CancelOperation(ctx, &pb.CancelOperationRequest{Name: op.Name()}, opts...)
+func (op *Operation) Cancel(ctx context.Context) error {
+	_, err := op.c.CancelOperation(ctx, &pb.CancelOperationRequest{Name: op.Name()})
+	return err
 }
 
 // Delete deletes a long-running operation. This method indicates that the client is
 // no longer interested in the operation result. It does not cancel the
 // operation. If the server doesn't support this method, grpc.Code(error) == codes.Unimplemented.
-func (op *Operation) Delete(ctx context.Context, opts ...gax.CallOption) error {
-	return op.c.DeleteOperation(ctx, &pb.DeleteOperationRequest{Name: op.Name()}, opts...)
+func (op *Operation) Delete(ctx context.Context) error {
+	_, err := op.c.DeleteOperation(ctx, &pb.DeleteOperationRequest{Name: op.Name()})
+	return err
 }

@@ -64,15 +64,6 @@ type TableMetadata struct {
 
 	// The time-based partitioning settings for this table.
 	TimePartitioning *TimePartitioning
-
-	// Contains information regarding this table's streaming buffer, if one is
-	// present. This field will be nil if the table is not being streamed to or if
-	// there is no data in the streaming buffer.
-	StreamingBuffer *StreamingBuffer
-
-	// ETag is the ETag obtained when reading metadata. Pass it to Table.Update to
-	// ensure that the metadata hasn't changed since it was read.
-	ETag string
 }
 
 // TableCreateDisposition specifies the circumstances under which destination table will be created.
@@ -110,24 +101,9 @@ const (
 type TableType string
 
 const (
-	RegularTable  TableType = "TABLE"
-	ViewTable     TableType = "VIEW"
-	ExternalTable TableType = "EXTERNAL"
+	RegularTable TableType = "TABLE"
+	ViewTable    TableType = "VIEW"
 )
-
-// StreamingBuffer holds information about the streaming buffer.
-type StreamingBuffer struct {
-	// A lower-bound estimate of the number of bytes currently in the streaming
-	// buffer.
-	EstimatedBytes uint64
-
-	// A lower-bound estimate of the number of rows currently in the streaming
-	// buffer.
-	EstimatedRows uint64
-
-	// The time of the oldest entry in the streaming buffer.
-	OldestEntryTime time.Time
-}
 
 func (t *Table) tableRefProto() *bq.TableReference {
 	return &bq.TableReference{
@@ -217,17 +193,8 @@ func (opt TimePartitioning) customizeCreateTable(conf *createTableConf) {
 	conf.timePartitioning = &opt
 }
 
-// Read fetches the contents of the table.
-func (t *Table) Read(ctx context.Context) *RowIterator {
-	return newRowIterator(ctx, t.c.service, &readTableConf{
-		projectID: t.ProjectID,
-		datasetID: t.DatasetID,
-		tableID:   t.TableID,
-	})
-}
-
 // Update modifies specific Table metadata fields.
-func (t *Table) Update(ctx context.Context, tm TableMetadataToUpdate, etag string) (*TableMetadata, error) {
+func (t *Table) Update(ctx context.Context, tm TableMetadataToUpdate) (*TableMetadata, error) {
 	var conf patchTableConf
 	if tm.Description != nil {
 		s := optional.ToString(tm.Description)
@@ -238,8 +205,7 @@ func (t *Table) Update(ctx context.Context, tm TableMetadataToUpdate, etag strin
 		conf.Name = &s
 	}
 	conf.Schema = tm.Schema
-	conf.ExpirationTime = tm.ExpirationTime
-	return t.c.service.patchTable(ctx, t.ProjectID, t.DatasetID, t.TableID, &conf, etag)
+	return t.c.service.patchTable(ctx, t.ProjectID, t.DatasetID, t.TableID, &conf)
 }
 
 // TableMetadataToUpdate is used when updating a table's metadata.
@@ -255,7 +221,4 @@ type TableMetadataToUpdate struct {
 	// When updating a schema, you can add columns but not remove them.
 	Schema Schema
 	// TODO(jba): support updating the view
-
-	// ExpirationTime is the time when this table expires.
-	ExpirationTime time.Time
 }

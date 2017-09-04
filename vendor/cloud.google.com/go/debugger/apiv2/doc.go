@@ -15,7 +15,7 @@
 // AUTO-GENERATED CODE. DO NOT EDIT.
 
 // Package debugger is an experimental, auto-generated package for the
-// Stackdriver Debugger API.
+// debugger API.
 //
 // Examines the call stack and variables of a running application
 // without stopping or slowing it down.
@@ -28,18 +28,9 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-func insertXGoog(ctx context.Context, val []string) context.Context {
-	md, _ := metadata.FromOutgoingContext(ctx)
+func insertXGoog(ctx context.Context, val string) context.Context {
+	md, _ := metadata.FromContext(ctx)
 	md = md.Copy()
-	md["x-goog-api-client"] = val
-	return metadata.NewOutgoingContext(ctx, md)
-}
-
-// DefaultAuthScopes reports the authentication scopes required
-// by this package.
-func DefaultAuthScopes() []string {
-	return []string{
-		"https://www.googleapis.com/auth/cloud-platform",
-		"https://www.googleapis.com/auth/cloud_debugger",
-	}
+	md["x-goog-api-client"] = []string{val}
+	return metadata.NewContext(ctx, md)
 }

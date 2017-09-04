@@ -36,7 +36,7 @@ import (
 	"unicode/utf8"
 
 	"google.golang.org/api/option"
-	htransport "google.golang.org/api/transport/http"
+	"google.golang.org/api/transport"
 
 	"cloud.google.com/go/internal/optional"
 	"cloud.google.com/go/internal/version"
@@ -89,7 +89,7 @@ func NewClient(ctx context.Context, opts ...option.ClientOption) (*Client, error
 		option.WithUserAgent(userAgent),
 	}
 	opts = append(o, opts...)
-	hc, ep, err := htransport.NewClient(ctx, opts...)
+	hc, ep, err := transport.NewHTTPClient(ctx, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("dialing: %v", err)
 	}
@@ -112,6 +112,39 @@ func NewClient(ctx context.Context, opts ...option.ClientOption) (*Client, error
 func (c *Client) Close() error {
 	c.hc = nil
 	return nil
+}
+
+// BucketHandle provides operations on a Google Cloud Storage bucket.
+// Use Client.Bucket to get a handle.
+type BucketHandle struct {
+	acl              ACLHandle
+	defaultObjectACL ACLHandle
+
+	c    *Client
+	name string
+}
+
+// Bucket returns a BucketHandle, which provides operations on the named bucket.
+// This call does not perform any network operations.
+//
+// The supplied name must contain only lowercase letters, numbers, dashes,
+// underscores, and dots. The full specification for valid bucket names can be
+// found at:
+//   https://cloud.google.com/storage/docs/bucket-naming
+func (c *Client) Bucket(name string) *BucketHandle {
+	return &BucketHandle{
+		c:    c,
+		name: name,
+		acl: ACLHandle{
+			c:      c,
+			bucket: name,
+		},
+		defaultObjectACL: ACLHandle{
+			c:         c,
+			bucket:    name,
+			isDefault: true,
+		},
+	}
 }
 
 // SignedURLOptions allows you to restrict the access to the signed URL.
@@ -262,7 +295,6 @@ type ObjectHandle struct {
 	gen           int64 // a negative value indicates latest
 	conds         *Conditions
 	encryptionKey []byte // AES-256 key
-	userProject   string // for requester-pays buckets
 }
 
 // ACL provides access to the object's access control list.
@@ -315,9 +347,6 @@ func (o *ObjectHandle) Attrs(ctx context.Context) (*ObjectAttrs, error) {
 	if err := applyConds("Attrs", o.gen, o.conds, call); err != nil {
 		return nil, err
 	}
-	if o.userProject != "" {
-		call.UserProject(o.userProject)
-	}
 	if err := setEncryptionHeaders(call.Header(), o.encryptionKey, false); err != nil {
 		return nil, err
 	}
@@ -360,7 +389,7 @@ func (o *ObjectHandle) Update(ctx context.Context, uattrs ObjectAttrsToUpdate) (
 	}
 	if uattrs.ContentEncoding != nil {
 		attrs.ContentEncoding = optional.ToString(uattrs.ContentEncoding)
-		forceSendFields = append(forceSendFields, "ContentEncoding")
+		forceSendFields = append(forceSendFields, "ContentType")
 	}
 	if uattrs.ContentDisposition != nil {
 		attrs.ContentDisposition = optional.ToString(uattrs.ContentDisposition)
@@ -391,9 +420,6 @@ func (o *ObjectHandle) Update(ctx context.Context, uattrs ObjectAttrsToUpdate) (
 	call := o.c.raw.Objects.Patch(o.bucket, o.object, rawObj).Projection("full").Context(ctx)
 	if err := applyConds("Update", o.gen, o.conds, call); err != nil {
 		return nil, err
-	}
-	if o.userProject != "" {
-		call.UserProject(o.userProject)
 	}
 	if err := setEncryptionHeaders(call.Header(), o.encryptionKey, false); err != nil {
 		return nil, err
@@ -441,10 +467,6 @@ func (o *ObjectHandle) Delete(ctx context.Context) error {
 	if err := applyConds("Delete", o.gen, o.conds, call); err != nil {
 		return err
 	}
-	if o.userProject != "" {
-		call.UserProject(o.userProject)
-	}
-	// Encryption doesn't apply to Delete.
 	setClientHeader(call.Header())
 	err := runWithRetry(ctx, func() error { return call.Do() })
 	switch e := err.(type) {
@@ -496,14 +518,10 @@ func (o *ObjectHandle) NewRangeReader(ctx context.Context, offset, length int64)
 	if err != nil {
 		return nil, err
 	}
-	req = withContext(req, ctx)
 	if length < 0 && offset > 0 {
 		req.Header.Set("Range", fmt.Sprintf("bytes=%d-", offset))
 	} else if length > 0 {
 		req.Header.Set("Range", fmt.Sprintf("bytes=%d-%d", offset, offset+length-1))
-	}
-	if o.userProject != "" {
-		req.Header.Set("X-Goog-User-Project", o.userProject)
 	}
 	if err := setEncryptionHeaders(req.Header, o.encryptionKey, false); err != nil {
 		return nil, err
@@ -567,13 +585,12 @@ func (o *ObjectHandle) NewRangeReader(ctx context.Context, offset, length int64)
 		crc, checkCRC = parseCRC32c(res)
 	}
 	return &Reader{
-		body:         body,
-		size:         size,
-		remain:       remain,
-		contentType:  res.Header.Get("Content-Type"),
-		cacheControl: res.Header.Get("Cache-Control"),
-		wantCRC:      crc,
-		checkCRC:     checkCRC,
+		body:        body,
+		size:        size,
+		remain:      remain,
+		contentType: res.Header.Get("Content-Type"),
+		wantCRC:     crc,
+		checkCRC:    checkCRC,
 	}, nil
 }
 
@@ -813,27 +830,26 @@ func newObject(o *raw.Object) *ObjectAttrs {
 		sha256 = o.CustomerEncryption.KeySha256
 	}
 	return &ObjectAttrs{
-		Bucket:             o.Bucket,
-		Name:               o.Name,
-		ContentType:        o.ContentType,
-		ContentLanguage:    o.ContentLanguage,
-		CacheControl:       o.CacheControl,
-		ACL:                acl,
-		Owner:              owner,
-		ContentEncoding:    o.ContentEncoding,
-		ContentDisposition: o.ContentDisposition,
-		Size:               int64(o.Size),
-		MD5:                md5,
-		CRC32C:             crc32c,
-		MediaLink:          o.MediaLink,
-		Metadata:           o.Metadata,
-		Generation:         o.Generation,
-		Metageneration:     o.Metageneration,
-		StorageClass:       o.StorageClass,
-		CustomerKeySHA256:  sha256,
-		Created:            convertTime(o.TimeCreated),
-		Deleted:            convertTime(o.TimeDeleted),
-		Updated:            convertTime(o.Updated),
+		Bucket:            o.Bucket,
+		Name:              o.Name,
+		ContentType:       o.ContentType,
+		ContentLanguage:   o.ContentLanguage,
+		CacheControl:      o.CacheControl,
+		ACL:               acl,
+		Owner:             owner,
+		ContentEncoding:   o.ContentEncoding,
+		Size:              int64(o.Size),
+		MD5:               md5,
+		CRC32C:            crc32c,
+		MediaLink:         o.MediaLink,
+		Metadata:          o.Metadata,
+		Generation:        o.Generation,
+		Metageneration:    o.Metageneration,
+		StorageClass:      o.StorageClass,
+		CustomerKeySHA256: sha256,
+		Created:           convertTime(o.TimeCreated),
+		Deleted:           convertTime(o.TimeDeleted),
+		Updated:           convertTime(o.Updated),
 	}
 }
 
@@ -888,7 +904,7 @@ func (c *contentTyper) ContentType() string {
 }
 
 // Conditions constrain methods to act on specific generations of
-// objects.
+// resources.
 //
 // The zero value is an empty set of constraints. Not all conditions or
 // combinations of conditions are applicable to all methods.

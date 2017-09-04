@@ -15,16 +15,15 @@
 package trace
 
 import (
-	"encoding/hex"
-	"fmt"
+	"strings"
 
-	"cloud.google.com/go/internal/tracecontext"
 	"golang.org/x/net/context"
+	"google.golang.org/api/option"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )
 
-const grpcMetadataKey = "grpc-trace-bin"
+const grpcMetadataKey = "stackdriver-trace-context"
 
 // GRPCClientInterceptor returns a grpc.UnaryClientInterceptor that traces all outgoing requests from a gRPC client.
 // The calling context should already have a *trace.Span; a child span will be
@@ -32,37 +31,27 @@ const grpcMetadataKey = "grpc-trace-bin"
 // the call will not be traced.
 //
 // The functionality in gRPC that this feature relies on is currently experimental.
-func (c *Client) GRPCClientInterceptor() grpc.UnaryClientInterceptor {
-	return grpc.UnaryClientInterceptor(c.grpcUnaryInterceptor)
+func GRPCClientInterceptor() grpc.UnaryClientInterceptor {
+	return grpc.UnaryClientInterceptor(grpcUnaryInterceptor)
 }
 
-func (c *Client) grpcUnaryInterceptor(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
+func grpcUnaryInterceptor(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 	// TODO: also intercept streams.
 	span := FromContext(ctx).NewChild(method)
-	if span == nil {
-		span = c.NewSpan(method)
-	}
 	defer span.Finish()
 
-	traceContext := make([]byte, tracecontext.Len)
-	// traceID is a hex-encoded 128-bit value.
-	// TODO(jbd): Decode trace IDs upon arrival and
-	// represent trace IDs with 16 bytes internally.
-	tid, err := hex.DecodeString(span.trace.traceID)
-	if err != nil {
-		return invoker(ctx, method, req, reply, cc, opts...)
+	if span != nil {
+		header := spanHeader(span.trace.traceID, span.span.ParentSpanId, span.trace.globalOptions)
+		md, ok := metadata.FromContext(ctx)
+		if !ok {
+			md = metadata.Pairs(grpcMetadataKey, header)
+		} else {
+			md[grpcMetadataKey] = []string{header}
+		}
+		ctx = metadata.NewContext(ctx, md)
 	}
-	tracecontext.Encode(traceContext, tid, span.span.SpanId, byte(span.trace.globalOptions))
-	md, ok := metadata.FromOutgoingContext(ctx)
-	if !ok {
-		md = metadata.Pairs(grpcMetadataKey, string(traceContext))
-	} else {
-		md = md.Copy() // metadata is immutable, copy.
-		md[grpcMetadataKey] = []string{string(traceContext)}
-	}
-	ctx = metadata.NewOutgoingContext(ctx, md)
 
-	err = invoker(ctx, method, req, reply, cc, opts...)
+	err := invoker(ctx, method, req, reply, cc, opts...)
 	if err != nil {
 		// TODO: standardize gRPC label names?
 		span.SetLabel("error", err.Error())
@@ -76,20 +65,21 @@ func (c *Client) grpcUnaryInterceptor(ctx context.Context, method string, req, r
 //	span := trace.FromContext(ctx)
 //
 // The functionality in gRPC that this feature relies on is currently experimental.
-func (c *Client) GRPCServerInterceptor() grpc.UnaryServerInterceptor {
+func GRPCServerInterceptor(tc *Client) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
-		md, _ := metadata.FromIncomingContext(ctx)
-		var traceHeader string
+		md, _ := metadata.FromContext(ctx)
 		if header, ok := md[grpcMetadataKey]; ok {
-			traceID, spanID, opts, ok := tracecontext.Decode([]byte(header[0]))
-			if ok {
-				// TODO(jbd): Generate a span directly from string(traceID), spanID and opts.
-				traceHeader = fmt.Sprintf("%x/%d;o=%d", traceID, spanID, opts)
-			}
+			span := tc.SpanFromHeader("", strings.Join(header, ""))
+			defer span.Finish()
+			ctx = NewContext(ctx, span)
 		}
-		span := c.SpanFromHeader(info.FullMethod, traceHeader)
-		defer span.Finish()
-		ctx = NewContext(ctx, span)
 		return handler(ctx, req)
 	}
 }
+
+// EnableGRPCTracing automatically traces all outgoing gRPC calls from cloud.google.com/go clients.
+//
+// The functionality in gRPC that this relies on is currently experimental.
+//
+// Deprecated: Use option.WithGRPCDialOption(grpc.WithUnaryInterceptor(GRPCClientInterceptor())) instead.
+var EnableGRPCTracing option.ClientOption = option.WithGRPCDialOption(grpc.WithUnaryInterceptor(GRPCClientInterceptor()))

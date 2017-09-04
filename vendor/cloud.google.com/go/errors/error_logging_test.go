@@ -204,12 +204,3 @@ func TestReportfUsingLogging(t *testing.T) {
 		t.Errorf("error report didn't contain formatted message")
 	}
 }
-
-func TestCloseUsingLogging(t *testing.T) {
-	fl := &fakeLogger{}
-	c := newTestClientUsingLogging(fl)
-	err := c.Close()
-	if err != nil {
-		t.Fatal(err)
-	}
-}

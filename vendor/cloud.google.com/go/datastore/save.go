@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"reflect"
 	"time"
-	"unicode/utf8"
 
 	timepb "github.com/golang/protobuf/ptypes/timestamp"
 	pb "google.golang.org/genproto/googleapis/datastore/v1"
@@ -329,36 +328,33 @@ func interfaceToProto(iv interface{}, noIndex bool) (*pb.Value, error) {
 	val := &pb.Value{ExcludeFromIndexes: noIndex}
 	switch v := iv.(type) {
 	case int:
-		val.ValueType = &pb.Value_IntegerValue{IntegerValue: int64(v)}
+		val.ValueType = &pb.Value_IntegerValue{int64(v)}
 	case int32:
-		val.ValueType = &pb.Value_IntegerValue{IntegerValue: int64(v)}
+		val.ValueType = &pb.Value_IntegerValue{int64(v)}
 	case int64:
-		val.ValueType = &pb.Value_IntegerValue{IntegerValue: v}
+		val.ValueType = &pb.Value_IntegerValue{v}
 	case bool:
-		val.ValueType = &pb.Value_BooleanValue{BooleanValue: v}
+		val.ValueType = &pb.Value_BooleanValue{v}
 	case string:
 		if len(v) > 1500 && !noIndex {
 			return nil, errors.New("string property too long to index")
 		}
-		if !utf8.ValidString(v) {
-			return nil, fmt.Errorf("string is not valid utf8: %q", v)
-		}
-		val.ValueType = &pb.Value_StringValue{StringValue: v}
+		val.ValueType = &pb.Value_StringValue{v}
 	case float32:
-		val.ValueType = &pb.Value_DoubleValue{DoubleValue: float64(v)}
+		val.ValueType = &pb.Value_DoubleValue{float64(v)}
 	case float64:
-		val.ValueType = &pb.Value_DoubleValue{DoubleValue: v}
+		val.ValueType = &pb.Value_DoubleValue{v}
 	case *Key:
 		if v == nil {
 			val.ValueType = &pb.Value_NullValue{}
 		} else {
-			val.ValueType = &pb.Value_KeyValue{KeyValue: keyToProto(v)}
+			val.ValueType = &pb.Value_KeyValue{keyToProto(v)}
 		}
 	case GeoPoint:
 		if !v.Valid() {
 			return nil, errors.New("invalid GeoPoint value")
 		}
-		val.ValueType = &pb.Value_GeoPointValue{GeoPointValue: &llpb.LatLng{
+		val.ValueType = &pb.Value_GeoPointValue{&llpb.LatLng{
 			Latitude:  v.Lat,
 			Longitude: v.Lng,
 		}}
@@ -366,7 +362,7 @@ func interfaceToProto(iv interface{}, noIndex bool) (*pb.Value, error) {
 		if v.Before(minTime) || v.After(maxTime) {
 			return nil, errors.New("time value out of range")
 		}
-		val.ValueType = &pb.Value_TimestampValue{TimestampValue: &timepb.Timestamp{
+		val.ValueType = &pb.Value_TimestampValue{&timepb.Timestamp{
 			Seconds: v.Unix(),
 			Nanos:   int32(v.Nanosecond()),
 		}}
@@ -374,13 +370,13 @@ func interfaceToProto(iv interface{}, noIndex bool) (*pb.Value, error) {
 		if len(v) > 1500 && !noIndex {
 			return nil, errors.New("[]byte property too long to index")
 		}
-		val.ValueType = &pb.Value_BlobValue{BlobValue: v}
+		val.ValueType = &pb.Value_BlobValue{v}
 	case *Entity:
 		e, err := propertiesToProto(v.Key, v.Properties)
 		if err != nil {
 			return nil, err
 		}
-		val.ValueType = &pb.Value_EntityValue{EntityValue: e}
+		val.ValueType = &pb.Value_EntityValue{e}
 	case []interface{}:
 		arr := make([]*pb.Value, 0, len(v))
 		for i, v := range v {
@@ -390,7 +386,7 @@ func interfaceToProto(iv interface{}, noIndex bool) (*pb.Value, error) {
 			}
 			arr = append(arr, elem)
 		}
-		val.ValueType = &pb.Value_ArrayValue{ArrayValue: &pb.ArrayValue{Values: arr}}
+		val.ValueType = &pb.Value_ArrayValue{&pb.ArrayValue{arr}}
 		// ArrayValues have ExcludeFromIndexes set on the individual items, rather
 		// than the top-level value.
 		val.ExcludeFromIndexes = false

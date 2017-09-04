@@ -28,7 +28,6 @@ type Reader struct {
 	body         io.ReadCloser
 	remain, size int64
 	contentType  string
-	cacheControl string
 	checkCRC     bool   // should we check the CRC?
 	wantCRC      uint32 // the CRC32c value the server sent in the header
 	gotCRC       uint32 // running crc
@@ -72,9 +71,4 @@ func (r *Reader) Remain() int64 {
 // ContentType returns the content type of the object.
 func (r *Reader) ContentType() string {
 	return r.contentType
-}
-
-// CacheControl returns the cache control of the object.
-func (r *Reader) CacheControl() string {
-	return r.cacheControl
 }

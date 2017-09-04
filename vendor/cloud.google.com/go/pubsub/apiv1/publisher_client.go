@@ -50,7 +50,10 @@ type PublisherCallOptions struct {
 func defaultPublisherClientOptions() []option.ClientOption {
 	return []option.ClientOption{
 		option.WithEndpoint("pubsub.googleapis.com:443"),
-		option.WithScopes(DefaultAuthScopes()...),
+		option.WithScopes(
+			"https://www.googleapis.com/auth/cloud-platform",
+			"https://www.googleapis.com/auth/pubsub",
+		),
 	}
 }
 
@@ -108,7 +111,7 @@ type PublisherClient struct {
 	CallOptions *PublisherCallOptions
 
 	// The metadata to be sent with each request.
-	xGoogHeader []string
+	xGoogHeader string
 }
 
 // NewPublisherClient creates a new publisher client.
@@ -147,7 +150,7 @@ func (c *PublisherClient) Close() error {
 func (c *PublisherClient) SetGoogleClientInfo(keyval ...string) {
 	kv := append([]string{"gl-go", version.Go()}, keyval...)
 	kv = append(kv, "gapic", version.Repo, "gax", gax.Version, "grpc", grpc.Version)
-	c.xGoogHeader = []string{gax.XGoogHeader(kv...)}
+	c.xGoogHeader = gax.XGoogHeader(kv...)
 }
 
 // PublisherProjectPath returns the path for the project resource.

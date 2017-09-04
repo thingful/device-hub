@@ -19,10 +19,9 @@ package logging
 import (
 	"net/http"
 	"net/url"
+	"reflect"
 	"testing"
 	"time"
-
-	"cloud.google.com/go/internal/testutil"
 
 	"github.com/golang/protobuf/proto"
 	durpb "github.com/golang/protobuf/ptypes/duration"
@@ -35,12 +34,7 @@ import (
 func TestLoggerCreation(t *testing.T) {
 	const logID = "testing"
 	c := &Client{projectID: "PROJECT_ID"}
-	customResource := &mrpb.MonitoredResource{
-		Type: "global",
-		Labels: map[string]string{
-			"project_id": "ANOTHER_PROJECT",
-		},
-	}
+	defaultResource := &mrpb.MonitoredResource{Type: "global"}
 	defaultBundler := &bundler.Bundler{
 		DelayThreshold:       DefaultDelayThreshold,
 		BundleCountThreshold: DefaultEntryCountThreshold,
@@ -49,44 +43,21 @@ func TestLoggerCreation(t *testing.T) {
 		BufferedByteLimit:    DefaultBufferedByteLimit,
 	}
 	for _, test := range []struct {
-		options         []LoggerOption
-		wantLogger      *Logger
-		defaultResource bool
-		wantBundler     *bundler.Bundler
+		options     []LoggerOption
+		wantLogger  *Logger
+		wantBundler *bundler.Bundler
 	}{
+		{nil, &Logger{commonResource: defaultResource}, defaultBundler},
 		{
-			options:         nil,
-			wantLogger:      &Logger{},
-			defaultResource: true,
-			wantBundler:     defaultBundler,
+			[]LoggerOption{CommonResource(nil), CommonLabels(map[string]string{"a": "1"})},
+			&Logger{commonResource: nil, commonLabels: map[string]string{"a": "1"}},
+			defaultBundler,
 		},
 		{
-			options: []LoggerOption{
-				CommonResource(nil),
-				CommonLabels(map[string]string{"a": "1"}),
-			},
-			wantLogger: &Logger{
-				commonResource: nil,
-				commonLabels:   map[string]string{"a": "1"},
-			},
-			wantBundler: defaultBundler,
-		},
-		{
-			options:     []LoggerOption{CommonResource(customResource)},
-			wantLogger:  &Logger{commonResource: customResource},
-			wantBundler: defaultBundler,
-		},
-		{
-			options: []LoggerOption{
-				DelayThreshold(time.Minute),
-				EntryCountThreshold(99),
-				EntryByteThreshold(17),
-				EntryByteLimit(18),
-				BufferedByteLimit(19),
-			},
-			wantLogger:      &Logger{},
-			defaultResource: true,
-			wantBundler: &bundler.Bundler{
+			[]LoggerOption{DelayThreshold(time.Minute), EntryCountThreshold(99),
+				EntryByteThreshold(17), EntryByteLimit(18), BufferedByteLimit(19)},
+			&Logger{commonResource: defaultResource},
+			&bundler.Bundler{
 				DelayThreshold:       time.Minute,
 				BundleCountThreshold: 99,
 				BundleByteThreshold:  17,
@@ -96,10 +67,10 @@ func TestLoggerCreation(t *testing.T) {
 		},
 	} {
 		gotLogger := c.Logger(logID, test.options...)
-		if got, want := gotLogger.commonResource, test.wantLogger.commonResource; !test.defaultResource && !proto.Equal(got, want) {
+		if got, want := gotLogger.commonResource, test.wantLogger.commonResource; !reflect.DeepEqual(got, want) {
 			t.Errorf("%v: resource: got %v, want %v", test.options, got, want)
 		}
-		if got, want := gotLogger.commonLabels, test.wantLogger.commonLabels; !testutil.Equal(got, want) {
+		if got, want := gotLogger.commonLabels, test.wantLogger.commonLabels; !reflect.DeepEqual(got, want) {
 			t.Errorf("%v: commonLabels: got %v, want %v", test.options, got, want)
 		}
 		if got, want := gotLogger.bundler.DelayThreshold, test.wantBundler.DelayThreshold; got != want {
@@ -198,8 +169,7 @@ func TestFromHTTPRequest(t *testing.T) {
 		Status:                         200,
 		ResponseSize:                   25,
 		Latency:                        100 * time.Second,
-		LocalIP:                        "127.0.0.1",
-		RemoteIP:                       "10.0.1.1",
+		RemoteIP:                       "127.0.0.1",
 		CacheHit:                       true,
 		CacheValidatedWithOriginServer: true,
 	}
@@ -212,13 +182,12 @@ func TestFromHTTPRequest(t *testing.T) {
 		ResponseSize:                   25,
 		Latency:                        &durpb.Duration{Seconds: 100},
 		UserAgent:                      "user-agent",
-		ServerIp:                       "127.0.0.1",
-		RemoteIp:                       "10.0.1.1",
+		RemoteIp:                       "127.0.0.1",
 		Referer:                        "referer",
 		CacheHit:                       true,
 		CacheValidatedWithOriginServer: true,
 	}
-	if !proto.Equal(got, want) {
+	if !reflect.DeepEqual(got, want) {
 		t.Errorf("got  %+v\nwant %+v", got, want)
 	}
 }

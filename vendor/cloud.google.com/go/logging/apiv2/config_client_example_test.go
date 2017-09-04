@@ -19,7 +19,6 @@ package logging_test
 import (
 	"cloud.google.com/go/logging/apiv2"
 	"golang.org/x/net/context"
-	"google.golang.org/api/iterator"
 	loggingpb "google.golang.org/genproto/googleapis/logging/v2"
 )
 
@@ -46,11 +45,9 @@ func ExampleConfigClient_ListSinks() {
 	it := c.ListSinks(ctx, req)
 	for {
 		resp, err := it.Next()
-		if err == iterator.Done {
-			break
-		}
 		if err != nil {
 			// TODO: Handle error.
+			break
 		}
 		// TODO: Use resp.
 		_ = resp

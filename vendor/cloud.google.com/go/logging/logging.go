@@ -36,7 +36,6 @@ import (
 	"sync"
 	"time"
 
-	"cloud.google.com/go/compute/metadata"
 	"cloud.google.com/go/internal/version"
 	vkit "cloud.google.com/go/logging/apiv2"
 	"cloud.google.com/go/logging/internal"
@@ -96,10 +95,6 @@ type Client struct {
 	donec     chan struct{}  // closed on Client.Close to close Logger bundlers
 	loggers   sync.WaitGroup // so we can wait for loggers to close
 	closed    bool
-
-	mu      sync.Mutex
-	nErrs   int   // number of errors we saw
-	lastErr error // last error we saw
 
 	// OnError is called when an error occurs in a call to Log or Flush. The
 	// error may be due to an invalid Entry, an overflow because BufferLimit
@@ -182,34 +177,9 @@ func (c *Client) Ping(ctx context.Context) error {
 	}
 	_, err := c.client.WriteLogEntries(ctx, &logpb.WriteLogEntriesRequest{
 		LogName:  internal.LogPath(c.parent(), "ping"),
-		Resource: globalResource(c.projectID),
+		Resource: &mrpb.MonitoredResource{Type: "global"},
 		Entries:  []*logpb.LogEntry{ent},
 	})
-	return err
-}
-
-// error puts the error on the client's error channel
-// without blocking, and records summary error info.
-func (c *Client) error(err error) {
-	select {
-	case c.errc <- err:
-	default:
-	}
-	c.mu.Lock()
-	c.lastErr = err
-	c.nErrs++
-	c.mu.Unlock()
-}
-
-func (c *Client) extractErrorInfo() error {
-	var err error
-	c.mu.Lock()
-	if c.lastErr != nil {
-		err = fmt.Errorf("saw %d errors; last: %v", c.nErrs, c.lastErr)
-		c.nErrs = 0
-		c.lastErr = nil
-	}
-	c.mu.Unlock()
 	return err
 }
 
@@ -232,57 +202,13 @@ type LoggerOption interface {
 }
 
 // CommonResource sets the monitored resource associated with all log entries
-// written from a Logger. If not provided, the resource is automatically
-// detected based on the running environment.  This value can be overridden
-// per-entry by setting an Entry's Resource field.
+// written from a Logger. If not provided, a resource of type "global" is used.
+// This value can be overridden by setting an Entry's Resource field.
 func CommonResource(r *mrpb.MonitoredResource) LoggerOption { return commonResource{r} }
 
 type commonResource struct{ *mrpb.MonitoredResource }
 
 func (r commonResource) set(l *Logger) { l.commonResource = r.MonitoredResource }
-
-var detectedResource struct {
-	pb   *mrpb.MonitoredResource
-	once sync.Once
-}
-
-func detectResource() *mrpb.MonitoredResource {
-	detectedResource.once.Do(func() {
-		if !metadata.OnGCE() {
-			return
-		}
-		projectID, err := metadata.ProjectID()
-		if err != nil {
-			return
-		}
-		id, err := metadata.InstanceID()
-		if err != nil {
-			return
-		}
-		zone, err := metadata.Zone()
-		if err != nil {
-			return
-		}
-		detectedResource.pb = &mrpb.MonitoredResource{
-			Type: "gce_instance",
-			Labels: map[string]string{
-				"project_id":  projectID,
-				"instance_id": id,
-				"zone":        zone,
-			},
-		}
-	})
-	return detectedResource.pb
-}
-
-func globalResource(projectID string) *mrpb.MonitoredResource {
-	return &mrpb.MonitoredResource{
-		Type: "global",
-		Labels: map[string]string{
-			"project_id": projectID,
-		},
-	}
-}
 
 // CommonLabels are labels that apply to all log entries written from a Logger,
 // so that you don't have to repeat them in each log entry's Labels field. If
@@ -362,14 +288,10 @@ func (b bufferedByteLimit) set(l *Logger) { l.bundler.BufferedByteLimit = int(b)
 // characters: [A-Za-z0-9]; and punctuation characters: forward-slash,
 // underscore, hyphen, and period.
 func (c *Client) Logger(logID string, opts ...LoggerOption) *Logger {
-	r := detectResource()
-	if r == nil {
-		r = globalResource(c.projectID)
-	}
 	l := &Logger{
 		client:         c,
 		logName:        internal.LogPath(c.parent(), logID),
-		commonResource: r,
+		commonResource: &mrpb.MonitoredResource{Type: "global"},
 	}
 	// TODO(jba): determine the right context for the bundle handler.
 	ctx := context.TODO()
@@ -410,7 +332,7 @@ func (w severityWriter) Write(p []byte) (n int, err error) {
 	return len(p), nil
 }
 
-// Close waits for all opened loggers to be flushed and closes the client.
+// Close closes the client.
 func (c *Client) Close() error {
 	if c.closed {
 		return nil
@@ -419,12 +341,9 @@ func (c *Client) Close() error {
 	c.loggers.Wait() // wait for all bundlers to flush and close
 	// Now there can be no more errors.
 	close(c.errc) // terminate error goroutine
-	// Prefer logging errors to close errors.
-	err := c.extractErrorInfo()
-	err2 := c.client.Close()
-	if err == nil {
-		err = err2
-	}
+	// Return only the first error. Since all clients share an underlying connection,
+	// Closes after the first always report a "connection is closing" error.
+	err := c.client.Close()
 	c.closed = true
 	return err
 }
@@ -563,10 +482,6 @@ type HTTPRequest struct {
 	// received until the response was sent.
 	Latency time.Duration
 
-	// LocalIP is the IP address (IPv4 or IPv6) of the origin server that the request
-	// was sent to.
-	LocalIP string
-
 	// RemoteIP is the IP address (IPv4 or IPv6) of the client that issued the
 	// HTTP request. Examples: "192.168.1.1", "FE80::0202:B3FF:FE1E:8329".
 	RemoteIP string
@@ -597,7 +512,6 @@ func fromHTTPRequest(r *HTTPRequest) *logtypepb.HttpRequest {
 		Status:                         int32(r.Status),
 		ResponseSize:                   r.ResponseSize,
 		UserAgent:                      r.Request.UserAgent(),
-		ServerIp:                       r.LocalIP,
 		RemoteIp:                       r.RemoteIP, // TODO(jba): attempt to parse http.Request.RemoteAddr?
 		Referer:                        r.Request.Referer(),
 		CacheHit:                       r.CacheHit,
@@ -685,23 +599,17 @@ func (l *Logger) LogSync(ctx context.Context, e Entry) error {
 func (l *Logger) Log(e Entry) {
 	ent, err := toLogEntry(e)
 	if err != nil {
-		l.client.error(err)
+		l.error(err)
 		return
 	}
 	if err := l.bundler.Add(ent, proto.Size(ent)); err != nil {
-		l.client.error(err)
+		l.error(err)
 	}
 }
 
 // Flush blocks until all currently buffered log entries are sent.
-//
-// If any errors occurred since the last call to Flush from any Logger, or the
-// creation of the client if this is the first call, then Flush returns a non-nil
-// error with summary information about the errors. This information is unlikely to
-// be actionable. For more accurate error reporting, set Client.OnError.
-func (l *Logger) Flush() error {
+func (l *Logger) Flush() {
 	l.bundler.Flush()
-	return l.client.extractErrorInfo()
 }
 
 func (l *Logger) writeLogEntries(ctx context.Context, entries []*logpb.LogEntry) {
@@ -713,7 +621,16 @@ func (l *Logger) writeLogEntries(ctx context.Context, entries []*logpb.LogEntry)
 	}
 	_, err := l.client.client.WriteLogEntries(ctx, req)
 	if err != nil {
-		l.client.error(err)
+		l.error(err)
+	}
+}
+
+// error puts the error on the client's error channel
+// without blocking.
+func (l *Logger) error(err error) {
+	select {
+	case l.client.errc <- err:
+	default:
 	}
 }
 

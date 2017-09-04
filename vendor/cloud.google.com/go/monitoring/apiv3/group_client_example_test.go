@@ -19,7 +19,6 @@ package monitoring_test
 import (
 	"cloud.google.com/go/monitoring/apiv3"
 	"golang.org/x/net/context"
-	"google.golang.org/api/iterator"
 	monitoringpb "google.golang.org/genproto/googleapis/monitoring/v3"
 )
 
@@ -46,11 +45,9 @@ func ExampleGroupClient_ListGroups() {
 	it := c.ListGroups(ctx, req)
 	for {
 		resp, err := it.Next()
-		if err == iterator.Done {
-			break
-		}
 		if err != nil {
 			// TODO: Handle error.
+			break
 		}
 		// TODO: Use resp.
 		_ = resp
@@ -140,11 +137,9 @@ func ExampleGroupClient_ListGroupMembers() {
 	it := c.ListGroupMembers(ctx, req)
 	for {
 		resp, err := it.Next()
-		if err == iterator.Done {
-			break
-		}
 		if err != nil {
 			// TODO: Handle error.
+			break
 		}
 		// TODO: Use resp.
 		_ = resp

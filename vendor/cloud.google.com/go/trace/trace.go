@@ -164,7 +164,7 @@ import (
 	"google.golang.org/api/gensupport"
 	"google.golang.org/api/option"
 	"google.golang.org/api/support/bundler"
-	htransport "google.golang.org/api/transport/http"
+	"google.golang.org/api/transport"
 )
 
 const (
@@ -269,7 +269,7 @@ func NewClient(ctx context.Context, projectID string, opts ...option.ClientOptio
 		option.WithUserAgent(userAgent),
 	}
 	o = append(o, opts...)
-	hc, basePath, err := htransport.NewClient(ctx, o...)
+	hc, basePath, err := transport.NewHTTPClient(ctx, o...)
 	if err != nil {
 		return nil, fmt.Errorf("creating HTTP client for Google Stackdriver Trace API: %v", err)
 	}
@@ -335,7 +335,7 @@ func (c *Client) SpanFromHeader(name string, header string) *Span {
 	if c == nil {
 		return nil
 	}
-	traceID, parentSpanID, options, _, ok := traceInfoFromHeader(header)
+	traceID, parentSpanID, options, ok := traceInfoFromHeader(header)
 	if !ok {
 		traceID = nextTraceID()
 	}
@@ -373,7 +373,7 @@ func (c *Client) SpanFromRequest(r *http.Request) *Span {
 	if c == nil {
 		return nil
 	}
-	traceID, parentSpanID, options, _, ok := traceInfoFromHeader(r.Header.Get(httpHeader))
+	traceID, parentSpanID, options, ok := traceInfoFromHeader(r.Header.Get(httpHeader))
 	if !ok {
 		traceID = nextTraceID()
 	}
@@ -446,22 +446,20 @@ func FromContext(ctx context.Context) *Span {
 	return s
 }
 
-func traceInfoFromHeader(h string) (traceID string, spanID uint64, options optionFlags, optionsOk bool, ok bool) {
+func traceInfoFromHeader(h string) (string, uint64, optionFlags, bool) {
 	// See https://cloud.google.com/trace/docs/faq for the header format.
 	// Return if the header is empty or missing, or if the header is unreasonably
 	// large, to avoid making unnecessary copies of a large string.
 	if h == "" || len(h) > 200 {
-		return "", 0, 0, false, false
-
+		return "", 0, 0, false
 	}
 
 	// Parse the trace id field.
 	slash := strings.Index(h, `/`)
 	if slash == -1 {
-		return "", 0, 0, false, false
-
+		return "", 0, 0, false
 	}
-	traceID, h = h[:slash], h[slash+1:]
+	traceID, h := h[:slash], h[slash+1:]
 
 	// Parse the span id field.
 	spanstr := h
@@ -471,22 +469,19 @@ func traceInfoFromHeader(h string) (traceID string, spanID uint64, options optio
 	}
 	spanID, err := strconv.ParseUint(spanstr, 10, 64)
 	if err != nil {
-		return "", 0, 0, false, false
-
+		return "", 0, 0, false
 	}
 
 	// Parse the options field, options field is optional.
 	if !strings.HasPrefix(h, "o=") {
-		return traceID, spanID, 0, false, true
-
+		return traceID, spanID, 0, true
 	}
 	o, err := strconv.ParseUint(h[2:], 10, 64)
 	if err != nil {
-		return "", 0, 0, false, false
-
+		return "", 0, 0, false
 	}
-	options = optionFlags(o)
-	return traceID, spanID, options, true, true
+	options := optionFlags(o)
+	return traceID, spanID, options, true
 }
 
 type optionFlags uint32
@@ -580,11 +575,7 @@ type Span struct {
 	statusCode int
 }
 
-// Traced reports whether the current span is sampled to be traced.
-func (s *Span) Traced() bool {
-	if s == nil {
-		return false
-	}
+func (s *Span) tracing() bool {
 	return s.trace.localOptions&optionTrace != 0
 }
 
@@ -594,8 +585,7 @@ func (s *Span) NewChild(name string) *Span {
 	if s == nil {
 		return nil
 	}
-	if !s.Traced() {
-		// TODO(jbd): Document this behavior in godoc here and elsewhere.
+	if !s.tracing() {
 		return s
 	}
 	return startNewChild(name, s.trace, s.span.SpanId)
@@ -620,27 +610,13 @@ func (s *Span) NewRemoteChild(r *http.Request) *Span {
 	if s == nil {
 		return nil
 	}
-	if !s.Traced() {
+	if !s.tracing() {
 		r.Header[httpHeader] = []string{spanHeader(s.trace.traceID, s.span.ParentSpanId, s.trace.globalOptions)}
 		return s
 	}
 	newSpan := startNewChildWithRequest(r, s.trace, s.span.SpanId)
 	r.Header[httpHeader] = []string{spanHeader(s.trace.traceID, newSpan.span.SpanId, s.trace.globalOptions)}
 	return newSpan
-}
-
-// Header returns the value of the X-Cloud-Trace-Context header that
-// should be used to propagate the span.  This is the inverse of
-// SpanFromHeader.
-//
-// Most users should use NewRemoteChild unless they have specific
-// propagation needs or want to control the naming of their span.
-// Header() does not create a new span.
-func (s *Span) Header() string {
-	if s == nil {
-		return ""
-	}
-	return spanHeader(s.trace.traceID, s.span.SpanId, s.trace.globalOptions)
 }
 
 func startNewChildWithRequest(r *http.Request, trace *trace, parentSpanID uint64) *Span {
@@ -696,7 +672,7 @@ func (s *Span) SetLabel(key, value string) {
 	if s == nil {
 		return
 	}
-	if !s.Traced() {
+	if !s.tracing() {
 		return
 	}
 	s.spanMu.Lock()
@@ -749,7 +725,7 @@ func (s *Span) Finish(opts ...FinishOption) {
 	if s == nil {
 		return
 	}
-	if !s.Traced() {
+	if !s.tracing() {
 		return
 	}
 	s.trace.finish(s, false, opts...)
@@ -761,7 +737,7 @@ func (s *Span) FinishWait(opts ...FinishOption) error {
 	if s == nil {
 		return nil
 	}
-	if !s.Traced() {
+	if !s.tracing() {
 		return nil
 	}
 	return s.trace.finish(s, true, opts...)

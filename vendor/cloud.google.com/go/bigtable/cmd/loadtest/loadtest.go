@@ -26,7 +26,6 @@ import (
 	"log"
 	"math/rand"
 	"os"
-	"os/signal"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -39,8 +38,7 @@ import (
 )
 
 var (
-	runFor = flag.Duration("run_for", 5*time.Second,
-		"how long to run the load test for; 0 to run forever until SIGTERM")
+	runFor       = flag.Duration("run_for", 5*time.Second, "how long to run the load test for")
 	scratchTable = flag.String("scratch_table", "loadtest-scratch", "name of table to use; should not already exist")
 	csvOutput    = flag.String("csv_output", "",
 		"output path for statistics in .csv format. If this file already exists it will be overwritten.")
@@ -110,23 +108,13 @@ func main() {
 	// Upon a successful run, delete the table. Don't bother checking for errors.
 	defer adminClient.DeleteTable(context.Background(), *scratchTable)
 
-	// Also delete the table on SIGTERM.
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
-	go func() {
-		s := <-c
-		log.Printf("Caught %v, cleaning scratch table.", s)
-		adminClient.DeleteTable(context.Background(), *scratchTable)
-		os.Exit(1)
-	}()
-
 	log.Printf("Starting load test... (run for %v)", *runFor)
 	tbl := client.Open(*scratchTable)
 	sem := make(chan int, *reqCount) // limit the number of requests happening at once
 	var reads, writes stats
 	stopTime := time.Now().Add(*runFor)
 	var wg sync.WaitGroup
-	for time.Now().Before(stopTime) || *runFor == 0 {
+	for time.Now().Before(stopTime) {
 		sem <- 1
 		wg.Add(1)
 		go func() {
