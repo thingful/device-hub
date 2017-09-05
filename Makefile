@@ -63,7 +63,7 @@ coverage: test_integration ## generate and display coverage report
 .PHONY: test_integration
 
 proto: ## regenerate protobuf files
-	protoc --gofast_out=plugins=grpc:. ./proto/*.proto
+	docker run -v $(PWD)/proto:/go/proto thingful/device-hub-proto
 	# strip `omitempty` from the json tags
 	ls ./proto/*.pb.go | xargs -n1 -IX bash -c 'sed s/,omitempty// X > X.tmp && mv X{.tmp,}'
 

@@ -17,10 +17,5 @@ script:
   - make docker_up
   - make coverage
 
-install:
-  - curl -OL https://github.com/google/protobuf/releases/download/v3.4.0/protoc-3.4.0-linux-x86_64.zip
-  - unzip protoc-3.4.0-linux-x86_64.zip -d protoc3
-  - sudo mv protoc3/bin/* /usr/local/bin/
-
 notifications:
     slack: thingful:1X9OpFzHUf1i7Y9lPyHoNGld
