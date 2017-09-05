@@ -18,9 +18,7 @@ all: linux-arm linux-i386 linux-amd64 darwin-amd64 ## build executables for the 
 
 get-build-deps: ## install build dependencies
 	go get -u github.com/chespinoza/goliscan
-	go get -u google.golang.org/grpc
-	go get -u github.com/golang/protobuf/protoc-gen-go
-	go get -u github.com/gogo/protobuf/protoc-gen-gofast
+	docker build -t thingful-device-hub-proto -f docker/Dockerfile.protobuf .
 
 .PHONY: get-build-deps
 
@@ -72,13 +70,15 @@ proto: ## regenerate protobuf files
 proto-verify: proto ## verify proto binding has been generated
 	git diff --exit-code
 
-docker_up: ## run dependencies as docker containers
+.PHONY: proto-verify
+
+docker-up: ## run dependencies as docker containers
 	docker-compose up -d
 	docker ps
 
 .PHONY: docker_up
 
-docker_build: linux-amd64  ## build a docker container containing the device-hub executables
+docker-build: linux-amd64  ## build a docker container containing the device-hub executables
 	docker build -t thingful/device-hub:latest -t thingful/device-hub:$(SOURCE_VERSION) .
 
 .PHONY: docker_build
