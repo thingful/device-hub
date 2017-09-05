@@ -14,7 +14,7 @@ script:
   - make check-license
   - make check-vendor-licenses
   - make proto-verify
-  - make docker_up
+  - make docker-up
   - make coverage
 
 notifications:
