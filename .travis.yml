@@ -9,11 +9,13 @@ services:
 
 before_script:
   - make get-build-deps
-  
+
 script:
   - make check-license
   - make check-vendor-licenses
-  - make docker_up coverage
+  - make proto-verify
+  - make docker-up
+  - make coverage
 
 notifications:
     slack: thingful:1X9OpFzHUf1i7Y9lPyHoNGld

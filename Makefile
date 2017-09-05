@@ -16,9 +16,10 @@ all: linux-arm linux-i386 linux-amd64 darwin-amd64 ## build executables for the 
 
 .PHONY: all
 
-get-build-deps: ## install build dependencies 
-	go get github.com/chespinoza/goliscan
-	go get github.com/gogo/protobuf/protoc-gen-gofast
+get-build-deps: ## install build dependencies
+	go get -u github.com/chespinoza/goliscan
+	## TODO : pull version from dockerhub rather than each developer building their own copy
+	docker build -t thingful/device-hub-proto -f docker/Dockerfile.protobuf .
 
 .PHONY: get-build-deps
 
@@ -61,22 +62,27 @@ coverage: test_integration ## generate and display coverage report
 .PHONY: test_integration
 
 proto: ## regenerate protobuf files
-	protoc --gofast_out=plugins=grpc:. ./proto/*.proto
+	docker run -v $(PWD)/proto:/go/proto thingful/device-hub-proto
 	# strip `omitempty` from the json tags
 	ls ./proto/*.pb.go | xargs -n1 -IX bash -c 'sed s/,omitempty// X > X.tmp && mv X{.tmp,}'
 
 .PHONY: proto
 
-docker_up: ## run dependencies as docker containers
+proto-verify: proto ## verify proto binding has been generated
+	git diff --exit-code
+
+.PHONY: proto-verify
+
+docker-up: ## run dependencies as docker containers
 	docker-compose up -d
 	docker ps
 
-.PHONY: docker_up
+.PHONY: docker-up
 
-docker_build: linux-amd64  ## build a docker container containing the device-hub executables
+docker-build: linux-amd64  ## build a docker container containing the device-hub executables
 	docker build -t thingful/device-hub:latest -t thingful/device-hub:$(SOURCE_VERSION) .
 
-.PHONY: docker_build
+.PHONY: docker-build
 
 darwin-amd64: tmp/build/darwin-amd64/$(EXE_NAME) tmp/build/darwin-amd64/$(CLI_EXE_NAME) ## build for mac amd64
 
