@@ -18,7 +18,8 @@ all: linux-arm linux-i386 linux-amd64 darwin-amd64 ## build executables for the 
 
 get-build-deps: ## install build dependencies
 	go get -u github.com/chespinoza/goliscan
-	docker build -t thingful-device-hub-proto -f docker/Dockerfile.protobuf .
+	## TODO : pull version from dockerhub rather than each developer building their own copy
+	docker build -t thingful/device-hub-proto -f docker/Dockerfile.protobuf .
 
 .PHONY: get-build-deps
 
