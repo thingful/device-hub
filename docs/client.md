@@ -20,39 +20,34 @@ Client CLI Commands
   - Flag:         -d
     Large Format: --request-dir <string>
     Is required:  Yes if -f isn't specified
-    Description:  Directory containing client request file(s) (must be json, yaml, or xml) 
+    Description:  Directory containing client request yaml file(s) if there are process files, will be started
     Parameter:    A filesystem path
     Example:      device-hub-cli create -d=./test-configurations/
 
   - Flag:         -f
     Large Format: --request-file <string>
     Is required:  Yes if -d isn't specified
-    Description:  Client request file (must be json, yaml, or xml); use "-" for stdin + json
-    Parameter:    Directory containing client request file(s) (must be json, yaml, or xml) 
+    Description:  Client request yaml file 
+    Parameter:    Directory containing client request yaml file(s) 
     Example:      device-hub-cli create -f=./test-configurations/mqtt_listener.yaml
 
 
 - Command Name:   delete [-d|-f]=<string>
-  Description:    Delete listener, profile and endpoint resources
+  Description:    Delete listener, profile, endpoint resources and stop processes if -d is used
   Flags:
   - Flag:         -d
     Large Format: --request-dir <string>
     Is required:  Yes if -f isn't specified
-    Description:  Directory containing client request file(s) (must be json, yaml, or xml) 
+    Description:  Directory containing client request yaml file(s) if there are process files, will be stopped
     Parameter:    A filesystem path
     Example:      device-hub-cli delete -d=./test-configurations/
 
   - Flag:         -f
     Large Format: --request-file <string>
     Is required:  Yes if -d isn't specified
-    Description:  Client request file (must be json, yaml, or xml); use "-" for stdin + json
-    Parameter:    Directory containing client request file(s) (must be json, yaml, or xml) 
+    Description:  Client request yaml file
+    Parameter:    Directory containing client request yaml file(s) 
     Example:      device-hub-cli delete -f=./test-configurations/mqtt_listener.yaml
-
-
-- Command Name:   describe [listener|endpoint] [mqtt|stdout]
-  Description:    Describe parameters for endpoints and listeners
-  Example:        device-hub-cli listener mqtt
 
 
 - Command Name:   show [listener|endpoint|profile|all]
@@ -64,28 +59,35 @@ Client CLI Commands
   Description:    List running pipes
 
 
-- Command Name:   start [-e <string> -l <string> -u <string>] <string>
+- Command Name:   start [-f <file>][-e <string> -l <string> -u <string>] <string>
   Description:    Start processing messages on an URI
   Flags:
+
+   - Flag:         -f <file>
+    Description:  Start processing messages using a yaml config file
+    Large Format: --request-file <file>
+    Is required:  No
+
   - Flag:         -e
     Description:  Endpoint uid to push messages to, may be specified multiple times
     Large Format: --endpoint <stringSlice>
-    Is required:  Yes
+    Is required:  Yes if -f isn't specified
 
   - Flag:         -l
     Description:  Listener uid to accept messages on
     Large Format: --listener <string>
-    Is required:  Yes
+    Is required:  Yes if -f isn't specified
   
   - Flag:         -u
     Description:  Uri to listen on
     Large Format: --uri <string>
-    Is required:  Yes
+    Is required:  Yes if -f isn't specified
 
   - Flag:         -t
     Description:  Colon separated (k:v) runtime tags to attach to requests, may be specified multiple times
     Large Format: --tags <stringSlice>
-  
+    Is required:  Yes if -f isn't specified
+
   Example:        device-hub-cli start -e=stdout-endpoint -l=http-listener-local-port-8085 -u=/a thingful/helsinki-bus
 
 
@@ -115,10 +117,6 @@ CLI Global Flags
   Large Format:   --response-format <string>
   Description:    response format (json, prettyjson, yaml, or xml)
   Default:        json
-
-- Flag:           -p
-  Large Format:   --print-sample-request
-  Description:    Print sample request file and exit
 
 - Flag:           --timeout <duration>
   Description:     Client connection timeout

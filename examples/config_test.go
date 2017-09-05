@@ -49,8 +49,11 @@ func TestConfigurationFilesAreValid(t *testing.T) {
 			err = in.Decode(&entity)
 
 			assert.Nil(t, err)
-			assert.NotEmpty(t, entity.Kind)
 			assert.NotEmpty(t, entity.Type)
+
+			if strings.ToLower(entity.Type) != "process" {
+				assert.NotEmpty(t, entity.Kind)
+			}
 
 			var params describe.Parameters
 

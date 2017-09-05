@@ -9,8 +9,6 @@ import (
 	"io/ioutil"
 	"net"
 	"os"
-	"path"
-	"path/filepath"
 
 	"github.com/fiorix/protoc-gen-cobra/iocodec"
 	"github.com/thingful/device-hub/proto"
@@ -108,9 +106,9 @@ func dial() (*grpc.ClientConn, proto.HubClient, error) {
 	return conn, proto.NewHubClient(conn), nil
 }
 
-type roundTripFunc func(cli proto.HubClient, in iocodec.Decoder, out iocodec.Encoder) error
+type roundTripFunc func(cli proto.HubClient, in rawContent, out iocodec.Encoder) error
 
-func roundTrip(sample interface{}, fn roundTripFunc) error {
+func roundTrip(fn roundTripFunc) error {
 	cfg := _config
 
 	var em iocodec.EncoderMaker
@@ -126,96 +124,16 @@ func roundTrip(sample interface{}, fn roundTripFunc) error {
 		}
 	}
 
-	if cfg.PrintSampleRequest {
-		return em.NewEncoder(os.Stdout).Encode(sample)
-	}
-
-	decoders := []iocodec.Decoder{}
-	files := []*os.File{}
-
-	// either no request file is not specified or set to std-in
-	if (cfg.RequestFile == "" && cfg.RequestDir == "") || cfg.RequestFile == "-" {
-		decoders = append(decoders, iocodec.DefaultDecoders["json"].NewDecoder(os.Stdin))
-
-		// or request file is specified
-	} else if cfg.RequestFile != "" {
-
-		f, d, err := decoderFromPath(cfg.RequestFile)
-
-		if err != nil {
-			return err
-		}
-
-		decoders = append(decoders, d)
-		files = append(files, f)
-
-		// or request dir is specified
-	} else if cfg.RequestDir != "" {
-		listing, err := ioutil.ReadDir(cfg.RequestDir)
-
-		if err != nil {
-			return err
-		}
-
-		for _, fi := range listing {
-
-			fmt.Println(fi.Name())
-
-			folderPath := path.Join(cfg.RequestDir, fi.Name())
-			f, d, err := decoderFromPath(folderPath)
-
-			if err != nil {
-				return err
-			}
-
-			decoders = append(decoders, d)
-			files = append(files, f)
-
-		}
-	}
-
-	defer func() {
-		for i, _ := range files {
-			files[i].Close()
-		}
-	}()
-
 	conn, client, err := dial()
 	if err != nil {
 		return err
 	}
-
 	defer conn.Close()
 
-	for _, d := range decoders {
-		err := fn(client, d, em.NewEncoder(os.Stdout))
-
-		if err != nil {
-			return err
-		}
+	err = fn(client, nil, em.NewEncoder(os.Stdout))
+	if err != nil {
+		return err
 	}
 
 	return nil
-}
-
-func decoderFromPath(filePath string) (*os.File, iocodec.Decoder, error) {
-
-	f, err := os.Open(filePath)
-	if err != nil {
-		return nil, nil, fmt.Errorf("request file: %v", err)
-	}
-
-	ext := filepath.Ext(filePath)
-
-	if len(ext) > 0 && ext[0] == '.' {
-		ext = ext[1:]
-		if ext != "yaml" {
-			return nil, nil, fmt.Errorf("invalid request file format: %q", ext)
-
-		}
-	}
-
-	dm, _ := iocodec.DefaultDecoders["yaml"]
-
-	return f, dm.NewDecoder(f), nil
 }
