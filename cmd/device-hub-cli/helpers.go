@@ -8,12 +8,13 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net"
-	"os"
-	"path"
-	"path/filepath"
+	"strings"
 
-	"github.com/fiorix/protoc-gen-cobra/iocodec"
+	"github.com/thingful/device-hub/describe"
+	"github.com/thingful/device-hub/endpoint"
+	"github.com/thingful/device-hub/listener"
 	"github.com/thingful/device-hub/proto"
+	"github.com/thingful/device-hub/registry"
 	"golang.org/x/oauth2"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -108,114 +109,31 @@ func dial() (*grpc.ClientConn, proto.HubClient, error) {
 	return conn, proto.NewHubClient(conn), nil
 }
 
-type roundTripFunc func(cli proto.HubClient, in iocodec.Decoder, out iocodec.Encoder) error
+// describeValidate validate the policy file before sending it over the wire
+func describeValidate(v proto.CreateRequest) (err error) {
+	var params describe.Parameters
 
-func roundTrip(sample interface{}, fn roundTripFunc) error {
-	cfg := _config
+	register := registry.Default
 
-	var em iocodec.EncoderMaker
-	var ok bool
+	endpoint.Register(register)
+	listener.Register(register)
 
-	if cfg.ResponseFormat == "" {
-		em = iocodec.DefaultEncoders["json"]
-	} else {
+	switch strings.ToLower(v.Type) {
 
-		em, ok = iocodec.DefaultEncoders[cfg.ResponseFormat]
-		if !ok {
-			return fmt.Errorf("invalid response format: %q", cfg.ResponseFormat)
-		}
+	case "listener":
+		params, err = register.DescribeListener(v.Kind)
+	case "endpoint":
+		params, err = register.DescribeEndpoint(v.Kind)
 	}
 
-	if cfg.PrintSampleRequest {
-		return em.NewEncoder(os.Stdout).Encode(sample)
-	}
-
-	decoders := []iocodec.Decoder{}
-	files := []*os.File{}
-
-	// either no request file is not specified or set to std-in
-	if (cfg.RequestFile == "" && cfg.RequestDir == "") || cfg.RequestFile == "-" {
-		decoders = append(decoders, iocodec.DefaultDecoders["json"].NewDecoder(os.Stdin))
-
-		// or request file is specified
-	} else if cfg.RequestFile != "" {
-
-		f, d, err := decoderFromPath(cfg.RequestFile)
-
-		if err != nil {
-			return err
-		}
-
-		decoders = append(decoders, d)
-		files = append(files, f)
-
-		// or request dir is specified
-	} else if cfg.RequestDir != "" {
-		listing, err := ioutil.ReadDir(cfg.RequestDir)
-
-		if err != nil {
-			return err
-		}
-
-		for _, fi := range listing {
-
-			fmt.Println(fi.Name())
-
-			folderPath := path.Join(cfg.RequestDir, fi.Name())
-			f, d, err := decoderFromPath(folderPath)
-
-			if err != nil {
-				return err
-			}
-
-			decoders = append(decoders, d)
-			files = append(files, f)
-
-		}
-	}
-
-	defer func() {
-		for i, _ := range files {
-			files[i].Close()
-		}
-	}()
-
-	conn, client, err := dial()
 	if err != nil {
 		return err
 	}
 
-	defer conn.Close()
+	_, err = describe.NewValues(v.Configuration, params)
 
-	for _, d := range decoders {
-		err := fn(client, d, em.NewEncoder(os.Stdout))
-
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func decoderFromPath(filePath string) (*os.File, iocodec.Decoder, error) {
-
-	f, err := os.Open(filePath)
 	if err != nil {
-		return nil, nil, fmt.Errorf("request file: %v", err)
+		return err
 	}
-
-	ext := filepath.Ext(filePath)
-
-	if len(ext) > 0 && ext[0] == '.' {
-		ext = ext[1:]
-		if ext != "yaml" {
-			return nil, nil, fmt.Errorf("invalid request file format: %q", ext)
-
-		}
-	}
-
-	dm, _ := iocodec.DefaultDecoders["yaml"]
-
-	return f, dm.NewDecoder(f), nil
+	return nil
 }

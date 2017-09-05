@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/fiorix/protoc-gen-cobra/iocodec"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -17,13 +18,21 @@ import (
 
 var RootCmd = &cobra.Command{
 	Use: "device-hub-cli",
+	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		// Set resources at CLI init
+		return _resources.SetResources(_config)
+	},
 }
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion4
 
-var _config = newConfig()
+var (
+	_config    = newConfig()
+	_resources = newResources()
+	_encoder   iocodec.Encoder
+)
 
 type config struct {
 	ServerAddr         string        `envconfig:"SERVER_ADDR" default:"127.0.0.1:50051"`
@@ -42,6 +51,7 @@ type config struct {
 	AuthTokenType      string        `envconfig:"AUTH_TOKEN_TYPE" default:"Bearer"`
 	JWTKey             string        `envconfig:"JWT_KEY"`
 	JWTKeyFile         string        `envconfig:"JWT_KEY_FILE"`
+	ProcessFile        processConf
 }
 
 func newConfig() *config {
@@ -81,6 +91,10 @@ func init() {
 	RootCmd.AddCommand(describeCommand)
 
 	_config.AddFlags(RootCmd.PersistentFlags())
+
+	// global encoder
+	em := iocodec.DefaultEncoders["json"]
+	_encoder = em.NewEncoder(os.Stdout)
 }
 
 func main() {
